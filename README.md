@@ -45,9 +45,8 @@ addpath(genpath(pwd));
 verify_reproducibility_package;
 ```
 
-The verification script checks the released source tree and human-readable result
-files. If the optional `section55_same_cohort_data.mat` archive is present, it
-also verifies the fixed cohort, re-runs the environment-level statistics, and
+The verification script checks the released source tree and MAT archives,
+verifies the fixed cohort, re-runs the environment-level statistics, and
 regenerates the manuscript figures. It never re-runs the hours-long planners.
 
 For an interactive single-environment demonstration:
@@ -61,9 +60,9 @@ hours, depending on the machine.
 
 ## Reproducing the Revised Analyses
 
-### From optional archived planner outputs
+### From archived planner outputs
 
-Place `section55_same_cohort_data.mat` in the repository root, then run:
+The released MAT archives are already included. Run:
 
 ```matlab
 runClusterAwareStatistics('section55_same_cohort_data.mat');
@@ -118,8 +117,12 @@ environment for cluster-aware inference.
 
 ## Released Data and Results
 
-- `section55_same_cohort_data.mat`: complete paired main-experiment cohort,
-  including paths, seeds, metrics, and feasibility labels.
+- `section55_same_cohort_data.mat`: paired main-experiment paths, seeds, metrics, and feasibility labels.
+- `fig9_ablation_same_cohort_data.mat`: same-cohort ablation outputs.
+- `reviewer_revision_master_results.mat`: master index of reviewer-revision analyses.
+- Result-specific MAT archives are also provided in the cluster-statistics,
+  spatial-resolution, resolution-selection, computational-budget,
+  reviewer-outcome, and weight-sensitivity directories.
 - `reviewer_outcome_summary/case_level_evaluator_outputs.csv`: case-level
   decomposed evaluator outputs.
 - `cluster_statistics_output/`: environment-level summaries, confidence

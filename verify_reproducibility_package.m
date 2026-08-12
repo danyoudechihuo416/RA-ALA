@@ -14,6 +14,8 @@ requiredFiles = {
     'PathPlanners.m'
     'runRA_ALA.m'
     'evalRA_v2.m'
+    'section55_same_cohort_data.mat'
+    'fig9_ablation_same_cohort_data.mat'
     fullfile('reviewer_outcome_summary','case_level_evaluator_outputs.csv')
     fullfile('cluster_statistics_output','environment_level_summary.csv')
     fullfile('spatial_resolution_output','spatial_resolution_case_results.csv')
@@ -26,13 +28,7 @@ assert(isempty(missing),'Missing required package file(s): %s', ...
 fprintf('Released source tree and readable result summaries: OK\n');
 
 archive = 'section55_same_cohort_data.mat';
-if ~isfile(archive)
-    fprintf(['Optional cohort archive not found; archived-output statistics ', ...
-        'and figure regeneration were skipped.\n']);
-    fprintf('RA-ALA source-package verification completed successfully.\n');
-    return;
-end
-
+assert(isfile(archive), 'Missing released cohort archive: %s', archive);
 S = load(archive);
 requiredVars = {'env_seeds_used','stat_env','stat_ra_seed','stat_J', ...
     'stat_E','stat_P','stat_feasible','stat_paths','algNames', ...
@@ -46,9 +42,9 @@ assert(isequal(S.env_seeds_used(:)',expectedSeeds), ...
 assert(S.N_ENV==10 && S.N_SEED==3 && S.N_STAT==30, ...
     'Expected a 10-environment x 3-run cohort.');
 
-fprintf('Optional archived cohort: OK\n');
+fprintf('Released archived cohort: OK\n');
 runClusterAwareStatistics(archive);
 regen_figures_11_13;
 regen_fig9;
-fprintf('RA-ALA archive-assisted verification completed successfully.\n');
+fprintf('RA-ALA reproducibility-package verification completed successfully.\n');
 end
