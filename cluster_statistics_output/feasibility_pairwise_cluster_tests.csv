@@ -1,0 +1,5 @@
+baseline,environment_N,mean_rate_difference_RA_minus_baseline,ci_low,ci_high,nonzero_clusters,p_raw,p_holm,effect_direction,test_method
+Energy-A*,10,0.4,0.1,0.7,6,0.0625,0.125,positive favors RA-ALA,exact cluster-level sign-flip test on environment feasibility proportions
+Informed-RRT*,10,0.633333333333333,0.4,0.866666666666667,8,0.0078125,0.0234375,positive favors RA-ALA,exact cluster-level sign-flip test on environment feasibility proportions
+ST-EA*,10,0.2,0,0.4,3,0.25,0.25,positive favors RA-ALA,exact cluster-level sign-flip test on environment feasibility proportions
+Greedy,10,0.8,0.6,0.966666666666667,9,0.00390625,0.015625,positive favors RA-ALA,exact cluster-level sign-flip test on environment feasibility proportions

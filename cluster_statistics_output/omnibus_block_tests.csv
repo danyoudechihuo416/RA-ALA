@@ -1,0 +1,5 @@
+outcomes,test,environment_N,algorithms_N,statistic,degrees_of_freedom,p_value
+Composite cost,Friedman block test with environment as block,10,5,27.4720812182741,4,1.59549030638356e-05
+Energy,Friedman block test with environment as block,10,5,21.989847715736,4,0.000201355146823006
+Hard-constraint penalty,Friedman block test with environment as block,10,5,29.1162790697674,4,7.40351559288749e-06
+Feasibility proportion,Friedman block test with environment as block,10,5,20.1515151515152,4,0.000466151971439847

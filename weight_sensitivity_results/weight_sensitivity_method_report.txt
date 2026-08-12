@@ -1,0 +1,35 @@
+COST-WEIGHT SENSITIVITY ANALYSIS
+================================
+
+Source cohort: section55_same_cohort_data.mat
+Design: 10 fixed High-complexity environments, one pre-specified seed per environment.
+Settings: baseline plus 0.5x and 1.5x one-at-a-time perturbations of each reported weight.
+Base weights: w_energy=1, w_time=0.5, w_climb=2, w_risk=10, lambda_penalty=100.
+RA-ALA budget: popSize=40, maxIter=80.
+The auxiliary search riskWeight remains fixed at 15; it is not treated as a reported J weight.
+
+Implementation rule:
+- RA-ALA and ST-EA* are re-optimized under every weight setting.
+- Energy-A*, Informed-RRT*, and Greedy paths are generated once per environment and rescored,
+  because their implemented path-generation objectives do not use the reported composite-cost weights.
+- Raw J values are not compared across different settings because each setting defines a different objective.
+  Interpretation uses within-setting algorithm ranks, feasibility, and physical outcome components.
+
+Section 5.5 reproduction passed: 1
+Maximum absolute baseline J difference: 0
+RA-ALA feasibility-first best settings: 11/11
+
+This analysis assesses robustness to reasonable weight perturbations; it does not claim that the base weights are optimal.
+
+Configuration table:
+ 1 Base            wE=1 wt=0.5 wc=2 wr=10 lambda=100
+ 2 Energy 0.5x     wE=0.5 wt=0.5 wc=2 wr=10 lambda=100
+ 3 Energy 1.5x     wE=1.5 wt=0.5 wc=2 wr=10 lambda=100
+ 4 Time 0.5x       wE=1 wt=0.25 wc=2 wr=10 lambda=100
+ 5 Time 1.5x       wE=1 wt=0.75 wc=2 wr=10 lambda=100
+ 6 Climb 0.5x      wE=1 wt=0.5 wc=1 wr=10 lambda=100
+ 7 Climb 1.5x      wE=1 wt=0.5 wc=3 wr=10 lambda=100
+ 8 Risk 0.5x       wE=1 wt=0.5 wc=2 wr=5 lambda=100
+ 9 Risk 1.5x       wE=1 wt=0.5 wc=2 wr=15 lambda=100
+10 Penalty 0.5x    wE=1 wt=0.5 wc=2 wr=10 lambda=50
+11 Penalty 1.5x    wE=1 wt=0.5 wc=2 wr=10 lambda=150

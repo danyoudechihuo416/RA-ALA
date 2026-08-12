@@ -1,0 +1,130 @@
+TARGETED 0.75 M RESOLUTION AUDIT
+
+Source: spatial_resolution_output/spatial_resolution_results.mat
+Fixed cases: [1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30]
+Spacings: [3 1.5 0.75] m
+
+case=1 spacing=3 m J=7.1113715 penalty=0 feasible=1 height/static/dynamic/NFZ=0/0/0/0 subsamples=400
+case=1 spacing=1.5 m J=21.885383 penalty=0.14692938 feasible=0 height/static/dynamic/NFZ=1/1/0/0 subsamples=794
+case=1 spacing=0.75 m J=21.959513 penalty=0.14774854 feasible=0 height/static/dynamic/NFZ=1/1/0/0 subsamples=1583
+case=2 spacing=3 m J=6.6810226 penalty=0 feasible=1 height/static/dynamic/NFZ=0/0/0/0 subsamples=402
+case=2 spacing=1.5 m J=6.7057033 penalty=0 feasible=1 height/static/dynamic/NFZ=0/0/0/0 subsamples=800
+case=2 spacing=0.75 m J=6.747122 penalty=0 feasible=1 height/static/dynamic/NFZ=0/0/0/0 subsamples=1595
+case=3 spacing=3 m J=7.2069954 penalty=0 feasible=1 height/static/dynamic/NFZ=0/0/0/0 subsamples=400
+case=3 spacing=1.5 m J=7.2534711 penalty=0 feasible=1 height/static/dynamic/NFZ=0/0/0/0 subsamples=797
+case=3 spacing=0.75 m J=7.2434694 penalty=0 feasible=1 height/static/dynamic/NFZ=0/0/0/0 subsamples=1592
+case=4 spacing=3 m J=53.361226 penalty=0.29072761 feasible=0 height/static/dynamic/NFZ=1/1/0/0 subsamples=578
+case=4 spacing=1.5 m J=68.566323 penalty=0.44222162 feasible=0 height/static/dynamic/NFZ=1/1/0/0 subsamples=1152
+case=4 spacing=0.75 m J=59.901471 penalty=0.35600446 feasible=0 height/static/dynamic/NFZ=1/1/0/0 subsamples=2301
+case=5 spacing=3 m J=25.278947 penalty=0.029481426 feasible=0 height/static/dynamic/NFZ=1/1/0/0 subsamples=767
+case=5 spacing=1.5 m J=26.823522 penalty=0.043679166 feasible=0 height/static/dynamic/NFZ=1/1/0/0 subsamples=1529
+case=5 spacing=0.75 m J=26.373813 penalty=0.03999707 feasible=0 height/static/dynamic/NFZ=1/1/0/0 subsamples=3053
+case=6 spacing=3 m J=13.461221 penalty=0 feasible=1 height/static/dynamic/NFZ=0/0/0/0 subsamples=524
+case=6 spacing=1.5 m J=13.669426 penalty=0 feasible=1 height/static/dynamic/NFZ=0/0/0/0 subsamples=1043
+case=6 spacing=0.75 m J=13.643183 penalty=0 feasible=1 height/static/dynamic/NFZ=0/0/0/0 subsamples=2080
+case=7 spacing=3 m J=161.03471 penalty=1.4291091 feasible=0 height/static/dynamic/NFZ=1/1/0/0 subsamples=426
+case=7 spacing=1.5 m J=163.67163 penalty=1.4548118 feasible=0 height/static/dynamic/NFZ=1/1/0/0 subsamples=849
+case=7 spacing=0.75 m J=163.63165 penalty=1.4548118 feasible=0 height/static/dynamic/NFZ=1/1/0/0 subsamples=1696
+case=8 spacing=3 m J=15.349056 penalty=0.012955941 feasible=0 height/static/dynamic/NFZ=1/0/0/0 subsamples=451
+case=8 spacing=1.5 m J=15.470759 penalty=0.012955941 feasible=0 height/static/dynamic/NFZ=1/0/0/0 subsamples=844
+case=8 spacing=0.75 m J=15.388155 penalty=0.013805289 feasible=0 height/static/dynamic/NFZ=1/0/0/0 subsamples=1632
+case=9 spacing=3 m J=162.36592 penalty=1.4388407 feasible=0 height/static/dynamic/NFZ=1/1/0/0 subsamples=441
+case=9 spacing=1.5 m J=169.83202 penalty=1.5109512 feasible=0 height/static/dynamic/NFZ=1/1/1/0 subsamples=878
+case=9 spacing=0.75 m J=174.22011 penalty=1.5544502 feasible=0 height/static/dynamic/NFZ=1/1/1/0 subsamples=1753
+case=10 spacing=3 m J=22.376249 penalty=0.00023131808 feasible=0 height/static/dynamic/NFZ=1/0/0/0 subsamples=534
+case=10 spacing=1.5 m J=22.293622 penalty=0.00023431246 feasible=0 height/static/dynamic/NFZ=1/0/0/0 subsamples=1063
+case=10 spacing=0.75 m J=22.386849 penalty=0.00036611322 feasible=0 height/static/dynamic/NFZ=1/0/0/0 subsamples=2122
+case=11 spacing=3 m J=10.920194 penalty=0 feasible=1 height/static/dynamic/NFZ=0/0/0/0 subsamples=455
+case=11 spacing=1.5 m J=11.07178 penalty=0 feasible=1 height/static/dynamic/NFZ=0/0/0/0 subsamples=905
+case=11 spacing=0.75 m J=11.11199 penalty=0 feasible=1 height/static/dynamic/NFZ=0/0/0/0 subsamples=1805
+case=12 spacing=3 m J=14.442684 penalty=0 feasible=1 height/static/dynamic/NFZ=0/0/0/0 subsamples=440
+case=12 spacing=1.5 m J=14.586365 penalty=0 feasible=1 height/static/dynamic/NFZ=0/0/0/0 subsamples=874
+case=12 spacing=0.75 m J=14.593762 penalty=0 feasible=1 height/static/dynamic/NFZ=0/0/0/0 subsamples=1742
+case=13 spacing=3 m J=12.933353 penalty=0 feasible=1 height/static/dynamic/NFZ=0/0/0/0 subsamples=502
+case=13 spacing=1.5 m J=13.271759 penalty=0 feasible=1 height/static/dynamic/NFZ=0/0/0/0 subsamples=952
+case=13 spacing=0.75 m J=13.088058 penalty=0 feasible=1 height/static/dynamic/NFZ=0/0/0/0 subsamples=1860
+case=14 spacing=3 m J=14.960401 penalty=0 feasible=1 height/static/dynamic/NFZ=0/0/0/0 subsamples=564
+case=14 spacing=1.5 m J=14.838251 penalty=0 feasible=1 height/static/dynamic/NFZ=0/0/0/0 subsamples=1064
+case=14 spacing=0.75 m J=14.833779 penalty=0 feasible=1 height/static/dynamic/NFZ=0/0/0/0 subsamples=2069
+case=15 spacing=3 m J=108.56733 penalty=0.95782078 feasible=0 height/static/dynamic/NFZ=1/1/0/0 subsamples=472
+case=15 spacing=1.5 m J=109.07837 penalty=0.9591084 feasible=0 height/static/dynamic/NFZ=1/1/0/0 subsamples=940
+case=15 spacing=0.75 m J=108.32905 penalty=0.95286202 feasible=0 height/static/dynamic/NFZ=1/1/0/0 subsamples=1875
+case=16 spacing=3 m J=8.3750311 penalty=0 feasible=1 height/static/dynamic/NFZ=0/0/0/0 subsamples=399
+case=16 spacing=1.5 m J=8.3529897 penalty=0 feasible=1 height/static/dynamic/NFZ=0/0/0/0 subsamples=793
+case=16 spacing=0.75 m J=8.3557968 penalty=0 feasible=1 height/static/dynamic/NFZ=0/0/0/0 subsamples=1583
+case=17 spacing=3 m J=7.5580486 penalty=0 feasible=1 height/static/dynamic/NFZ=0/0/0/0 subsamples=405
+case=17 spacing=1.5 m J=7.572066 penalty=0 feasible=1 height/static/dynamic/NFZ=0/0/0/0 subsamples=805
+case=17 spacing=0.75 m J=7.5815371 penalty=0 feasible=1 height/static/dynamic/NFZ=0/0/0/0 subsamples=1606
+case=18 spacing=3 m J=9.3756022 penalty=0 feasible=1 height/static/dynamic/NFZ=0/0/0/0 subsamples=427
+case=18 spacing=1.5 m J=20.775718 penalty=0.11363636 feasible=0 height/static/dynamic/NFZ=0/0/1/0 subsamples=850
+case=18 spacing=0.75 m J=19.122867 penalty=0.097142857 feasible=0 height/static/dynamic/NFZ=0/0/1/0 subsamples=1695
+case=19 spacing=3 m J=11.493309 penalty=0 feasible=1 height/static/dynamic/NFZ=0/0/0/0 subsamples=431
+case=19 spacing=1.5 m J=11.580903 penalty=0 feasible=1 height/static/dynamic/NFZ=0/0/0/0 subsamples=854
+case=19 spacing=0.75 m J=11.574592 penalty=0 feasible=1 height/static/dynamic/NFZ=0/0/0/0 subsamples=1705
+case=20 spacing=3 m J=14.43825 penalty=0 feasible=1 height/static/dynamic/NFZ=0/0/0/0 subsamples=426
+case=20 spacing=1.5 m J=14.698185 penalty=0 feasible=1 height/static/dynamic/NFZ=0/0/0/0 subsamples=849
+case=20 spacing=0.75 m J=14.755922 penalty=0 feasible=1 height/static/dynamic/NFZ=0/0/0/0 subsamples=1692
+case=21 spacing=3 m J=12.15472 penalty=0 feasible=1 height/static/dynamic/NFZ=0/0/0/0 subsamples=422
+case=21 spacing=1.5 m J=12.202956 penalty=0 feasible=1 height/static/dynamic/NFZ=0/0/0/0 subsamples=835
+case=21 spacing=0.75 m J=12.257166 penalty=0 feasible=1 height/static/dynamic/NFZ=0/0/0/0 subsamples=1664
+case=22 spacing=3 m J=8.7721898 penalty=0 feasible=1 height/static/dynamic/NFZ=0/0/0/0 subsamples=419
+case=22 spacing=1.5 m J=8.8868243 penalty=0 feasible=1 height/static/dynamic/NFZ=0/0/0/0 subsamples=833
+case=22 spacing=0.75 m J=8.8827359 penalty=0 feasible=1 height/static/dynamic/NFZ=0/0/0/0 subsamples=1663
+case=23 spacing=3 m J=9.2340532 penalty=0 feasible=1 height/static/dynamic/NFZ=0/0/0/0 subsamples=424
+case=23 spacing=1.5 m J=9.4450294 penalty=0 feasible=1 height/static/dynamic/NFZ=0/0/0/0 subsamples=842
+case=23 spacing=0.75 m J=9.4735849 penalty=0 feasible=1 height/static/dynamic/NFZ=0/0/0/0 subsamples=1680
+case=24 spacing=3 m J=7.7235008 penalty=0 feasible=1 height/static/dynamic/NFZ=0/0/0/0 subsamples=407
+case=24 spacing=1.5 m J=9.6793919 penalty=0.018995119 feasible=0 height/static/dynamic/NFZ=1/1/0/0 subsamples=811
+case=24 spacing=0.75 m J=10.644339 penalty=0.028429892 feasible=0 height/static/dynamic/NFZ=1/1/0/0 subsamples=1618
+case=25 spacing=3 m J=19.285992 penalty=0.059701493 feasible=0 height/static/dynamic/NFZ=0/0/1/0 subsamples=527
+case=25 spacing=1.5 m J=19.796246 penalty=0.060150376 feasible=0 height/static/dynamic/NFZ=0/0/1/0 subsamples=1049
+case=25 spacing=0.75 m J=20.160339 penalty=0.063909774 feasible=0 height/static/dynamic/NFZ=0/0/1/0 subsamples=2094
+case=26 spacing=3 m J=22.491591 penalty=0.083333333 feasible=0 height/static/dynamic/NFZ=0/0/1/0 subsamples=477
+case=26 spacing=1.5 m J=22.059987 penalty=0.075 feasible=0 height/static/dynamic/NFZ=0/0/1/0 subsamples=951
+case=26 spacing=0.75 m J=22.399548 penalty=0.079497908 feasible=0 height/static/dynamic/NFZ=0/0/1/0 subsamples=1898
+case=27 spacing=3 m J=25.330945 penalty=0.060606061 feasible=0 height/static/dynamic/NFZ=0/0/1/0 subsamples=544
+case=27 spacing=1.5 m J=24.673709 penalty=0.053030303 feasible=0 height/static/dynamic/NFZ=0/0/1/0 subsamples=1084
+case=27 spacing=0.75 m J=24.985594 penalty=0.056818182 feasible=0 height/static/dynamic/NFZ=0/0/1/0 subsamples=2165
+case=28 spacing=3 m J=39.566176 penalty=0.28224718 feasible=0 height/static/dynamic/NFZ=1/1/0/0 subsamples=453
+case=28 spacing=1.5 m J=44.345801 penalty=0.32850759 feasible=0 height/static/dynamic/NFZ=1/1/0/0 subsamples=905
+case=28 spacing=0.75 m J=44.352228 penalty=0.32850759 feasible=0 height/static/dynamic/NFZ=1/1/0/0 subsamples=1808
+case=29 spacing=3 m J=10.617842 penalty=0 feasible=1 height/static/dynamic/NFZ=0/0/0/0 subsamples=444
+case=29 spacing=1.5 m J=10.738503 penalty=0 feasible=1 height/static/dynamic/NFZ=0/0/0/0 subsamples=881
+case=29 spacing=0.75 m J=10.715503 penalty=0 feasible=1 height/static/dynamic/NFZ=0/0/0/0 subsamples=1755
+case=30 spacing=3 m J=10.464662 penalty=0 feasible=1 height/static/dynamic/NFZ=0/0/0/0 subsamples=452
+case=30 spacing=1.5 m J=10.729303 penalty=0 feasible=1 height/static/dynamic/NFZ=0/0/0/0 subsamples=902
+case=30 spacing=0.75 m J=10.824238 penalty=0 feasible=1 height/static/dynamic/NFZ=0/0/0/0 subsamples=1801
+
+DECISION
+case=1: 1.5 m feasible=0, 0.75 m feasible=0, confirmed=1, relative J change=0.00337576; 1.5 m classification confirmed by 0.75 m
+case=2: 1.5 m feasible=1, 0.75 m feasible=1, confirmed=1, relative J change=0.00613872; 1.5 m classification confirmed by 0.75 m
+case=3: 1.5 m feasible=1, 0.75 m feasible=1, confirmed=1, relative J change=0.00138079; 1.5 m classification confirmed by 0.75 m
+case=4: 1.5 m feasible=0, 0.75 m feasible=0, confirmed=1, relative J change=0.144652; 1.5 m classification confirmed by 0.75 m
+case=5: 1.5 m feasible=0, 0.75 m feasible=0, confirmed=1, relative J change=0.0170513; 1.5 m classification confirmed by 0.75 m
+case=6: 1.5 m feasible=1, 0.75 m feasible=1, confirmed=1, relative J change=0.00192354; 1.5 m classification confirmed by 0.75 m
+case=7: 1.5 m feasible=0, 0.75 m feasible=0, confirmed=1, relative J change=0.000244333; 1.5 m classification confirmed by 0.75 m
+case=8: 1.5 m feasible=0, 0.75 m feasible=0, confirmed=1, relative J change=0.00536805; 1.5 m classification confirmed by 0.75 m
+case=9: 1.5 m feasible=0, 0.75 m feasible=0, confirmed=1, relative J change=0.0251871; 1.5 m classification confirmed by 0.75 m
+case=10: 1.5 m feasible=0, 0.75 m feasible=0, confirmed=1, relative J change=0.00416432; 1.5 m classification confirmed by 0.75 m
+case=11: 1.5 m feasible=1, 0.75 m feasible=1, confirmed=1, relative J change=0.00361859; 1.5 m classification confirmed by 0.75 m
+case=12: 1.5 m feasible=1, 0.75 m feasible=1, confirmed=1, relative J change=0.000506833; 1.5 m classification confirmed by 0.75 m
+case=13: 1.5 m feasible=1, 0.75 m feasible=1, confirmed=1, relative J change=0.0140357; 1.5 m classification confirmed by 0.75 m
+case=14: 1.5 m feasible=1, 0.75 m feasible=1, confirmed=1, relative J change=0.000301459; 1.5 m classification confirmed by 0.75 m
+case=15: 1.5 m feasible=0, 0.75 m feasible=0, confirmed=1, relative J change=0.00691702; 1.5 m classification confirmed by 0.75 m
+case=16: 1.5 m feasible=1, 0.75 m feasible=1, confirmed=1, relative J change=0.000335943; 1.5 m classification confirmed by 0.75 m
+case=17: 1.5 m feasible=1, 0.75 m feasible=1, confirmed=1, relative J change=0.00124922; 1.5 m classification confirmed by 0.75 m
+case=18: 1.5 m feasible=0, 0.75 m feasible=0, confirmed=1, relative J change=0.0864332; 1.5 m classification confirmed by 0.75 m
+case=19: 1.5 m feasible=1, 0.75 m feasible=1, confirmed=1, relative J change=0.000545205; 1.5 m classification confirmed by 0.75 m
+case=20: 1.5 m feasible=1, 0.75 m feasible=1, confirmed=1, relative J change=0.0039128; 1.5 m classification confirmed by 0.75 m
+case=21: 1.5 m feasible=1, 0.75 m feasible=1, confirmed=1, relative J change=0.00442269; 1.5 m classification confirmed by 0.75 m
+case=22: 1.5 m feasible=1, 0.75 m feasible=1, confirmed=1, relative J change=0.000460271; 1.5 m classification confirmed by 0.75 m
+case=23: 1.5 m feasible=1, 0.75 m feasible=1, confirmed=1, relative J change=0.00301422; 1.5 m classification confirmed by 0.75 m
+case=24: 1.5 m feasible=0, 0.75 m feasible=0, confirmed=1, relative J change=0.0906536; 1.5 m classification confirmed by 0.75 m
+case=25: 1.5 m feasible=0, 0.75 m feasible=0, confirmed=1, relative J change=0.0180598; 1.5 m classification confirmed by 0.75 m
+case=26: 1.5 m feasible=0, 0.75 m feasible=0, confirmed=1, relative J change=0.0151593; 1.5 m classification confirmed by 0.75 m
+case=27: 1.5 m feasible=0, 0.75 m feasible=0, confirmed=1, relative J change=0.0124826; 1.5 m classification confirmed by 0.75 m
+case=28: 1.5 m feasible=0, 0.75 m feasible=0, confirmed=1, relative J change=0.000144911; 1.5 m classification confirmed by 0.75 m
+case=29: 1.5 m feasible=1, 0.75 m feasible=1, confirmed=1, relative J change=0.00214643; 1.5 m classification confirmed by 0.75 m
+case=30: 1.5 m feasible=1, 0.75 m feasible=1, confirmed=1, relative J change=0.00877061; 1.5 m classification confirmed by 0.75 m
+
+Overall recommendation: adopt 1.5 m as the final sampled standard; targeted 0.75 m confirms the limiting classifications.

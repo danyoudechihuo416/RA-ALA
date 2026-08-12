@@ -1,0 +1,11 @@
+item,value
+run_datetime,"2026-08-11 14:53:22"
+matlab_version,"24.2.0.2712019 (R2024b)"
+matlab_release,"2024b"
+architecture,"win64"
+operating_system,"Microsoft Windows 11 专业版"
+cpu_model,"AMD64 Family 26 Model 68 Stepping 0, AuthenticAMD"
+logical_processors,"16"
+physical_memory_gb,"31.11"
+parallel_pool_active,"false"
+timer_scope,"complete runRA_ALA call; stage timers are mutually exclusive except warm_start_s, which is a subcomponent of initialization_s"

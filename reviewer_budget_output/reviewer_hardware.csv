@@ -1,0 +1,11 @@
+item,value
+run_datetime,"2026-08-12 10:27:47"
+matlab_version,"24.2.0.2712019 (R2024b)"
+matlab_release,"2024b"
+architecture,"win64"
+operating_system,"Microsoft Windows (kernel 10.0, amd64)"
+cpu_model,"AMD64 Family 26 Model 68 Stepping 0, AuthenticAMD"
+logical_processors,"16"
+ram_gb,"31.1142"
+parallel_pool_active,"false"
+timer_scope,"complete planner call only; excludes environment generation, plotting, and file export"

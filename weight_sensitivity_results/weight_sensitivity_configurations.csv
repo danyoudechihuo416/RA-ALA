@@ -1,0 +1,12 @@
+ConfigID,ConfigName,VariedComponent,Multiplier,w_energy,w_time,w_climb,w_risk,lambda_penalty
+1,Base,None,1,1,0.5,2,10,100
+2,Energy 0.5x,Energy,0.5,0.5,0.5,2,10,100
+3,Energy 1.5x,Energy,1.5,1.5,0.5,2,10,100
+4,Time 0.5x,Time,0.5,1,0.25,2,10,100
+5,Time 1.5x,Time,1.5,1,0.75,2,10,100
+6,Climb 0.5x,Climb,0.5,1,0.5,1,10,100
+7,Climb 1.5x,Climb,1.5,1,0.5,3,10,100
+8,Risk 0.5x,Risk,0.5,1,0.5,2,5,100
+9,Risk 1.5x,Risk,1.5,1,0.5,2,15,100
+10,Penalty 0.5x,Penalty,0.5,1,0.5,2,10,50
+11,Penalty 1.5x,Penalty,1.5,1,0.5,2,10,150

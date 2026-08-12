@@ -1,0 +1,26 @@
+# MATLAB generated files
+*.asv
+*.autosave
+*.m~
+*.mex*
+*.mlappinstall
+slprj/
+codegen/
+
+# Runtime logs and checkpoints
+*.log
+*.diary
+*_checkpoint.mat
+
+# Regenerated smoke-test and temporary outputs
+*_smoke/
+*_smoke_*/
+temp/
+tmp/
+
+# OS/editor files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+

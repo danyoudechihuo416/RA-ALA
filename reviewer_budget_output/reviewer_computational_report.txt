@@ -1,0 +1,68 @@
+REVIEWER COMPUTATIONAL-BUDGET REPORT
+
+Independent environments: 10
+Runs per environment: 3
+Environment seeds: [483 638 855 948 1041 1103 1227 1475 2312 2560]
+
+HARDWARE
+CPU: AMD64 Family 26 Model 68 Stepping 0, AuthenticAMD
+RAM: 31.11 GB
+OS: Microsoft Windows (kernel 10.0, amd64)
+MATLAB: 24.2.0.2712019 (R2024b)
+Parallel pool: 0
+
+RUNTIME AND EVALUATOR CALLS (median [Q1, Q3])
+RA-ALA           runtime 220.1971 [212.3510, 256.2453] s; evaluatePath 7483.0 [6713.5, 17292.8]; feasibility 80.0%; failures 6/30
+Energy-A*        runtime 4.4795 [3.6188, 15.0038] s; evaluatePath 4232.0 [3457.0, 13867.8]; feasibility 40.0%; failures 18/30
+Informed-RRT*    runtime 15.0790 [15.0168, 15.0899] s; evaluatePath 7286.5 [7171.8, 7388.2]; feasibility 16.7%; failures 25/30
+ST-EA*           runtime 3.0634 [1.3499, 8.9826] s; evaluatePath 3001.0 [1249.0, 9313.0]; feasibility 60.0%; failures 12/30
+Greedy           runtime 0.1222 [0.1126, 0.1407] s; evaluatePath 1.0 [1.0, 1.0]; feasibility 0.0%; failures 30/30
+
+BUDGET, CANDIDATE, SMOOTHING, AND RECOVERY RULES
+
+RA-ALA
+  Initialization: structured population + Greedy projection + Energy-A* warm start
+  Population/sample: 40 individuals
+  Budget: 80 iterations; timeout: none; fixed iteration budget
+  Candidate policy: Top-K=5 parents; raw+smooth per parent; conditional mild and Rescue candidates
+  Smoothing: yes: spline smoothing; mild smoothing only in difficult environments
+  Recovery: yes: conditional RescueA dynamic detours and RescueB altitude/static recovery
+  Failure rule: exception, no path/goal, nonfinite output, or any nonzero hard-constraint violation in the unified evaluator
+
+Energy-A*
+  Initialization: nearest graph node initialization
+  Population/sample: N/A (spatial graph search)
+  Budget: 5000 expanded spatial nodes; timeout: 15.0 s
+  Candidate policy: one graph-derived output path
+  Smoothing: no
+  Recovery: no
+  Failure rule: exception, no path/goal, nonfinite output, or any nonzero hard-constraint violation in the unified evaluator
+
+Informed-RRT*
+  Initialization: single start-node tree
+  Population/sample: one sample per iteration
+  Budget: 1500 sampling iterations; timeout: 15.0 s
+  Candidate policy: one best tree-derived output path
+  Smoothing: no
+  Recovery: no
+  Failure rule: exception, no path/goal, nonfinite output, or any nonzero hard-constraint violation in the unified evaluator
+
+ST-EA*
+  Initialization: nearest space-time graph state at departure
+  Population/sample: N/A (space-time graph; 2.0 s bins)
+  Budget: 5000 expanded space-time states; timeout: 15.0 s
+  Candidate policy: one best space-time graph output path
+  Smoothing: no
+  Recovery: no
+  Failure rule: exception, no path/goal, nonfinite output, or any nonzero hard-constraint violation in the unified evaluator
+
+Greedy
+  Initialization: deterministic greedy construction
+  Population/sample: N/A (deterministic)
+  Budget: one construction pass; timeout: none; deterministic pass
+  Candidate policy: one greedy output path
+  Smoothing: no
+  Recovery: no
+  Failure rule: exception, no path/goal, nonfinite output, or any nonzero hard-constraint violation in the unified evaluator
+
+Interpretation boundary: these measurements compare complete planner configurations, not isolated update operators.

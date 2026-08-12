@@ -1,0 +1,28 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite the associated article."
+title: "RA-ALA Reproducibility Package"
+type: software
+version: 1.0.0
+date-released: 2026-08-13
+authors:
+  - family-names: Xu
+    given-names: Kaijun
+  - family-names: Hong
+    given-names: Yilin
+  - family-names: Luo
+    given-names: Hongda
+  - family-names: Yang
+    given-names: Yong
+license: MIT
+repository-code: "https://github.com/danyoudechihuo416/RA-ALA"
+abstract: >-
+  MATLAB implementation and reproducibility artifacts for unified-evaluation-
+  driven three-dimensional UAV path planning in time-varying urban low-altitude
+  environments.
+keywords:
+  - UAV path planning
+  - urban low-altitude operations
+  - dynamic obstacles
+  - time-aware planning
+  - reproducible research
+

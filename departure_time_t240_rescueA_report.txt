@@ -1,0 +1,11 @@
+DEPARTURE-TIME CASE t = 240 s
+Chosen output mode: raw
+Initial dynamic-conflict segments: 0
+RescueA candidates generated: 0
+RescueA candidates evaluated: 0
+RescueA successful insertions: 0
+RescueA adopted: 0
+RescueA additional computation: 0.000000 s
+Total planning time: 124.236393 s
+RescueA fraction of total time: 0.000%
+Operational compatibility: not evaluated because no replanning interval was supplied.

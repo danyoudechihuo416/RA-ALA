@@ -1,0 +1,40 @@
+CLUSTER-AWARE SECTION 5.5 STATISTICS
+
+Source: section55_same_cohort_data.mat
+Independent unit: urban environment (N=10)
+Within-environment aggregation: median of three seeds for continuous outcomes.
+Feasibility criterion: no hard penalty (numerical tolerance 1e-12).
+Algorithms: RA-ALA, Energy-A*, Informed-RRT*, ST-EA*, Greedy
+
+OMNIBUS TESTS
+Composite cost: Friedman Q=27.4721, df=4, p=1.59549e-05
+Energy: Friedman Q=21.9898, df=4, p=0.000201355
+Hard-constraint penalty: Friedman Q=29.1163, df=4, p=7.40352e-06
+Feasibility proportion: Friedman Q=20.1515, df=4, p=0.000466152
+
+FEASIBILITY RATES WITH CLUSTER BOOTSTRAP CI
+RA-ALA: 24/30 = 0.800, 95% CI [0.600, 0.967]
+Energy-A*: 12/30 = 0.400, 95% CI [0.100, 0.700]
+Informed-RRT*: 5/30 = 0.167, 95% CI [0.000, 0.333]
+ST-EA*: 18/30 = 0.600, 95% CI [0.300, 0.900]
+Greedy: 0/30 = 0.000, 95% CI [0.000, 0.000]
+
+PAIRWISE FEASIBILITY CONTRASTS (RA-ALA minus baseline)
+Energy-A*: diff=0.400 [0.100, 0.700], p=0.0625, Holm p=0.125
+Informed-RRT*: diff=0.633 [0.400, 0.867], p=0.0078125, Holm p=0.0234375
+ST-EA*: diff=0.200 [0.000, 0.400], p=0.25, Holm p=0.25
+Greedy: diff=0.800 [0.600, 0.967], p=0.00390625, Holm p=0.015625
+
+CONTINUOUS OUTCOMES (baseline minus RA-ALA; positive effect favors RA-ALA)
+Composite cost vs Energy-A*: median diff=11.9695 [2.36132, 101.411], W+=52, W-=3, p=0.00976562, Holm p=0.0195312, rank-biserial=0.890909
+Composite cost vs Informed-RRT*: median diff=42.3077 [13.3799, 200.586], W+=54, W-=1, p=0.00390625, Holm p=0.0117188, rank-biserial=0.963636
+Composite cost vs ST-EA*: median diff=0.968901 [-1.97136, 141.496], W+=42, W-=13, p=0.160156, Holm p=0.160156, rank-biserial=0.527273
+Composite cost vs Greedy: median diff=3319.86 [2122.68, 8262.49], W+=55, W-=0, p=0.00195312, Holm p=0.0078125, rank-biserial=1
+Energy vs Energy-A*: median diff=-0.853174 [-1.34785, 1.27759], W+=20, W-=35, p=0.492188, Holm p=0.984375, rank-biserial=-0.272727
+Energy vs Informed-RRT*: median diff=0.131593 [-0.922787, 3.12268], W+=33, W-=22, p=0.625, Holm p=0.984375, rank-biserial=0.2
+Energy vs ST-EA*: median diff=-1.59824 [-3.00312, 1.20494], W+=15, W-=40, p=0.232422, Holm p=0.697266, rank-biserial=-0.454545
+Energy vs Greedy: median diff=58.7303 [36.1499, 73.2273], W+=55, W-=0, p=0.00195312, Holm p=0.0078125, rank-biserial=1
+Hard-constraint penalty vs Energy-A*: median diff=0.158925 [0, 1.04511], W+=21, W-=0, p=0.03125, Holm p=0.0625, rank-biserial=1
+Hard-constraint penalty vs Informed-RRT*: median diff=0.414385 [0.0862069, 2.08997], W+=36, W-=0, p=0.0078125, Holm p=0.0234375, rank-biserial=1
+Hard-constraint penalty vs ST-EA*: median diff=0 [0, 1.47822], W+=10, W-=0, p=0.125, Holm p=0.125, rank-biserial=1
+Hard-constraint penalty vs Greedy: median diff=32.6335 [20.6215, 81.6542], W+=55, W-=0, p=0.00195312, Holm p=0.0078125, rank-biserial=1

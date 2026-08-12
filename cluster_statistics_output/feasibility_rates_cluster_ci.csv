@@ -1,0 +1,6 @@
+algorithm,environment_N,successes,total_runs,feasibility_rate,cluster_ci_low,cluster_ci_high,ci_method
+RA-ALA,10,24,30,0.8,0.6,0.966666666666667,percentile cluster bootstrap (20000 resamples)
+Energy-A*,10,12,30,0.4,0.1,0.7,percentile cluster bootstrap (20000 resamples)
+Informed-RRT*,10,5,30,0.166666666666667,0,0.333333333333333,percentile cluster bootstrap (20000 resamples)
+ST-EA*,10,18,30,0.6,0.3,0.9,percentile cluster bootstrap (20000 resamples)
+Greedy,10,0,30,0,0,0,percentile cluster bootstrap (20000 resamples)

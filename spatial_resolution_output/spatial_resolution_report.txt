@@ -1,0 +1,21 @@
+SPATIAL COLLISION-SAMPLING RESOLUTION STUDY
+
+Cohort: section55_same_cohort_data.mat
+Cases planned once: 30
+Planning/evaluation baseline: 1.5 m
+Design: fixed selected paths re-evaluated at [12 6 3 1.5 0.75] m.
+
+SUMMARY
+12 m: N=30, median J=13.861, median T=97.7868 s, feasible=86.7%, static/dynamic/NFZ=1/3/0
+6 m: N=30, median J=14.2779, median T=98.9924 s, feasible=80.0%, static/dynamic/NFZ=2/2/0
+3 m: N=30, median J=15.1789, median T=97.7128 s, feasible=73.3%, static/dynamic/NFZ=4/2/0
+1.5 m: N=30, median J=14.1869, median T=97.6001 s, feasible=80.0%, static/dynamic/NFZ=2/0/0
+0.75 m: N=30, median J=14.4105, median T=98.4981 s, feasible=76.7%, static/dynamic/NFZ=3/1/0
+
+STABILITY RELATIVE TO THE FINEST RESOLUTION
+12 vs 0.75 m: N=30, median/max rel J=0.01034/0.6529, median/max rel T=0.009235/0.05897, feasibility agreement=76.7%, static/dynamic/NFZ agreement=93.3/93.3/100.0%
+6 vs 0.75 m: N=30, median/max rel J=0.01068/0.4489, median/max rel T=0.004954/0.04418, feasibility agreement=83.3%, static/dynamic/NFZ agreement=96.7/90.0/100.0%
+3 vs 0.75 m: N=30, median/max rel J=0.006096/1.528, median/max rel T=0.002681/0.01703, feasibility agreement=96.7%, static/dynamic/NFZ agreement=96.7/96.7/100.0%
+1.5 vs 0.75 m: N=30, median/max rel J=0.007776/0.4631, median/max rel T=0.001753/0.09484, feasibility agreement=96.7%, static/dynamic/NFZ agreement=96.7/96.7/100.0%
+
+Interpretation boundary: this is a numerical-resolution study, not a claim of analytic continuous collision detection.
