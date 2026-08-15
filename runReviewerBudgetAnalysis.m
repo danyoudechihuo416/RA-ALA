@@ -1,14 +1,14 @@
-function results = runReviewerBudgetAnalysis(userOpts)
-%RUNREVIEWERBUDGETANALYSIS Generate reviewer-facing budget/runtime evidence.
+function results = runComputationalBudgetAnalysis(userOpts)
+%RUNCOMPUTATIONALBUDGETANALYSIS Generate computational-budget and runtime evidence.
 %   Full run:
-%       results = runReviewerBudgetAnalysis();
+%       results = runComputationalBudgetAnalysis();
 %
 %   Quick syntax/smoke run:
 %       opts = struct('N_ENV',1,'N_SEED',1,'RRTIterations',20, ...
 %           'TimeBudgetS',2,'NodeBudget',100, ...
 %           'ALAConfig',struct('popSize',8,'maxIter',2, ...
 %           'nWaypoints',4,'riskWeight',15,'windLookahead',3));
-%       results = runReviewerBudgetAnalysis(opts);
+%       results = runComputationalBudgetAnalysis(opts);
 %
 %   The timer covers the complete planner call, including candidate
 %   generation, unified re-evaluation, smoothing, and conditional recovery
@@ -30,7 +30,7 @@ function results = runReviewerBudgetAnalysis(userOpts)
     algNames = {'RA-ALA','Energy-A*','Informed-RRT*','ST-EA*','Greedy'};
     budgetTable = buildBudgetPermissionsTable(opts, algNames);
     writetable(budgetTable, fullfile(opts.OutputDir, ...
-        'reviewer_algorithm_budget_permissions.csv'));
+        'algorithm_budget_permissions.csv'));
     if opts.TableOnly
         results = struct('budget_permissions',budgetTable,'hardware',hardware, ...
             'options',opts);
@@ -43,7 +43,7 @@ function results = runReviewerBudgetAnalysis(userOpts)
     R = initializeRawResults(nRows);
     row = 0;
 
-    fprintf('\nReviewer computational-budget analysis\n');
+    fprintf('\nComputational-budget analysis\n');
     fprintf('  Environments: %d; repeated runs/environment: %d\n', ...
         numel(envSeeds), opts.N_SEED);
     fprintf('  Timer excludes environment generation, plotting, and file export.\n\n');
@@ -113,12 +113,12 @@ function results = runReviewerBudgetAnalysis(userOpts)
 
     rawTable = rawStructToTable(R);
     summaryTable = summarizeRuntime(rawTable, algNames);
-    writetable(rawTable, fullfile(opts.OutputDir,'reviewer_runtime_raw.csv'));
-    writetable(summaryTable, fullfile(opts.OutputDir,'reviewer_runtime_summary.csv'));
+    writetable(rawTable, fullfile(opts.OutputDir,'runtime_case_results.csv'));
+    writetable(summaryTable, fullfile(opts.OutputDir,'runtime_summary.csv'));
 
     writeHumanReadableReport(opts.OutputDir, hardware, budgetTable, ...
         summaryTable, envSeeds, opts);
-    save(fullfile(opts.OutputDir,'reviewer_budget_results.mat'), ...
+    save(fullfile(opts.OutputDir,'computational_budget_results.mat'), ...
         'rawTable','summaryTable','budgetTable','hardware','envSeeds','opts');
 
     results = struct('raw',rawTable,'summary',summaryTable, ...
@@ -126,11 +126,11 @@ function results = runReviewerBudgetAnalysis(userOpts)
         'environment_seeds',envSeeds,'options',opts);
 
     fprintf('\nOutputs written to: %s\n', opts.OutputDir);
-    fprintf('  reviewer_algorithm_budget_permissions.csv\n');
-    fprintf('  reviewer_runtime_raw.csv\n');
-    fprintf('  reviewer_runtime_summary.csv\n');
-    fprintf('  reviewer_hardware.csv / reviewer_hardware.txt\n');
-    fprintf('  reviewer_computational_report.txt\n');
+    fprintf('  algorithm_budget_permissions.csv\n');
+    fprintf('  runtime_case_results.csv\n');
+    fprintf('  runtime_summary.csv\n');
+    fprintf('  hardware_specifications.csv / hardware_specifications.txt\n');
+    fprintf('  computational_budget_report.txt\n');
 end
 
 function opts = defaultOptions(u)
@@ -151,7 +151,7 @@ function opts = defaultOptions(u)
     opts.TimeHorizonS = 300;
     opts.ScreenMode = 'fixed';
     opts.ScreenGap = 1.3;
-    opts.OutputDir = fullfile(pwd,'reviewer_budget_output');
+    opts.OutputDir = fullfile(pwd,'computational_budget_output');
     opts.EnvironmentSeeds = [483, 638, 855, 948, 1041, 1103, 1227, 1475, 2312, 2560];
     opts.CohortFiles = {'section55_same_cohort_data.mat', ...
         'environment_level_statistics.mat','fig9_ablation_same_cohort_data.mat'};
@@ -557,15 +557,15 @@ function writeHardwareOutputs(H,outDir)
         if isnumeric(v), values{i}=num2str(v); elseif islogical(v), values{i}=mat2str(v); else, values{i}=v; end
     end
     T=table(names,values,'VariableNames',{'item','value'});
-    writetable(T,fullfile(outDir,'reviewer_hardware.csv'));
-    fid=fopen(fullfile(outDir,'reviewer_hardware.txt'),'w');
+    writetable(T,fullfile(outDir,'hardware_specifications.csv'));
+    fid=fopen(fullfile(outDir,'hardware_specifications.txt'),'w');
     for i=1:numel(names), fprintf(fid,'%s: %s\n',names{i},values{i}); end
     fclose(fid);
 end
 
 function writeHumanReadableReport(outDir,H,B,S,seeds,opts)
-    fid=fopen(fullfile(outDir,'reviewer_computational_report.txt'),'w');
-    fprintf(fid,'REVIEWER COMPUTATIONAL-BUDGET REPORT\n\n');
+    fid=fopen(fullfile(outDir,'computational_budget_report.txt'),'w');
+    fprintf(fid,'COMPUTATIONAL-BUDGET REPORT\n\n');
     fprintf(fid,'Independent environments: %d\n',numel(seeds));
     fprintf(fid,'Runs per environment: %d\n',opts.N_SEED);
     fprintf(fid,'Environment seeds: %s\n\n',mat2str(seeds));
