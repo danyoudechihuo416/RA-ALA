@@ -11,7 +11,7 @@
 %%  数据收集（按是否需要补丁分级）:
 %%    [无需补丁] 算法总耗时 (tic/toc)              ← 立即可用
 %%    [无需补丁] J / E / T / R_dyn / P_total       ← 已有
-%%    [无需补丁] feasibility                        ← 由 P_total<0.1 自动推出
+%%    [无需补丁] feasibility                        ← 直接采用 evaluatePath 的严格逐分量判定
 %%    [需要补丁1] evaluatePath 调用次数            ← 见底部 PATCH_GUIDE
 %%    [需要补丁2] RA-ALA 内部各阶段耗时分解        ← 见底部 PATCH_GUIDE  
 %%    [需要补丁2] RescueA / RescueB 触发次数       ← 见底部 PATCH_GUIDE
@@ -588,7 +588,7 @@ function D = recordRow(D, row_idx, d_s, eval_cnt, resA, resB, is_ra_ala)
     D.T(row_idx)        = safeGet(d_s, 'T_total',       NaN);
     D.R_dyn(row_idx)    = safeGet(d_s, 'R_dynamic',     NaN);
     D.P_total(row_idx)  = safeGet(d_s, 'penalty_total', NaN);
-    D.feasible(row_idx) = D.P_total(row_idx) < 0.1;
+    D.feasible(row_idx) = logical(safeGet(d_s, 'feasible', false));
     D.eval_count(row_idx) = eval_cnt;
 
     if is_ra_ala
