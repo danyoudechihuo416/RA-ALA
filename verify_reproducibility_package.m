@@ -16,11 +16,11 @@ requiredFiles = {
     'evalRA_v2.m'
     'section55_same_cohort_data.mat'
     'fig9_ablation_same_cohort_data.mat'
-    fullfile('reviewer_outcome_summary','case_level_evaluator_outputs.csv')
+    fullfile('evaluation_outcomes','case_level_evaluator_outputs.csv')
     fullfile('cluster_statistics_output','environment_level_summary.csv')
     fullfile('spatial_resolution_output','spatial_resolution_case_results.csv')
     fullfile('weight_sensitivity_results','weight_sensitivity_summary.csv')
-    fullfile('reviewer_budget_output','reviewer_runtime_summary.csv')};
+    fullfile('computational_budget_output','runtime_summary.csv')};
 
 missing = requiredFiles(~cellfun(@(f) isfile(fullfile(root,f)),requiredFiles));
 assert(isempty(missing),'Missing required package file(s): %s', ...
