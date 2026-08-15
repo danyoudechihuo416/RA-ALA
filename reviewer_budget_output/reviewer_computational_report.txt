@@ -1,4 +1,4 @@
-REVIEWER COMPUTATIONAL-BUDGET REPORT
+COMPUTATIONAL-BUDGET REPORT
 
 Independent environments: 10
 Runs per environment: 3
