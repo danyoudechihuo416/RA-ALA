@@ -33,7 +33,7 @@ communication effects, and it is not flight-control software.
 
 The archived runs used Windows, a 16-logical-processor AMD64 CPU, 31.1 GB RAM,
 and no active parallel pool. Exact hardware metadata is provided in
-`reviewer_budget_output/reviewer_hardware.csv`.
+`computational_budget_output/hardware_specifications.csv`.
 
 ## Quick Start
 
@@ -68,7 +68,7 @@ The released MAT archives are already included. Run:
 runClusterAwareStatistics('section55_same_cohort_data.mat');
 runSpatialResolutionSensitivity('section55_same_cohort_data.mat');
 runWeightSensitivityAnalysis('section55_same_cohort_data.mat');
-summarizeReviewerOutcomes;
+summarizeEvaluationOutcomes;
 regen_figures_11_13;
 regen_fig9;
 ```
@@ -79,14 +79,14 @@ longer than the other post-processing steps.
 ### Full experiment suite
 
 ```matlab
-results = runAllReviewerRevisionExperiments();
+results = runReproducibilitySuite();
 ```
 
 To reuse the released main cohort and skip the longest stage:
 
 ```matlab
 opts = struct('RunMain', false);
-results = runAllReviewerRevisionExperiments(opts);
+results = runReproducibilitySuite(opts);
 ```
 
 The fixed High-complexity environment seeds are:
@@ -111,7 +111,7 @@ environment for cluster-aware inference.
 - `runClusterAwareStatistics.m`: environment-level paired inference.
 - `runSpatialResolutionSensitivity.m`: 12/6/3/1.5/0.75 m resolution analysis.
 - `runWeightSensitivityAnalysis.m`: objective-weight sensitivity analysis.
-- `runReviewerBudgetAnalysis.m`: evaluator-call, runtime, and planner-permission
+- `runComputationalBudgetAnalysis.m`: evaluator-call, runtime, and planner-permission
   audit.
 - `exportDepartureTimeLatency.m`: stage-level latency and Rescue accounting.
 
@@ -119,11 +119,11 @@ environment for cluster-aware inference.
 
 - `section55_same_cohort_data.mat`: paired main-experiment paths, seeds, metrics, and feasibility labels.
 - `fig9_ablation_same_cohort_data.mat`: same-cohort ablation outputs.
-- `reviewer_revision_master_results.mat`: master index of reviewer-revision analyses.
+- `reproducibility_suite_results.mat`: master index of reproducibility analyses.
 - Result-specific MAT archives are also provided in the cluster-statistics,
   spatial-resolution, resolution-selection, computational-budget,
-  reviewer-outcome, and weight-sensitivity directories.
-- `reviewer_outcome_summary/case_level_evaluator_outputs.csv`: case-level
+  evaluation-outcome, and weight-sensitivity directories.
+- `evaluation_outcomes/case_level_evaluator_outputs.csv`: case-level
   decomposed evaluator outputs.
 - `cluster_statistics_output/`: environment-level summaries, confidence
   intervals, omnibus tests, adjusted pairwise tests, and paired effect sizes.
@@ -132,7 +132,7 @@ environment for cluster-aware inference.
 - `resolution_selection_output/`: targeted 1.5 m versus 0.75 m audit.
 - `weight_sensitivity_results/`: weight configurations, case-level outcomes,
   summaries, and rank stability.
-- `reviewer_budget_output/`: algorithm permissions, evaluator calls, runtime,
+- `computational_budget_output/`: algorithm permissions, evaluator calls, runtime,
   failure rules, and hardware metadata.
 - `departure_time_latency_details.csv`: optimization, Top-K, smoothing,
   RescueA, and RescueB timing/counts for the departure-time cases.
