@@ -10,10 +10,11 @@ Environments"**.
 RA-ALA is a simulation-level hybrid path-generation pipeline. It combines an
 Energy-A* warm start, continuous waypoint search, Top-K path-variant
 re-evaluation, feasibility-first selection, and conditional recovery under a
-shared arrival-time-recursive evaluator. The released version is the final
-**no-WindBias** implementation used for the revised experiments: the wind
-field, wind-dependent propulsion model, and headwind look-ahead term remain
-active, while the wind-biased ALA walk displacement is disabled.
+shared arrival-time-recursive evaluator. The current `main` branch is the mutable revision candidate used for the
+revised experiments. The physical wind field, wind-dependent propulsion
+model, and headwind look-ahead guidance remain active, while the ALA walk
+operator does not directly displace waypoints according to wind. An immutable
+archival snapshot will be created after the manuscript and code are frozen.
 
 ## Scope
 
@@ -45,7 +46,7 @@ addpath(genpath(pwd));
 verify_reproducibility_package;
 ```
 
-The verification script checks the released source tree and MAT archives,
+The verification script checks the current source tree and MAT archives,
 verifies the fixed cohort, re-runs the environment-level statistics, and
 regenerates the manuscript figures. It never re-runs the hours-long planners.
 
@@ -62,7 +63,7 @@ hours, depending on the machine.
 
 ### From archived planner outputs
 
-The released MAT archives are already included. Run:
+The archived MAT files are included. Run:
 
 ```matlab
 runClusterAwareStatistics('section55_same_cohort_data.mat');
@@ -82,7 +83,7 @@ longer than the other post-processing steps.
 results = runReproducibilitySuite();
 ```
 
-To reuse the released main cohort and skip the longest stage:
+To reuse the archived main cohort and skip the longest stage:
 
 ```matlab
 opts = struct('RunMain', false);
@@ -102,6 +103,7 @@ environment for cluster-aware inference.
 ## Main Files
 
 - `RA_ALA_demo.m`: manuscript experiment driver and fixed cohort definition.
+- `run_experiments.m`: same-cohort ablation runner and ablation summaries.
 - `runRA_ALA.m`: complete RA-ALA pipeline with timing and recovery counters.
 - `UnifiedCostModel.m`: shared arrival-time-recursive route evaluator.
 - `CityEnvironment.m`: seeded urban environment, wind, obstacle, and NFZ
@@ -115,7 +117,7 @@ environment for cluster-aware inference.
   audit.
 - `exportDepartureTimeLatency.m`: stage-level latency and Rescue accounting.
 
-## Released Data and Results
+## Data and Results
 
 - `section55_same_cohort_data.mat`: paired main-experiment paths, seeds, metrics, and feasibility labels.
 - `fig9_ablation_same_cohort_data.mat`: same-cohort ablation outputs.
@@ -148,7 +150,7 @@ the corresponding MATLAB structures and saved paths.
   tolerance of `1e-12` is used only to recognize floating-point zero.
 - The 30 runs are not treated as 30 independent environments.
 - Runtime values are hardware dependent. Statistical and physical outcomes are
-  deterministic for the released seeds, subject to MATLAB-version numerical
+  deterministic for the fixed seeds, subject to MATLAB-version numerical
   differences.
 
 ## Citation

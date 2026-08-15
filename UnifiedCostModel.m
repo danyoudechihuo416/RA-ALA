@@ -122,10 +122,10 @@ classdef UnifiedCostModel < handle
         %%  主要修改: 修复端点重复计费; 新增 penalty_* 分解字段
         %% ================================================================
         function [J, details] = evaluatePath(obj, pathPts, t_start, hasPayload)
-            % >>>>> RUNTIME_ANALYSIS PATCH 1 (eval_count) >>>>>
+            % Count calls to the shared path evaluator.
             global EVAL_COUNTER;
             if ~isempty(EVAL_COUNTER), EVAL_COUNTER = EVAL_COUNTER + 1; end
-            % <<<<< RUNTIME_ANALYSIS PATCH 1 END <<<<<
+            % End evaluator-call instrumentation.
         % 评估单条路径的统一代价 (完整分解输出)
         %
         % 输入:
@@ -558,7 +558,7 @@ classdef UnifiedCostModel < handle
         end
 
         %% ================================================================
-        %%  checkStaticCollision (legacy sampled helper)
+        %%  checkStaticCollision (compatibility sampled helper)
         %% ================================================================
         function collision = checkStaticCollision(obj, p1, p2)
             collision = false;

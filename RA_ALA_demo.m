@@ -280,136 +280,715 @@ for c = 1:nCity
     end
 end
 
-%% =================ï}z¶‰ËkºwµçJNÈ	HØ]™HÙ[XİY]È›Üˆš^Y\]™\ÛÛ][Ûˆ]Y][™Â‚™[—ÜÙYY×İ\ÙYHÍËŒÎMKMLKLLËLŒËMÍKŒÌL‹MŒNÂšYˆ[Y[
-[—ÜÙYY×İ\ÙY
-HH—ÑS•‚ˆ\œ›ÜŠ	ÕHš^YÙXİ[ÛˆKHÛÚÜ]\İÛÛZ[ˆ^XİH	Y[š\›Û›Y[Ë‰Ë—ÑS•ŠNÂ™[™˜ÛÛÚYHÂ™œš[Š	È9fî¹k¦¹ã«ùh ÈÙYYÎˆ	\×‰ËX]œİŠ[—ÜÙYY×İ\ÙY
-JNÂ‚™›Üˆ[—ØÛİ[HN“—ÑS•‚ˆ[—ØØ[™Y]HH[—ÜÙYY×İ\ÙY
-[—ØÛİ[
-NÂˆ›™Ê[—ØØ[™Y]JNÂˆ[—ØÌˆHÚ]Q[š\›Û›Y[
-X\Ú^™KÜšYİ\
-NÂˆ[—ØÌ‹™Ù[™\˜]J	ÚYÚ	ËÚ[™]™[š\ÚÓ]™[[—ØØ[™Y]JNÂˆ[—ØÌ‹œÙ]\ÚÔÚ[Êİ\ÛØ[
-NÂˆÛWØÌˆH[šYšYYÛÜİ[Ù[
+%% ====================================================================
+%%  å›¾1: ä¸åŒå‡ºå‘æ—¶åˆ»è·¯å¾„å¯¹æ¯”
+%% ====================================================================
 
-NÂˆÛWØÌ‹œÙ][š\›Û›Y[
-[—ØÌ‹Ú[™šY[[—ØÌ‹™[“ØœİXÛ\Ë[—ØÌ‹šZYÚX\
-NÂˆØÌˆH][›™\œÊ[—ØÌ‹ÛWØÌŠNÂˆØÌ‹œÙ]YÙ]
-MKLŒ
-NÂˆœš[Š	Èùã«ùh È	YÉYHÙYYIKMY‰Ë[—ØÛİ[—ÑS•‹[—ØØ[™Y]JNÂˆ	H8¥ 8¥ 9a¡yl`ˆ—ÔÑQQ9«(HSH9a¡z`ê9éãykd8¥ 8¥ ˆ›ÜˆÈHN“—ÔÑQQˆÛÛÚYHÛÛÚY
-ÈNÂˆ[×ÜÙYYH[—ØØ[™Y]H
-ÈÈ
-ˆLÎÈ	H9a¡z`ê9éãykd9.#¹ã«ùh ÈÙYY:)èú )‚ˆİ]Ù[ŠÛÛÚY
-HH[—ØØ[™Y]NÂˆİ]Ü˜WÜÙYY
-ÛÛÚY
-HH[×ÜÙYY
-ÈLNÈ	HOLNˆXİX[KPSH›™ÈÙYY‚ˆ›ÜˆHHN›[Âˆ›™Ê[×ÜÙYY
-ÈH
-ˆLJNÂˆBˆİÚ]ÚBˆØ\ÙHH	HKPSNˆ9.#yd#9ã«ùh È
-È9.#yd#9a¡z`ê9éãykdˆÜÜË‹Ü×HH[”WĞSJØÌ‹ÛWØÌ‹[—ØÌ‹‹‹‚ˆİ\ÛØ[YK[WØÙ™×Üİ]
-NÂˆØ\ÙHˆ	H[™\™ŞKPJˆ9èk¹k¦¹ )ûï#9d#9. 9ã«ùh ùa¡yîäù§§9æî9d#ˆÜÜË‹—HHØÌ‹™[™\™ŞPTİ\Šİ\ÛØ[YJNÂˆß‹Ü×HHÛWØÌ‹™]˜[X]T]
-ÜËYJNÂˆØ\ÙHÈ	H[™›Ü›YYT”•
-ˆ9.#yd#9a¡z`ê:aáù¨-ùéãykdˆÜÜË‹—HHØÌ‹š[™›Ü›YY”•İ\Šİ\ÛØ[YKML
-NÂˆß‹Ü×HHÛWØÌ‹™]˜[X]T]
-ÜËYJNÂˆØ\ÙH	HÕQPJˆ9èk¹k¦¹ )ù¥í¹ên¹fï¹¤'9í(‚ˆÜÜË‹—HHØÌ‹[YQ^[™Y[™\™ŞPTİ\Š‹‹‚ˆİ\ÛØ[YKİİ[YWÜİ\İİ[YWÚÜš^›ÛŠNÂˆß‹Ü×HHÛWØÌ‹™]˜[X]T]
-ÜËYJNÂˆØ\ÙHH	HÜ™YYNˆ9èk¹k¦¹ )ÂˆÜÜË‹—HHØÌ‹™Ü™YYT[›™\Šİ\ÛØ[YJNÂˆß‹Ü×HHÛWØÌ‹™]˜[X]T]
-ÜËYJNÂˆ[™ˆİ]ÒŠKÛÛÚY
-HHÜË’—Ùš[˜[Âˆİ]ÑJKÛÛÚY
-HHÜË‘Wİİ[Âˆİ]Ô
-KÛÛÚY
-HHÜËœ[˜[Wİİ[Âˆİ]Ù™X\ÚX›JKÛÛÚY
-HHÙÚXØ[
-ÜË™™X\ÚX›JNÂˆİ]Ü]ŞØKÛÛÚYHHÜÎÂˆØ]Úˆİ]ÒŠKÛÛÚY
-HH˜SÂˆİ]ÑJKÛÛÚY
-HH˜SÂˆİ]Ô
-KÛÛÚY
-HH˜SÂˆİ]Ù™X\ÚX›JKÛÛÚY
-HH˜[ÙNÂˆ[™ˆ[™‚ˆ	H:/æùn©¹§hBˆİHÛÛÚYÓ—ÔÕUÈ›[LŒÈš[Y\›İ[™
-İ
-˜›[ŠNÂˆœš[Š	×ˆÉ\É\×H	L™ÉY
-[‰YÙYY	Y
-IË‹‹‚ˆ™\X]
-	ÈÉËKš[Y
-K™\X]
-	ËIËK›[‹Yš[Y
-K‹‹‚ˆÛÛÚY—ÔÕU[—ØÛİ[ÊNÂˆ[™™[™™œš[Š	×ˆ9¥l9£k¹¥-ºfá¹k£9«åW‰ÊNÂ™œš[Š	È9î¬ùaiyã«ùh ÈÙYYÎˆ	ÊNÂ™œš[Š	ÉY	Ë[—ÜÙYY×İ\ÙY
-NÈœš[Š	×‰ÊNÂ™œš[Š	ÈSH:acyïkˆÜÚ^™OIYX^]\IY
-9îçú+¨z/k¹«(yh§¹o.¹âb
-W‰Ë‹‹‚ˆ[WØÙ™×Üİ]œÜÚ^™K[WØÙ™×Üİ]›X^]\ŠNÂ‚‰H8¥ 8¥ :h§:"lˆ8¥ 8¥ ˜[ĞÛÛÜœ×Üİ]HÌÍHŒLÈŒLÎÈ	HKPSH9î¨‚ˆŒMˆLÌÎÈ	HPJˆ:$çBˆŒMHŒÈŒNÈ	H”•
-ˆ9îïÂˆHŒNMÈ	HÕQPJˆ9í*ÂˆNNNNÈ	HÜ™YYH9àl‚‰IHOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOB‰IH9fïÎˆ9ã«ùh ùî©ùë¬yî¯ùfï‚‰IHOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOBœİ\İšX][Û˜[›Ø\İ™\ÜÊİ]Ò‹İ]ÑKİ]Ù™X\ÚX›Kİ]Ù[‹‹‹ƒBˆ[—ÜÙYY×İ\ÙY[Ó˜[Y\Ë	ÙšYÍ×Ù\İšX][Û˜[Ü›Ø\İ™\ÜËœ™ÉÊNÃB™œš[Š	ÈšYÍÈ
-[\]\İšX][Û˜[›Ø\İ™\ÜÊHØ]™Y‰ÊNÂ‚‰IHOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOB‰IH9fï9g*9/çykf9fî¹k¦ºf'ùb%ùd#¹å,yã«ùh ùî©ú f¹ìnù¡'ùçéyîçú+¨yå'ù¢$8à ‚‰IH9."y.*¹a¡z`ê9éãykd9ab9g*9«ãù.*¹ã«ùh ùa¡z f¹d";ï#9âë9êâù£ª9¥«ycey/cy..ˆL9.*¹gã¹n ¹ã«ùh øà ‚‰H9/çykf9ë+Kz" ¹d#:f'ùb%ù¥l9£k»ï#9/¦ù­¢:'£xà y§`úaãyd£9b!º/ª9ã¡ùk§ºj£9.)y¨/9i#yå*8à ‚›XZ[—ØÛÛ\Ú[Û—ÜØ[\WÜÜXÚ[™×ÛHHÛÜİ[Ù[˜ÛÛ\Ú[Û—ÜØ[\WÜÜXÚ[™ÎÂ›XZ[—ÛZ[—ØÛÛ\Ú[Û—ÜØ[\\ÈHÛÜİ[Ù[›Z[—ØÛÛ\Ú[Û—ÜØ[\\ÎÂœØ]™J	ÜÙXİ[ÛMWÜØ[YWØÛÚÜÙ]K›X]	Ë‹‹‚ˆ	Ù[—ÜÙYY×İ\ÙY	Ë	Üİ]Ù[‰Ë	Üİ]Ü˜WÜÙYY	Ë	Üİ]Ò‰Ë	Üİ]ÑIË	Üİ]Ô	Ë	Üİ]Ù™X\ÚX›IË	Üİ]Ü]ÉË‹‹‚ˆ	Ø[WØÙ™×Üİ]	Ë	Ó—ÑS•‰Ë	Ó—ÔÑQQ	Ë	Ó—ÔÕU	Ë‹‹‚ˆ	ÛX\Ú^™IË	ÙÜšYİ\	Ë	İÚ[™]™[	Ë	Üš\ÚÓ]™[	Ë	Üİ\	Ë	ÙÛØ[	Ë‹‹‚ˆ	Ø[Ó˜[Y\ÉË	Üİİ[YWÜİ\	Ë	Üİİ[YWÚÜš^›Û‰Ë‹‹‚ˆ	ÛXZ[—ØÛÛ\Ú[Û—ÜØ[\WÜÜXÚ[™×ÛIË	ÛXZ[—ÛZ[—ØÛÛ\Ú[Û—ÜØ[\\ÉÊNÂ™œš[Š	ÈÙXİ[ÛˆKHÛÚÜØ]™YˆÙXİ[ÛMWÜØ[YWØÛÚÜÙ]K›X]‰ÊNÂ˜Û\İ\”İ]ÈH[Û\İ\]Ø\™Tİ]\İXÜÊ	ÜÙXİ[ÛMWÜØ[YWØÛÚÜÙ]K›X]	ÊNÂœİÛ\İ\]Ø\™Tİ]\İXÜÊÛ\İ\”İ]Ë	ÙšYÎÜİ]\İXØ[ÜÚYÛšYšXØ[˜ÙKœ™ÉÊNÂ‚‚‰IHOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOB‰IH9­¢:'£yk§ºj£
-šYÎJB‰IH:+¯º+¨{ï&¹«ãù«(ycê¹alúeëy. 9.*¹îá9.í»ï#9.#¹k£9¥mKPSH9kîy«å8à ‚‰IH9.*¹§"y¥b9cæ9/dûï&‚‰IHLHËÛÈÛ[Ûİ8 %9c®ù£¢ynlù®äyn©¹kï9d$zhnH3­ÜÛ[Ûİ‰IHLˆËÛÈXYÚ[™8 %9c®ù£¢z`!ºhã¹bcyç®ùkï9d$zhnH×ÚXYÚ[™‰IHLÈËÛÈ[šYšYY]˜[8 %:-ìú/áÈÜRÈ9îçù. :aãz+á9/,;ï#9æí9£©z/¤ùaîˆ˜]Â‰IB‰IH:+¯º+¨Nˆ9.)y¨/9i#yå*9i&¹ã«ùh ùîçú+¨yk§ºj£;ï"ÙXİ[ÛˆK{ï"yæ¡:acykîy¨-ù§+‰IH9i%¹l`¹æí9£©y/oùå*[—ÜÙYY×İ\ÙY;ï#9.#ya£y..¹­¢:'£yâë9êâùëfú`"yã«ùh Â‰IH9a¡yl`¹æí9£©y/oùå*İ]Ü˜WÜÙYY;ï#9.#y¥.ycæKPSH9æ¡:f£ù§.º/áùê"Â‰IH[9.#¹¢`9§"y­¢:'£ycæ9/dùgaù/oùå*[WØÙ™×Üİ]9æ¡9æî9d#:+¨yë¥úh¡9ë¥Â‰IH9fè9«i[KPSH9n¥:`$9¨b9/¢ùi#yã¬ÙXİ[ÛˆKH9æ¡KPSH9îäù§§‰IHOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOB‚™œš[Š	×¸¥ x¥ x¥ HX›][ÛˆİYH
-šYÎJNˆÛÛ\Û™[ÛÛšX][Ûˆ[˜[\Ú\È8¥ x¥ x¥ W‰ÊNÂ‚“—ĞP“ÑS•ˆH—ÑS•È	H9.#ˆÙXİ[ÛˆKH9k£9aj9. :!í“—ĞP“Ô‘TH—ÔÑQQÈ	H9.#ˆÙXİ[ÛˆKH9k£9aj9. :!í“—ĞP“H—ÔÕUÈ	H9d#9. 9¢nHL9ã«ùh È0åÈÈ9éãykdHÌ9.*ºacykîy¨b9/¢Â™œš[Š	È:+¯º+¨Nˆ9.)y¨/9i#yå*ÙXİ[ÛˆKH
-	Y9ã«ùh È0åÈ	Y9éãykdIY
-W‰Ë‹‹‚ˆ—ĞP“ÑS•‹—ĞP“Ô‘T—ĞP“
-NÂ‚˜X›][Û“˜[Y\ÈHÉÑ[KPSIË	İËÛÈÛ[Ûİ	Ë‹‹‚ˆ	İËÛÈXYÚ[™İZY[˜ÙIË	İËÛÈ[šYšYY]˜[	ßNÂ‰H9­¢:'£ycæ9/dú+í9¦#»ï&‚‰H[KPSH8 %9k£9¥m9¥®y¬å{ï"9gî¹aá»ï"B‰HËÛÈÛ[Ûİ8 %9c®ù£¢H]˜[WİŒˆ9nlù®äyn©¹kï9d$yïfºhnB‰HËÛÈXYÚ[™8 %9l!ˆÚ[™ÛÚØZXY:+¯¹..ˆ;ï#9c®ù£¢z`!ºhã¹bcyç®ùkï9d$zhnB‰HËÛÈ[šYšYY]˜[8 %9c®ù£¢yîçù. :aãz+á9/,;ï#9æí9£©z/¤ùaîˆ]˜[WİŒˆ9a¡z`ê:` ¹n¥9n©‚‰H9§ 9/&:-ëùo¡;ï"˜]ûï"{ï#9.#yîãú/áÈÜRÈ9«å:/ È˜]ÈœÈÛ[Ûİ8à ‚‰H:+ày¦#ˆ¹îçù. :+á9/,:jlybª¹æ¡9k§º-*:-(yã+»ï&‚‰H:"éya¡z`ê:` ¹n¥9n©¹cèùo¡9.#¹¢©ydb¹cèùo¡9.#y. :!í;ï#9¤'9í(¹b,9æ¡¹§ 9/&:-ëùo¡‚‰H9g*9îçù. :+á9/,9."ù§*¹oáyç'ùæ¡9§ 9/&8à ‚›X›H[™İ
-X›][Û“˜[Y\ÊNÂ‚‰H8¥ 8¥ 9­¢:'£yå*SH:acyïk»ï&¹.)y¨/9i#yå*ÙXİ[ÛˆKH9æ¡:+¨yë¥úh¡9ë¥È8¥ 8¥ ˜Ù™×ØX›Ø˜\ÙHH[WØÙ™×Üİ]È	HÜÚ^™OMX^]\N™\ØİYWÛX^Ú[œÏLL‚‚‰H8¥ 8¥ 9§¡9nî¹d!9cæ9/dÈÙ™È8¥ 8¥ ˜Ù™Ü×ØX›HÙ[
-X›JNÂ™›ÜˆXHHN›X›ˆÙ™Ü×ØX›ØX_HHÙ™×ØX›Ø˜\ÙNÂ™[™˜Ù™Ü×ØX›ÌŸK˜X›]WÜÛ[Ûİ[˜[HHYNÂ˜Ù™Ü×ØX›ÌßKÚ[™ÛÚØZXYHÂ˜Ù™Ü×ØX›ÍK˜X›]Wİ[šYšYY]˜[HYNÂ‚‰H8¥ 8¥ 9.)y¨/9i#yå*ÙXİ[ÛˆKH9æ¡9ã«ùh ù.#ˆKPSH9a¡z`ê:f£ù§.¹éãykd8¥ 8¥ šYˆ™^\İ
-	Ù[—ÜÙYY×İ\ÙY	Ë	İ˜\‰ÊH[Y[
-[—ÜÙYY×İ\ÙY
-HH—ĞP“ÑS•‚ˆ\œ›ÜŠ	ĞX›][Ûˆ™\]Z\™\ÈH	Y[š\›Û›Y[ÙYYÈ›ÙXÙYHÙXİ[ÛˆKK‰Ë—ĞP“ÑS•ŠNÂ™[™šYˆ™^\İ
-	Üİ]Ü˜WÜÙYY	Ë	İ˜\‰ÊH[Y[
-İ]Ü˜WÜÙYY
-HH—ĞP“ˆ\œ›ÜŠ	ĞX›][Ûˆ™\]Z\™\ÈH	YKPSH[ˆÙYYÈ™XÛÜ™Y[ˆÙXİ[ÛˆKK‰Ë—ĞP“
-NÂ™[™˜X›Ù[—ÜÙYYÈH[—ÜÙYY×İ\ÙYÂ˜X›Ü[—ÜÙYYÈHİ]Ü˜WÜÙYYÂ™œš[Š	È9i#yå*9ã«ùh ÈÙYYÎˆ	\×‰ËX]œİŠX›Ù[—ÜÙYYÊJNÂ™œš[Š	È9i#yå*KPSH[ˆÙYYÎˆ	\×—‰ËX]œİŠX›Ü[—ÜÙYYÊJNÂ‚‰H8¥ 8¥ 9îäù§§9çêzf-H8¥ 8¥ ˜X›ÒˆH™\›ÜÊX›—ĞP“
-NÂ˜X›ÑHH™\›ÜÊX›—ĞP“
-NÂ˜X›ÕH™\›ÜÊX›—ĞP“
-NÂ˜X›ÔˆH™\›ÜÊX›—ĞP“
-NÂ˜X›Ô[ˆH™\›ÜÊX›—ĞP“
-NÂ˜X›Ù™X\ÚX›HH˜[ÙJX›—ĞP“
-NÂ‚‰H8¥ 8¥ 9«hùo#ú/ä:(c8¥ 8¥ ™›ÜˆXHHN›X›ˆœš[Š	ÈÉYÉYH	KLŒÎˆ	ËXKX›X›][Û“˜[Y\ŞØX_JNÂˆÛÛHÂˆ›ÜˆZHHN“—ĞP“ÑS•‚ˆ	H:aãynî¹kîyn¥9ã«ùh Âˆ›™ÊX›Ù[—ÜÙYYÊZJJNÂˆ[—Ü[ˆHÚ]Q[š\›Û›Y[
-X\Ú^™KÜšYİ\
-NÂˆ[—Ü[‹™Ù[™\˜]J	ÚYÚ	ËÚ[™]™[š\ÚÓ]™[X›Ù[—ÜÙYYÊZJJNÂˆ[—Ü[‹œÙ]\ÚÔÚ[Êİ\ÛØ[
-NÂˆÛWÜ[ˆH[šYšYYÛÜİ[Ù[
+fprintf('\nç”Ÿæˆå›¾è¡¨...\n');
 
-NÂˆÛWÜ[‹œÙ][š\›Û›Y[
-[—Ü[‹Ú[™šY[[—Ü[‹™[“ØœİXÛ\Ë[—Ü[‹šZYÚX\
-NÂˆÜ[ˆH][›™\œÊ[—Ü[‹ÛWÜ[ŠNÂˆÜ[‹œÙ]YÙ]
-MKLŒ
-NÂ‚ˆ›ÜˆšHHN“—ĞP“Ô‘TˆÛÛHÛÛ
-ÈNÂˆ	HX]ÚHÙXİ[ÛˆKHKPSHÙYY^XİNÈ[˜\šX[ÈÚ\™H]‚ˆ›™ÊX›Ü[—ÜÙYYÊÛÛ
-JNÂˆBˆß‹‹]ØX›HH[”WĞSJÜ[‹ÛWÜ[‹[—Ü[‹‹‹‚ˆİ\ÛØ[YKÙ™Ü×ØX›ØX_JNÂˆX›ÒŠXKÛÛ
-HH]ØX›’—Ùš[˜[ÂˆX›ÑJXKÛÛ
-HH]ØX›‘Wİİ[ÂˆX›Õ
-XKÛÛ
-HH]ØX›•İİ[ÂˆX›ÔŠXKÛÛ
-HH]ØX›”—Ù[˜[ZXÎÂˆX›Ô[ŠXKÛÛ
-HH]ØX›œ[˜[Wİİ[ÂˆX›Ù™X\ÚX›JXKÛÛ
-HHÙÚXØ[
-]ØX›™™X\ÚX›JNÂˆØ]ÚˆX›ÒŠXKÛÛ
-HH˜SÈX›ÑJXKÛÛ
-HH˜SÂˆX›Õ
-XKÛÛ
-HH˜SÈX›ÔŠXKÛÛ
-HH˜SÈX›Ô[ŠXKÛÛ
-HH˜SÂˆX›Ù™X\ÚX›JXKÛÛ
-HH˜[ÙNÂˆ[™ˆİHÛÛÓ—ĞP“È›[ˆHMNÈš[YH›İ[™
-İ
-˜›[ŠNÂˆœš[Š	×ˆÉYÉYH	KLŒÎˆÉ\É\×H	L™ÉY	ËXKX›‹‹‚ˆX›][Û“˜[Y\ŞØX_K™\X]
-	ø¥¢	ËKš[Y
-K‹‹‚ˆ™\X]
-	ø¥¤IËK›[‹Yš[Y
-KÛÛ—ĞP“
-NÂˆ[™ˆ[™ˆœš[Š	×ˆÉYÉYH	KLŒÎˆIKŒY°¬IKŒYˆOIKŒY°¬IKŒYˆ[IKŒÙ—‰Ë‹‹‚ˆXKX›X›][Û“˜[Y\ŞØX_K‹‹‚ˆYX[ŠX›ÒŠXKŠK	ÛÛZ]˜[‰ÊKİ
-X›ÒŠXKŠK	ÛÛZ]˜[‰ÊK‹‹‚ˆYX[ŠX›ÑJXKŠK	ÛÛZ]˜[‰ÊKİ
-X›ÑJXKŠK	ÛÛZ]˜[‰ÊK‹‹‚ˆYX[ŠX›Ô[ŠXKŠK	ÛÛZ]˜[‰ÊJNÂ™[™‚‰H[KPSHÚİ[™\›ÙXÙHÙXİ[ÛˆKHØ\ÙHHØ\ÙK‚œØ[YWÛ˜[—ÒˆH\Ù\]X[
-\Û˜[ŠX›ÒŠKŠJK\Û˜[Šİ]ÒŠKŠJJNÂœØ[YWÛ˜[—ÑHH\Ù\]X[
-\Û˜[ŠX›ÑJKŠJK\Û˜[Šİ]ÑJKŠJJNÂœØ[YWÛ˜[—ÔH\Ù\]X[
-\Û˜[ŠX›Ô[ŠKŠJK\Û˜[Šİ]Ô
-KŠJJNÂœØ[YWÙ™X\ÚX›HH\Ù\]X[
-X›Ù™X\ÚX›JKŠKİ]Ù™X\ÚX›JKŠJNÂ›X^ÙY™—ÒˆHX^
-XœÊX›ÒŠKŠHHİ]ÒŠKŠJK×K	ÛÛZ]˜[‰ÊNÂ›X^ÙY™—ÑHHX^
-XœÊX›ÑJKŠHHİ]ÑJKŠJK×K	ÛÛZ]˜[‰ÊNÂ›X^ÙY™—ÔHX^
-XœÊX›Ô[ŠKŠHHİ]Ô
-KŠJK×K	ÛÛZ]˜[‰ÊNÂœ™\›×İÛHYKNNÂšYˆØ[YWÛ˜[—Òˆ	‰ˆØ[YWÛ˜[—ÑH	‰ˆØ[YWÛ˜[—Ô	‰ˆØ[YWÙ™X\ÚX›H	‰ˆ‹‹‚ˆX^ÙY™—ÒˆH™\›×İÛ	‰ˆX^ÙY™—ÑHH™\›×İÛ	‰ˆX^ÙY™—ÔH™\›×İÛˆœš[Š	×ˆùi#yã¬9¨à9§éWHTÔÎˆ[KPSH9.#ˆÙXİ[ÛˆKH9æ¡Ì9.*¹îäù§§:`$9¨b9/¢ù. :!í8à —‰ÊNÂ™[ÙBˆØ\›š[™ÊÉÑ[KPSHY›İ^XİH™\›ÙXÙHÙXİ[ÛˆKNˆ	Ë‹‹‚ˆ	ÛX^ŸIKŒÙËX^_IKŒÙËX^[ŸIKŒÙË‰×K‹‹‚ˆX^ÙY™—Ò‹X^ÙY™—ÑKX^ÙY™—Ô
-NÂ™[™‚‰H8¥ 8¥ 9¢dùcl9doy.é:(c9¬aù .ú(j8¥ 8¥ ™œš[Š	×¸¥e8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥e×‰ÊNÂ™œš[Š	ø¥dH9­¢:'£yk§ºj£9¬aù .È
-	Y9ã«ùh ğåÉY9éãykdSIYYÚ9i#y§`¹n©‹L
-H8¥dW‰Ë—ĞP“ÑS•‹—ĞP“Ô‘T—ĞP“
-NÂ™œš[Š	ø¥h8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥i¸¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥i¸¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥i¸¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥i¸¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥i¸¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥h×‰ÊNÂ™œš[Š	ø¥dH9cæ9/dÈ8¥dHˆ
-9gaù`/
-x¥dHH
-Ú
-H8¥dH:hãºfjH8¥dH9 êyïfˆ8¥dH9.#ycëú(c9ã¡ø¥dW‰ÊNÂ™œš[Š	ø¥h8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥k8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥k8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥k8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥k8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥k8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥h×‰ÊNÂ™›ÜˆXHHN›X›ˆ™[H	ÉÎÂˆYˆXHˆBˆ[WÒˆH
-YX[ŠX›ÒŠXKŠK	ÛÛZ]˜[‰ÊHHYX[ŠX›ÒŠKŠK	ÛÛZ]˜[‰ÊJH‹‹‚ˆÈYX[ŠX›ÒŠKŠK	ÛÛZ]˜[‰ÊH
-ˆLÂˆ™[HÜš[Š	È
-	JËŒY‰IJIË[WÒŠNÂˆ[™ˆ[™™X\×Ü˜]HHİ[J˜X›Ù™X\ÚX›JXKŠJHÈ—ĞP“
-ˆLÂˆœš[Š	ø¥dH	KLŒø¥dH	M‹Œ™‰KLÜø¥dH	M‹Œ™ˆ8¥dH	M‹ˆ8¥dH	M‹ˆ8¥dH	MŒ‰IH8¥dW‰Ë‹‹‚ˆX›][Û“˜[Y\ŞØX_K‹‹‚ˆYX[ŠX›ÒŠXKŠK	ÛÛZ]˜[‰ÊK™[‹‹‚ˆYX[ŠX›ÑJXKŠK	ÛÛZ]˜[‰ÊK‹‹‚ˆYX[ŠX›ÔŠXKŠK	ÛÛZ]˜[‰ÊK‹‹‚ˆYX[ŠX›Ô[ŠXKŠK	ÛÛZ]˜[‰ÊK[™™X\×Ü˜]JNÂ™[™™œš[Š	ø¥f¸¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥jx¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥jx¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥jx¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥jx¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥jx¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥gW‰ÊNÂ™œš[Š	È9¬êˆ9.#ycëú(c9ã¡ù£"y.)y¨/9¨!ùaáº+¨yë¥ûï&¹.îù. 9èk9î©¹§gú/çz)á9¢%º/ä:(c9i,z-)ygaù.#ycëú(c;ï&ùæî9kîycæ9c%ˆHœÈ[KPSH9gaù`/‰ÊNÂ™œš[Š	È9k§ºj£:+¯º+¨Nˆ9.)y¨/9i#yå*ÙXİ[ÛˆKH9æ¡9ã«ùh øà TKPSH9éãykd9.#º+¨yë¥úh¡9ë¥×‰ÊNÂ™œš[Š	ÈSyk®zaãÎˆÜÚ^™OIYX^]\IY‰ËÙ™×ØX›Ø˜\ÙKœÜÚ^™KÙ™×ØX›Ø˜\ÙK›X^]\ŠNÂ‚‰IH8¥ 8¥ 9îæ9b-ˆšYÎH8¥ 8¥ œİX›][Û”İYQšYİ\™JX›Ò‹X›ÑKX›ÕX›Ô‹X›Ô[‹‹‹‚ˆX›][Û“˜[Y\Ë—ĞP“	ÙšYÎWØX›][Û—ÜİYKœ™ÉÊNÂ‚œØ]™J	ÙšYÎWØX›][Û—ÜØ[YWØÛÚÜÙ]K›X]	Ë‹‹‚ˆ	ØX›Ò‰Ë	ØX›ÑIË	ØX›Õ	Ë	ØX›Ô‰Ë	ØX›Ô[‰Ë	ØX›Ù™X\ÚX›IË	ØX›][Û“˜[Y\ÉË‹‹‚ˆ	ØX›Ù[—ÜÙYYÉË	ØX›Ü[—ÜÙYYÉË	ØÙ™×ØX›Ø˜\ÙIË‹‹‚ˆ	Üİ]Ò‰Ë	Üİ]ÑIË	Üİ]Ô	Ë	Üİ]Ù™X\ÚX›IË	Üİ]Ù[‰Ë	Üİ]Ü˜WÜÙYY	Ë‹‹‚ˆ	Ó—ĞP“ÑS•‰Ë	Ó—ĞP“Ô‘T	Ë	Ó—ĞP“	ÊNÂ™œš[Š	ÈšYÎHZ\™Y˜]È]HØ]™YˆšYÎWØX›][Û—ÜØ[YWØÛÚÜÙ]K›X]‰ÊNÂ™œš[Š	ÈšYÎH
-X›][ÛˆİYHHÛÛ\Û™[ÛÛšX][ÛŠHØ]™Y‰ÊNÂ‚‰IHOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOB‰IH™]šY]Ù\‹\™\]Y\İYÛÜİ]ÙZYÚÙ[œÚ]]š]H[˜[\Ú\Â‰IH\Ù\ÈÛ™H™K\ÜXÚYšYYÙYYœ›ÛHXXÚÙˆHØ[YHLÙXİ[ÛˆKB‰IH[š\›Û›Y[Ëˆ˜]Èˆ\ÈÛÛ\\™YÛ›HÚ][ˆHš^YÙZYÚÙ][™Ë‚‰IHOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOBšYˆ•S—ÕÑRQÒÔÑS”ÒUU’UBˆ[•ÙZYÚÙ[œÚ]]š]P[˜[\Ú\Ê	ÜÙXİ[ÛMWÜØ[YWØÛÚÜÙ]K›X]	ÊNÂ™[™šYˆ•S—ÔÔUPSÔ‘TÓÓUSÓ—ÔÑS”ÒUU’UBˆ[”Ü]X[™\ÛÛ][Û”Ù[œÚ]]š]J	ÜÙXİ[ÛMWÜØ[YWØÛÚÜÙ]K›X]	ÊNÂ™[™‚‚™œš[Š	×¹aj:`ê9k£9¢$W‰ÊNÂ‚‰IHOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOB‰IHKPSH9¨.9oàùë¥ù¬åyaïy¥l‰IHOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOB
+buildings = env.buildings;
+movObs    = env.dynObstacles.movingObs;
+tempNFZ   = env.dynObstacles.tempNFZ;
+
+departColors = [
+    0.15, 0.30, 0.75;
+    0.20, 0.60, 0.65;
+    0.30, 0.75, 0.35;
+    0.85, 0.60, 0.15;
+    0.85, 0.15, 0.15;
+];
+
+fig1 = figure('Units','centimeters','Position',[0.5 0.5 26 24],'Color','w');
+hold on; axis equal;
+set(gca, 'FontSize', 13, 'FontName', 'Times New Roman');
+
+for i = 1:size(buildings,1)
+    cx=buildings(i,1); cy=buildings(i,2); bh=buildings(i,3);
+    hw=buildings(i,4); hh=buildings(i,5);
+    gv = max(0.4, 0.88 - bh/200);
+    rectangle('Position',[cx-hw,cy-hh,2*hw,2*hh], ...
+        'FaceColor',[gv gv gv+0.02 0.75], 'EdgeColor',[0.35 0.35 0.35], 'LineWidth', 0.3);
+end
+for i = 1:length(tempNFZ)
+    nfz = tempNFZ(i);
+    theta = linspace(0,2*pi,60);
+    fill(nfz.center(1)+nfz.radius*cos(theta), nfz.center(2)+nfz.radius*sin(theta), ...
+        [1 0.2 0.2], 'FaceAlpha', 0.15, 'EdgeColor','r', 'LineWidth',1.2, 'LineStyle','--');
+    text(nfz.center(1), nfz.center(2), sprintf('NFZ%d',i), ...
+        'HorizontalAlignment','center','FontSize',10,'Color',[0.7 0 0],'FontWeight','bold');
+end
+for d = 1:nDepart
+    t_dep = departureTimes(d);
+    for i = 1:length(movObs)
+        pos = env.dynObstacles.getPosition(i, t_dep);
+        theta = linspace(0,2*pi,20);
+        r = movObs(i).radius;
+        plot(pos(1)+r*cos(theta), pos(2)+r*sin(theta), '-', ...
+            'Color', [departColors(d,:) 0.35], 'LineWidth', 0.7);
+    end
+end
+hPaths = zeros(nDepart, 1);
+for d = 1:nDepart
+    p = exp1_paths{d};
+    if isempty(p), continue; end
+    hPaths(d) = plot(p(:,1), p(:,2), '-', 'Color', departColors(d,:), 'LineWidth', 2.5);
+end
+plot(startPt(1),startPt(2),'p','MarkerSize',16,'MarkerFaceColor',[0 0.75 0],'MarkerEdgeColor','k','LineWidth',1.2);
+plot(goalPt(1),goalPt(2),'h','MarkerSize',16,'MarkerFaceColor',[1 0 0],'MarkerEdgeColor','k','LineWidth',1.2);
+text(startPt(1)+25, startPt(2)-30, 'Start', 'FontSize', 14, 'FontWeight','bold');
+text(goalPt(1)-70, goalPt(2)+25, 'Goal', 'FontSize', 14, 'FontWeight','bold');
+legend(hPaths(hPaths>0), departLabels(hPaths>0), 'Location','northwest', 'FontSize', 12, 'Box','on');
+xlabel('X (m)','FontSize',14); ylabel('Y (m)','FontSize',14);
+title({'Temporal Adaptation of RA-ALA under Different Departure Times', ...
+       'Same origin & destination, different time-varying environments'}, ...
+    'FontSize', 16, 'FontWeight', 'bold');
+xlim([0 mapSize]); ylim([0 mapSize]); grid on; box on;
+exportPublicationFigure(fig1, 'fig1_temporal_adaptation.png');
+fprintf('  fig1 (Temporal Adaptation) saved\n');
+
+%% ====================================================================
+%%  å›¾2: é£åœºå¿«ç…§ + è·¯å¾„
+%% ====================================================================
+
+fig2 = figure('Units','centimeters','Position',[0.5 0.5 38 26],'Color','w');
+showTimes = [1, 3, 5];
+for si = 1:3
+    d = showTimes(si); t_dep = departureTimes(d);
+    subplot(2, 3, si); hold on; axis equal;
+    set(gca, 'FontSize', 11, 'FontName', 'Times New Roman');
+    for i = 1:size(buildings,1)
+        cx=buildings(i,1); cy=buildings(i,2); hw=buildings(i,4); hh=buildings(i,5);
+        rectangle('Position',[cx-hw,cy-hh,2*hw,2*hh], ...
+            'FaceColor',[0.78 0.78 0.78 0.8], 'EdgeColor',[0.5 0.5 0.5], 'LineWidth',0.2);
+    end
+    wStep = 60;
+    [wx_g,wy_g] = meshgrid(wStep:wStep:mapSize-wStep, wStep:wStep:mapSize-wStep);
+    wu_g = zeros(size(wx_g)); wv_g = zeros(size(wy_g));
+    for ii = 1:numel(wx_g)
+        w = env.windField.getWind(wx_g(ii), wy_g(ii), 60, t_dep);
+        wu_g(ii) = w(1); wv_g(ii) = w(2);
+    end
+    quiver(wx_g,wy_g,wu_g,wv_g, 1.2, 'Color',[0.4 0.6 0.9 0.5], 'LineWidth',0.5);
+    for i = 1:length(movObs)
+        pos = env.dynObstacles.getPosition(i, t_dep);
+        theta = linspace(0,2*pi,20);
+        fill(pos(1)+movObs(i).radius*cos(theta), pos(2)+movObs(i).radius*sin(theta), ...
+            [1 0.6 0.2], 'FaceAlpha',0.5, 'EdgeColor',[0.85 0.45 0], 'LineWidth',0.6);
+    end
+    for i = 1:length(tempNFZ)
+        nfz = tempNFZ(i);
+        if t_dep >= nfz.t_start && t_dep <= nfz.t_end
+            theta = linspace(0,2*pi,40);
+            fill(nfz.center(1)+nfz.radius*cos(theta), nfz.center(2)+nfz.radius*sin(theta), ...
+                [1 0.15 0.15], 'FaceAlpha',0.2, 'EdgeColor','r', 'LineWidth',1, 'LineStyle','--');
+        end
+    end
+    p = exp1_paths{d};
+    if ~isempty(p), plot(p(:,1), p(:,2), '-', 'Color', departColors(d,:), 'LineWidth', 2.5); end
+    plot(startPt(1),startPt(2),'p','MarkerSize',10,'MarkerFaceColor',[0 0.7 0],'MarkerEdgeColor','k');
+    plot(goalPt(1),goalPt(2),'h','MarkerSize',10,'MarkerFaceColor',[1 0 0],'MarkerEdgeColor','k');
+    title(sprintf('Wind & Obstacles at %s', departLabels{d}), 'FontSize', 13, 'FontWeight','bold');
+    xlabel('X (m)'); ylabel('Y (m)'); xlim([0 mapSize]); ylim([0 mapSize]); grid on; box on;
+end
+for si = 1:3
+    d = showTimes(si);
+    subplot(2, 3, 3+si); hold on; set(gca, 'FontSize', 11, 'FontName', 'Times New Roman');
+    p = exp1_paths{d};
+    if ~isempty(p)
+        cumDist = zeros(size(p,1),1);
+        for k=2:size(p,1), cumDist(k)=cumDist(k-1)+norm(p(k,1:2)-p(k-1,1:2)); end
+        plot(cumDist, p(:,3), '-', 'Color', departColors(d,:), 'LineWidth', 2);
+    end
+    yline(30,'k--','LineWidth',0.6); yline(120,'k--','LineWidth',0.6);
+    xlabel('Horizontal Distance (m)'); ylabel('Altitude (m)');
+    title(sprintf('Altitude Profile (%s)', departLabels{d}), 'FontSize', 13, 'FontWeight','bold');
+    grid on; box on; ylim([0 160]);
+end
+sgtitle('Spatial-Temporal Environment Dynamics and Adaptive Path Generation', ...
+    'FontSize', 16, 'FontWeight', 'bold');
+exportPublicationFigure(fig2, 'fig2_spatiotemporal_dynamics.png');
+fprintf('  fig2 (Spatio-Temporal Dynamics) saved\n');
+
+%% ====================================================================
+%%  å›¾3: RA-ALA vs åŸºçº¿
+%% ====================================================================
+
+fig3 = figure('Units','centimeters','Position',[0.5 0.5 36 16],'Color','w');
+subplot(1, 2, 1); hold on; axis equal; set(gca, 'FontSize', 13, 'FontName', 'Times New Roman');
+for i = 1:size(buildings,1)
+    cx=buildings(i,1); cy=buildings(i,2); hw=buildings(i,4); hh=buildings(i,5); bh=buildings(i,3);
+    gv = max(0.4, 0.88-bh/200);
+    rectangle('Position',[cx-hw,cy-hh,2*hw,2*hh],'FaceColor',[gv gv gv 0.7],'EdgeColor',[0.35 0.35 0.35],'LineWidth',0.3);
+end
+for i = 1:length(tempNFZ)
+    nfz = tempNFZ(i); theta = linspace(0,2*pi,50);
+    fill(nfz.center(1)+nfz.radius*cos(theta), nfz.center(2)+nfz.radius*sin(theta), ...
+        [1 0.2 0.2], 'FaceAlpha',0.15, 'EdgeColor','r', 'LineWidth',1, 'LineStyle','--');
+end
+for i = 1:length(movObs)
+    pos = env.dynObstacles.getPosition(i, 0); theta = linspace(0,2*pi,20);
+    fill(pos(1)+movObs(i).radius*cos(theta), pos(2)+movObs(i).radius*sin(theta), ...
+        [1 0.6 0.2], 'FaceAlpha',0.45, 'EdgeColor',[0.8 0.4 0], 'LineWidth',0.6);
+end
+hp = zeros(nAlg,1);
+for a = 1:nAlg
+    p = exp2_paths{a};
+    if isempty(p), continue; end
+    hp(a) = plot(p(:,1), p(:,2), algStyles{a}, 'Color', algColors(a,:), 'LineWidth', algWidths(a));
+end
+plot(startPt(1),startPt(2),'p','MarkerSize',14,'MarkerFaceColor',[0 0.7 0],'MarkerEdgeColor','k');
+plot(goalPt(1),goalPt(2),'h','MarkerSize',14,'MarkerFaceColor',[1 0 0],'MarkerEdgeColor','k');
+legend(hp(hp>0), algNames(hp>0), 'Location','northwest', 'FontSize', 12);
+% åŒæ­¥åŠ å¤§ legend å†…çº¿æ®µé•¿åº¦
+lgd2d = findobj(gca,'Type','Legend');
+if ~isempty(lgd2d), lgd2d(1).ItemTokenSize = [38, 18]; end
+xlabel('X (m)','FontSize',14); ylabel('Y (m)','FontSize',14); title('2D Path Comparison (t=0)', 'FontSize', 15, 'FontWeight','bold');
+xlim([0 mapSize]); ylim([0 mapSize]); grid on; box on;
+
+subplot(1, 2, 2); hold on; set(gca, 'FontSize', 13, 'FontName', 'Times New Roman');
+% â”€â”€ é¡¶åˆŠé£æ ¼åŸå¸‚å»ºæ¨¡: å®å¿ƒé˜´å½±æ¥¼ä½“ (æ›¿ä»£åŸåŠé€æ˜çº¿æ¡†) â”€â”€
+set(gcf, 'Renderer', 'opengl');
+for i = 1:size(buildings,1)
+    cx=buildings(i,1); cy=buildings(i,2); bh=buildings(i,3); hw=buildings(i,4); hh=buildings(i,5);
+    vx=[cx-hw cx+hw cx+hw cx-hw cx-hw cx+hw cx+hw cx-hw];
+    vy=[cy-hh cy-hh cy+hh cy+hh cy-hh cy-hh cy+hh cy+hh];
+    vz=[0 0 0 0 bh bh bh bh];
+    faces=[1 2 3 4; 5 6 7 8; 1 2 6 5; 2 3 7 6; 3 4 8 7; 4 1 5 8];
+    gv = 0.86 - 0.12*min(bh/180, 1);              % æµ…ç°æ¥¼ä½“: 0.74(é«˜)~0.86(çŸ®), é¿å…èƒŒå…‰é¢å‘é»‘
+    patch('Vertices',[vx' vy' vz'],'Faces',faces, ...
+        'FaceColor',[gv gv gv*1.02], 'FaceAlpha',0.82, ...   % ç•¥é€æ˜, è·¯å¾„ä¸çºµæ·±æ›´æ¸…æ™°
+        'EdgeColor',[0.45 0.45 0.48], 'LineWidth',0.3, ...
+        'FaceLighting','flat','AmbientStrength',0.72, ...     % é«˜ç¯å¢ƒå…‰: èƒŒå…‰é¢ä¸å†å‘é»‘
+        'DiffuseStrength',0.45,'SpecularStrength',0.10, ...   % å¼±æ–¹å‘å…‰: æ˜æš—å¯¹æ¯”æŸ”å’Œ
+        'BackFaceLighting','lit','HandleVisibility','off');
+end
+hp3d = zeros(nAlg,1);
+for a = 1:nAlg
+    p = exp2_paths{a};
+    if isempty(p), continue; end
+    hp3d(a) = plot3(p(:,1),p(:,2),p(:,3), algStyles{a}, 'Color', algColors(a,:), 'LineWidth', algWidths(a));
+end
+plot3(startPt(1),startPt(2),startPt(3),'p','MarkerSize',12,'MarkerFaceColor',[0 0.7 0],'MarkerEdgeColor','k','HandleVisibility','off');
+plot3(goalPt(1),goalPt(2),goalPt(3),'h','MarkerSize',12,'MarkerFaceColor',[1 0 0],'MarkerEdgeColor','k','HandleVisibility','off');
+xlabel('X (m)','FontSize',14); ylabel('Y (m)','FontSize',14); zlabel('Z (m)','FontSize',14);
+title('3D Path Comparison (t=0)', 'FontSize', 15, 'FontWeight','bold');
+lgd3d = legend(hp3d(hp3d~=0), algNames(hp3d~=0), 'Location','northeast', 'FontSize', 12);
+% åŠ å¤§ legend å†…çº¿æ®µé•¿åº¦ï¼Œä½¿ LineStyle (--, -., :) åœ¨å›¾ä¾‹ä¸­æ¸…æ™°å¯è¾¨
+lgd3d.ItemTokenSize = [38, 18];
+view(35,28); grid on; box on; xlim([0 mapSize]); ylim([0 mapSize]); zlim([0 200]);
+set(gca,'ZTick',0:100:200);          % Z è½´åˆ»åº¦é—´éš” 50â†’100
+pbaspect([1 1 0.5]);                  % æŠŠ Z å‹æ‰åˆ° 0.5Ã—: æ¥¼çœ‹èµ·æ¥æ›´çŸ®(æ•°å€¼è¶Šå°è¶Šæ‰; æƒ³æ›´æ‰ç”¨ 0.35)
+% å…‰ç…§: æ–œä¸Šæ–¹ä¸»å…‰è®©æ¥¼ä½“å„é¢äº§ç”Ÿæ˜æš—å·® â†’ ç«‹ä½“å®å¿ƒæ„Ÿ (é¡¶åˆŠé£æ ¼çš„å…³é”®)
+camlight(35, 55);
+sgtitle('Path Planning Quality Comparison: RA-ALA vs. Baseline Algorithms (High Urban Complexity)', 'FontSize', 17, 'FontWeight','bold');
+exportPublicationFigure(fig3, 'fig3_path_quality_comparison.png');
+fprintf('  fig3 (Path Quality Comparison) saved\n');
+
+%% ====================================================================
+%%  å›¾4: æ€§èƒ½æŸ±çŠ¶å›¾
+%% ====================================================================
+
+fig4 = figure('Units','centimeters','Position',[0.5 0.5 32 18],'Color','w');
+metricTitles = {'Unified Cost J', 'Energy (Wh)', 'Flight Time (s)', 'Dynamic Risk'};
+% æ ‡è®°å“ªäº›å­å›¾éœ€è¦å¯¹æ•° Y è½´ï¼ˆæ•°æ®è·¨åº¦å¤§çš„ï¼‰
+metricUseLog = [true, false, false, true];
+
+metricData = zeros(nCity, nAlg, 4);
+for c = 1:nCity
+    for a = 1:nAlg
+        d = exp3_details{c,a};
+        metricData(c,a,:) = [exp3_costs(c,a), d.E_total, d.T_total, d.R_dynamic];
+    end
+end
+for m = 1:4
+    subplot(2,2,m); hold on; set(gca,'FontSize',14,'FontName','Times New Roman');
+    barData = squeeze(metricData(:,:,m));
+    hb = bar(barData, 'grouped');
+    for a = 1:nAlg, hb(a).FaceColor = algColors(a,:); end
+    set(gca,'XTick',1:nCity,'XTickLabel',{'Low','Medium','High'});
+    ylabel(metricTitles{m},'FontSize',15);
+    title(metricTitles{m},'FontSize',15,'FontWeight','bold');
+    grid on;
+    if m == 1, legend(algNames,'Location','northwest','FontSize',12); end
+
+    % å¯¹æ•°è½´ï¼šä»…å¯¹ J å’Œ Risk å¯ç”¨ï¼ˆæ•°æ®è·¨å¤šä¸ªæ•°é‡çº§ï¼‰
+    use_log = metricUseLog(m);
+    valid_vals = barData(barData > 0);
+    if use_log && ~isempty(valid_vals)
+        set(gca, 'YScale', 'log');
+        % ä¸‹ç•Œ = æœ€å°æ­£å€¼çš„ 0.3 å€ï¼ˆç»™çŸ­æŸ±ç•™ç©ºé—´ï¼‰ï¼Œä¸Šç•Œ = æœ€å¤§å€¼çš„ 5 å€ï¼ˆç»™æ–‡å­—ç•™ç©ºé—´ï¼‰
+        ymin_log = max(min(valid_vals) * 0.3, 1e-5);
+        ymax_log = max(valid_vals) * 5;
+        ylim([ymin_log, ymax_log]);
+    end
+
+    nG=nCity; nB=nAlg; gW=min(0.8,nB/(nB+1.5));
+    for a=1:nB
+        xP=(1:nG)-gW/2+(2*a-1)*gW/(2*nB);
+        for g=1:nG
+            v=metricData(g,a,m);
+            % æ•°å€¼æ ‡ç­¾æ ¼å¼ï¼šæ ¹æ®é‡çº§è‡ªé€‚åº”å°æ•°ä½æ•°
+            if abs(v) < 0.01 && v ~= 0
+                vstr = sprintf('%.4f', v);
+            elseif abs(v) < 1
+                vstr = sprintf('%.3f', v);
+            elseif abs(v) < 100
+                vstr = sprintf('%.1f', v);
+            else
+                vstr = sprintf('%.0f', v);
+            end
+            % æ–‡å­—ä½ç½®ï¼šå¯¹æ•°è½´ç”¨ä¹˜æ³•åç§»ï¼Œçº¿æ€§è½´ç”¨åŠ æ³•åç§»
+            if use_log
+                if v > 0
+                    y_label = v * 1.4;   % æŸ±é¡¶ä¸Šæ–¹ 0.15 dex
+                else
+                    continue;             % è·³è¿‡ 0 å€¼ï¼ˆå¯¹æ•°è½´ä¸å¯è§ï¼‰
+                end
+            else
+                y_label = v;
+            end
+            text(xP(g),y_label,vstr,'HorizontalAlignment','center',...
+                'VerticalAlignment','bottom','FontSize',11,'FontWeight','bold',...
+                'Color',algColors(a,:)*0.6);
+        end
+    end
+end
+sgtitle('Multi-Dimensional Performance Evaluation across Urban Complexity Levels', 'FontSize', 17, 'FontWeight','bold');
+exportPublicationFigure(fig4, 'fig4_multidimensional_evaluation.png');
+fprintf('  fig4 (Multi-Dimensional Evaluation) saved\n');
+
+%% ====================================================================
+%%  å›¾5: å‡ºå‘æ—¶åˆ»æ•æ„Ÿæ€§
+%% ====================================================================
+
+fig5 = figure('Units','centimeters','Position',[0.5 0.5 30 14],'Color','w');
+metricByTime = zeros(nDepart, 4);
+for d = 1:nDepart
+    det = exp1_details{d};
+    metricByTime(d,:) = [exp1_costs(d), det.E_total, det.T_total, det.R_dynamic];
+end
+metLabels = {'Cost J', 'Energy (Wh)', 'Time (s)', 'Risk'};
+for m = 1:4
+    subplot(1,4,m); hold on; set(gca,'FontSize',13,'FontName','Times New Roman');
+    bar(metricByTime(:,m), 0.6, 'FaceColor', [0.85 0.15 0.15], 'FaceAlpha', 0.75);
+    set(gca, 'XTick', 1:nDepart, 'XTickLabel', departLabels, 'XTickLabelRotation', 30);
+    ylabel(metLabels{m}); grid on;
+    for d = 1:nDepart
+        text(d, metricByTime(d,m), sprintf('%.1f', metricByTime(d,m)), ...
+            'HorizontalAlignment','center','VerticalAlignment','bottom','FontSize',10);
+    end
+end
+sgtitle('Sensitivity of Path Quality to Departure Time in Time-Varying Urban Environments', 'FontSize', 17, 'FontWeight','bold');
+exportPublicationFigure(fig5, 'fig5_departure_time_sensitivity.png');
+fprintf('  fig5 (Departure Time Sensitivity) saved\n');
+
+%% ====================================================================
+%%  å›¾6: åŠ¨æ€éšœç¢è½¨è¿¹ + æ—¶å˜è·¯å¾„
+%% ====================================================================
+
+fig6 = figure('Units','centimeters','Position',[0.5 0.5 26 24],'Color','w');
+hold on; axis equal; set(gca, 'FontSize', 13, 'FontName', 'Times New Roman');
+for i = 1:size(buildings,1)
+    cx=buildings(i,1); cy=buildings(i,2); hw=buildings(i,4); hh=buildings(i,5);
+    rectangle('Position',[cx-hw,cy-hh,2*hw,2*hh],'FaceColor',[0.9 0.9 0.9],'EdgeColor',[0.65 0.65 0.65],'LineWidth',0.3);
+end
+for i = 1:length(tempNFZ)
+    nfz = tempNFZ(i); theta = linspace(0,2*pi,60);
+    fill(nfz.center(1)+nfz.radius*cos(theta), nfz.center(2)+nfz.radius*sin(theta), ...
+        [1 0.88 0.88], 'FaceAlpha',0.6, 'EdgeColor','r', 'LineWidth',1.3, 'LineStyle','--');
+    text(nfz.center(1), nfz.center(2), sprintf('NFZ%d\nt=[%.0f,%.0f]s', i, nfz.t_start, nfz.t_end), ...
+        'HorizontalAlignment','center','FontSize',9,'Color',[0.65 0 0],'FontWeight','bold');
+end
+obsC = lines(length(movObs));
+tSpan = linspace(0, 300, 150);
+for i = 1:length(movObs)
+    traj = zeros(length(tSpan),2);
+    for ti = 1:length(tSpan)
+        p = env.dynObstacles.getPosition(i, tSpan(ti)); traj(ti,:) = p(1:2);
+    end
+    for ti = 2:length(tSpan)
+        frac = ti/length(tSpan);
+        plot(traj(ti-1:ti,1), traj(ti-1:ti,2), '-', 'Color', [obsC(i,:) 0.12+0.55*frac], 'LineWidth', 1);
+    end
+    pos0 = env.dynObstacles.getPosition(i, 0); theta = linspace(0,2*pi,24);
+    fill(pos0(1)+movObs(i).radius*cos(theta), pos0(2)+movObs(i).radius*sin(theta), ...
+        obsC(i,:), 'FaceAlpha',0.65, 'EdgeColor',obsC(i,:)*0.6, 'LineWidth',0.7);
+    text(pos0(1), pos0(2)+movObs(i).radius+12, sprintf('Obs%d',i), ...
+        'HorizontalAlignment','center','FontSize',9,'Color',obsC(i,:)*0.5);
+end
+p0=exp1_paths{1}; p180=exp1_paths{4};
+if ~isempty(p0),   plot(p0(:,1),   p0(:,2),   '-', 'Color', departColors(1,:), 'LineWidth', 2.8); end
+if ~isempty(p180), plot(p180(:,1), p180(:,2), '-', 'Color', departColors(4,:), 'LineWidth', 2.8); end
+plot(startPt(1),startPt(2),'p','MarkerSize',16,'MarkerFaceColor',[0 0.8 0],'MarkerEdgeColor','k');
+plot(goalPt(1),goalPt(2),'h','MarkerSize',16,'MarkerFaceColor',[1 0 0],'MarkerEdgeColor','k');
+h_obs=fill(NaN,NaN,[1 0.6 0.2],'FaceAlpha',0.65,'EdgeColor',[0.85 0.45 0]);
+h_nfz=fill(NaN,NaN,[1 0.88 0.88],'FaceAlpha',0.6,'EdgeColor','r','LineStyle','--');
+h_p0=plot(NaN,NaN,'-','Color',departColors(1,:),'LineWidth',2.8);
+h_p180=plot(NaN,NaN,'-','Color',departColors(4,:),'LineWidth',2.8);
+legend([h_obs,h_nfz,h_p0,h_p180], {'Obstacle (t=0)','No-Fly Zone','RA-ALA (t=0s)','RA-ALA (t=180s)'}, ...
+    'Location','northwest','FontSize',12);
+xlabel('X (m)'); ylabel('Y (m)');
+title('Spatio-Temporal Trajectories of Dynamic Obstacles and Time-Dependent Path Adaptation', 'FontSize', 16, 'FontWeight','bold');
+xlim([0 mapSize]); ylim([0 mapSize]); grid on; box on;
+exportPublicationFigure(fig6, 'fig6_spatiotemporal_trajectories.png');
+fprintf('  fig6 (Spatio-Temporal Trajectories) saved\n');
+
+%% ====================================================================
+%%  å®Œæ•´æ±‡æ€»è¡¨
+%% ====================================================================
+
+fprintf('\nâ•”â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•—\n');
+fprintf('â•‘  å®éªŒ1 æ±‡æ€»: ä¸åŒå‡ºå‘æ—¶åˆ» RA-ALA ä»£ä»·åˆ†è§£                          â•‘\n');
+fprintf('â•šâ•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•\n');
+fprintf('%-8s %7s %7s %6s %7s %8s %8s %7s\n', ...
+    'æ—¶åˆ»', 'J', 'E(Wh)', 'T(s)', 'Risk', 'Pen_tot', 'Pen_h', 'hViol');
+fprintf('%s\n', repmat('-',1,72));
+for d = 1:nDepart
+    det = exp1_details{d};
+    fprintf('%-8s %7.1f %7.1f %6.0f %7.4f %8.4f %8.4f %7d\n', ...
+        departLabels{d}, det.J_final, det.E_total, det.T_total, det.R_dynamic, ...
+        det.penalty_total, det.penalty_height, det.heightViolations);
+end
+
+fprintf('\nâ•”â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•—\n');
+fprintf('â•‘  å®éªŒ2 æ±‡æ€»: RA-ALA vs åŸºçº¿ (ç»Ÿä¸€è¯„ä¼°å£å¾„, t=0, highåŸå¸‚)          â•‘\n');
+fprintf('â•šâ•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•\n');
+fprintf('%-18s %7s %7s %6s %7s %8s %8s\n', ...
+    'ç®—æ³•', 'J', 'E(Wh)', 'T(s)', 'Risk', 'Pen_tot', 'feasible');
+fprintf('%s\n', repmat('-',1,72));
+for a = 1:nAlg
+    det = exp2_details{a};
+    mk = '  '; if a == 1, mk = 'â˜… '; end
+    fprintf('%s%-16s %7.1f %7.1f %6.0f %7.4f %8.4f %8d\n', ...
+        mk, algNames{a}, det.J_final, det.E_total, det.T_total, ...
+        det.R_dynamic, det.penalty_total, det.feasible);
+end
+
+%% ====================================================================
+%%  å›¾7: å¤šéšæœºç§å­ç®±çº¿å›¾ (fig7)
+%%  å›¾8: ç¯å¢ƒçº§èšç±»æ„ŸçŸ¥é…å¯¹ç»Ÿè®¡å›¾ (fig8)
+%%
+%%  ä¸¤å› ç´ åˆ†å±‚é‡‡æ ·è®¾è®¡:
+%%    å¤–å±‚ N_ENV ä¸ªä¸åŒåŸå¸‚ç¯å¢ƒ â†’ æµ‹è¯•è·¨åœºæ™¯æ³›åŒ–æ€§
+%%    å†…å±‚ N_SEED ä¸ª ALA å†…éƒ¨ç§å­ â†’ æµ‹è¯•åŒåœºæ™¯ç®—æ³•ç¨³å®šæ€§
+%%    ç¯å¢ƒé˜Ÿåˆ—: å›ºå®šå¤ç”¨æ—§ç‰ˆ 3 m å®éªŒä¸­çš„ 10 ä¸ªé¢„å…ˆæŒ‡å®šç¯å¢ƒ
+%%    æé«˜å®¹é‡: stat è½®æ¬¡ä½¿ç”¨æ›´å¤§ popSize/maxIter
+%%    æ€»è¿è¡Œæ¬¡æ•° = N_ENV Ã— N_SEED = N_STAT
+%%
+%%    fig7 â€” ç®±çº¿å›¾ï¼šç¯å¢ƒå†…ä¸‰æ¬¡è¿è¡Œä¸­ä½æ•°çš„è·¨ç¯å¢ƒåˆ†å¸ƒ
+%%    fig8 â€” ç¯å¢ƒçº§ç²¾ç¡®ç¬¦å·ç§©æ£€éªŒã€Holm æ ¡æ­£ä¸é…å¯¹ç§©äºŒåˆ—æ•ˆåº”é‡
+%% ====================================================================
+
+fprintf('\nâ”â”â” Generating Statistical Figures (fig7: Distributional Robustness / fig8: Statistical Significance) â”â”â”\n');
+fprintf('  è®¾è®¡: ä¸¤å› ç´ åˆ†å±‚é‡‡æ · (N_ENV ä¸ªç¯å¢ƒ Ã— N_SEED æ¬¡ALAå†…éƒ¨ç§å­)\n');
+
+% â”€â”€ å‚æ•°é…ç½® â”€â”€
+N_ENV  = 10;  % ç¯å¢ƒæ•°é‡ï¼ˆå‡è‡³10ä»¥æå‡ vs å¼ºåŸºçº¿å¯¹æ¯”çš„ç»Ÿè®¡åŠŸæ•ˆï¼‰
+N_SEED = 3;   % æ¯ä¸ªç¯å¢ƒçš„ ALA å†…éƒ¨é‡å¤æ¬¡æ•°
+N_STAT = N_ENV * N_SEED;   % æ€»æ ·æœ¬é‡ = 30
+
+% ç»Ÿè®¡è½®æ¬¡æé«˜ ALA å®¹é‡ï¼ˆæ¯”ä¸»å®éªŒæ›´å¼ºï¼Œç¡®ä¿åº”å¯¹æ›´éš¾çš„ç¯å¢ƒï¼‰
+ala_cfg_stat                 = ala_cfg;
+ala_cfg_stat.popSize         = 40;   % ä¸»å®éªŒ 30 â†’ ç»Ÿè®¡è½®æ¬¡ 40
+ala_cfg_stat.maxIter         = 80;   % ä¸»å®éªŒ 60 â†’ ç»Ÿè®¡è½®æ¬¡ 80
+ala_cfg_stat.rescue_max_ins  = 12;   % ä¸»å®éªŒ 6  â†’ ç»Ÿè®¡è½®æ¬¡ 12ï¼ˆå¢å¼ºæ•‘æ´ï¼‰
+
+stat_J    = zeros(nAlg, N_STAT);
+stat_E    = zeros(nAlg, N_STAT);
+stat_P    = zeros(nAlg, N_STAT);
+stat_feasible = false(nAlg, N_STAT); % ä¸¥æ ¼æ ‡å‡†ï¼šæ— ä»»ä¸€ç¡¬çº¦æŸè¿è§„
+stat_env  = zeros(1, N_STAT);   % è®°å½•æ¯æ¬¡ä½¿ç”¨çš„ç¯å¢ƒ seedï¼ˆç”¨äºè®ºæ–‡æ–¹æ³•è¯´æ˜ï¼‰
+stat_ra_seed = zeros(1, N_STAT); % Exact RA-ALA run seeds reused by the ablation study
+stat_paths = cell(nAlg,N_STAT); % Save selected paths for fixed-path resolution auditing
+
+env_seeds_used = [483, 638, 855, 948, 1041, 1103, 1227, 1475, 2312, 2560];
+if numel(env_seeds_used) ~= N_ENV
+    error('The fixed Section 5.5 cohort must contain exactly %d environments.', N_ENV);
+end
+col_idx = 0;
+fprintf('  å›ºå®šç¯å¢ƒ seeds: %s\n', mat2str(env_seeds_used));
+
+for env_count = 1:N_ENV
+    env_candidate = env_seeds_used(env_count);
+    rng(env_candidate);
+    env_c2 = CityEnvironment(mapSize, gridStep);
+    env_c2.generate('high', windLevel, riskLevel, env_candidate);
+    env_c2.setTaskPoints(startPt, goalPt);
+    cm_c2 = UnifiedCostModel();
+    cm_c2.setEnvironment(env_c2.windField, env_c2.dynObstacles, env_c2.heightMap);
+    pl_c2 = PathPlanners(env_c2, cm_c2);
+    pl_c2.setBudget(15, 5000, 2000);
+    fprintf('  [ç¯å¢ƒ %d/%d] seed=%-5d\n', env_count, N_ENV, env_candidate);
+    % â”€â”€ å†…å±‚: N_SEED æ¬¡ ALA å†…éƒ¨ç§å­ â”€â”€
+    for s = 1:N_SEED
+        col_idx = col_idx + 1;
+        alg_seed = env_candidate + s * 53;   % å†…éƒ¨ç§å­ä¸ç¯å¢ƒ seed è§£è€¦
+        stat_env(col_idx) = env_candidate;
+        stat_ra_seed(col_idx) = alg_seed + 11; % a=1: actual RA-ALA rng seed
+
+        for a = 1:nAlg
+            rng(alg_seed + a * 11);
+            try
+                switch a
+                    case 1  % RA-ALA: ä¸åŒç¯å¢ƒ + ä¸åŒå†…éƒ¨ç§å­
+                        [p_s,~,d_s] = runRA_ALA(pl_c2, cm_c2, env_c2, ...
+                            startPt, goalPt, 0, true, ala_cfg_stat);
+                    case 2  % Energy-A*: ç¡®å®šæ€§ï¼ŒåŒä¸€ç¯å¢ƒå†…ç»“æœç›¸åŒ
+                        [p_s,~,~] = pl_c2.energyAStar(startPt, goalPt, 0, true);
+                        [~,d_s]   = cm_c2.evaluatePath(p_s, 0, true);
+                    case 3  % Informed-RRT*: ä¸åŒå†…éƒ¨é‡‡æ ·ç§å­
+                        [p_s,~,~] = pl_c2.informedRRTStar(startPt, goalPt, 0, true, 1500);
+                        [~,d_s]   = cm_c2.evaluatePath(p_s, 0, true);
+                    case 4  % ST-EA*: ç¡®å®šæ€§æ—¶ç©ºå›¾æœç´¢
+                        [p_s,~,~] = pl_c2.timeExpandedEnergyAStar( ...
+                            startPt, goalPt, 0, true, st_time_step, st_time_horizon);
+                        [~,d_s]   = cm_c2.evaluatePath(p_s, 0, true);
+                    case 5  % Greedy: ç¡®å®šæ€§
+                        [p_s,~,~] = pl_c2.greedyPlanner(startPt, goalPt, 0, true);
+                        [~,d_s]   = cm_c2.evaluatePath(p_s, 0, true);
+                end
+                stat_J(a,col_idx) = d_s.J_final;
+                stat_E(a,col_idx) = d_s.E_total;
+                stat_P(a,col_idx) = d_s.penalty_total;
+                stat_feasible(a,col_idx) = logical(d_s.feasible);
+                stat_paths{a,col_idx} = p_s;
+            catch
+                stat_J(a,col_idx) = NaN;
+                stat_E(a,col_idx) = NaN;
+                stat_P(a,col_idx) = NaN;
+                stat_feasible(a,col_idx) = false;
+            end
+        end
+
+        % è¿›åº¦æ¡
+        pct = col_idx/N_STAT; blen=20; filled=round(pct*blen);
+        fprintf('\r  [%s%s] %2d/%d (env%d seed%d)', ...
+            repmat('#',1,filled), repmat('-',1,blen-filled), ...
+            col_idx, N_STAT, env_count, s);
+    end
+end
+fprintf('\n  æ•°æ®æ”¶é›†å®Œæ¯•\n');
+fprintf('  çº³å…¥ç¯å¢ƒ seeds: ');
+fprintf('%d ', env_seeds_used); fprintf('\n');
+fprintf('  ALA é…ç½®: popSize=%d, maxIter=%d (ç»Ÿè®¡è½®æ¬¡å¢å¼ºç‰ˆ)\n', ...
+    ala_cfg_stat.popSize, ala_cfg_stat.maxIter);
+
+% â”€â”€ é¢œè‰² â”€â”€
+algColors_stat = [0.75 0.13 0.13;   % RA-ALA  çº¢
+                  0.16 0.50 0.73;   % EA*     è“
+                  0.15 0.63 0.25;   % RRT*    ç»¿
+                  0.49 0.18 0.56;   % ST-EA*  ç´«
+                  0.58 0.58 0.58];  % Greedy  ç°
+
+%% ====================================================================
+%%  å›¾7: ç¯å¢ƒçº§ç®±çº¿å›¾
+%% ====================================================================
+plotDistributionalRobustness(stat_J,stat_E,stat_feasible,stat_env, ...
+    env_seeds_used,algNames,'fig7_distributional_robustness.png');
+fprintf('  fig7 (all-path distributional robustness) saved\n');
+
+%% ====================================================================
+%%  å›¾8åœ¨ä¿å­˜å›ºå®šé˜Ÿåˆ—åç”±ç¯å¢ƒçº§èšç±»æ„ŸçŸ¥ç»Ÿè®¡ç”Ÿæˆã€‚
+%%  ä¸‰ä¸ªå†…éƒ¨ç§å­å…ˆåœ¨æ¯ä¸ªç¯å¢ƒå†…èšåˆï¼Œç‹¬ç«‹æ¨æ–­å•ä½ä¸º 10 ä¸ªåŸå¸‚ç¯å¢ƒã€‚
+% ä¿å­˜ç¬¬5.5èŠ‚åŒé˜Ÿåˆ—æ•°æ®ï¼Œä¾›æ¶ˆèã€æƒé‡å’Œåˆ†è¾¨ç‡å®éªŒä¸¥æ ¼å¤ç”¨ã€‚
+main_collision_sample_spacing_m = costModel.collision_sample_spacing;
+main_min_collision_samples = costModel.min_collision_samples;
+save('section55_same_cohort_data.mat', ...
+    'env_seeds_used','stat_env','stat_ra_seed','stat_J','stat_E','stat_P','stat_feasible','stat_paths', ...
+    'ala_cfg_stat','N_ENV','N_SEED','N_STAT', ...
+    'mapSize','gridStep','windLevel','riskLevel','startPt','goalPt', ...
+    'algNames','st_time_step','st_time_horizon', ...
+    'main_collision_sample_spacing_m','main_min_collision_samples');
+fprintf('  Section 5.5 cohort saved: section55_same_cohort_data.mat\n');
+clusterStats = runClusterAwareStatistics('section55_same_cohort_data.mat');
+plotClusterAwareStatistics(clusterStats, 'fig8_statistical_significance.png');
+
+
+%% ====================================================================
+%%  æ¶ˆèå®éªŒ (fig9)
+%%  è®¾è®¡ï¼šæ¯æ¬¡åªå…³é—­ä¸€ä¸ªç»„ä»¶ï¼Œä¸å®Œæ•´ RA-ALA å¯¹æ¯”ã€‚
+%%  4 ä¸ªæœ‰æ•ˆå˜ä½“ï¼š
+%%    A1 w/o Smooth        â€” å»æ‰å¹³æ»‘åº¦å¯¼å‘é¡¹ Î´_smooth
+%%    A2 w/o Headwind      â€” å»æ‰é€†é£å‰ç»å¯¼å‘é¡¹ G_headwind
+%%    A3 w/o Unified Eval  â€” è·³è¿‡ Top-K ç»Ÿä¸€é‡è¯„ä¼°ï¼Œç›´æ¥è¾“å‡º raw
+%%
+%%  è®¾è®¡: ä¸¥æ ¼å¤ç”¨å¤šç¯å¢ƒç»Ÿè®¡å®éªŒï¼ˆSection 5.5ï¼‰çš„é…å¯¹æ ·æœ¬
+%%    å¤–å±‚ç›´æ¥ä½¿ç”¨ env_seeds_usedï¼Œä¸å†ä¸ºæ¶ˆèç‹¬ç«‹ç­›é€‰ç¯å¢ƒ
+%%    å†…å±‚ç›´æ¥ä½¿ç”¨ stat_ra_seedï¼Œä¸æ”¹å˜ RA-ALA çš„éšæœºè¿‡ç¨‹
+%%    Full ä¸æ‰€æœ‰æ¶ˆèå˜ä½“å‡ä½¿ç”¨ ala_cfg_stat çš„ç›¸åŒè®¡ç®—é¢„ç®—
+%%    å› æ­¤ Full RA-ALA åº”é€æ¡ˆä¾‹å¤ç° Section 5.5 çš„ RA-ALA ç»“æœ
+%% ====================================================================
+
+fprintf('\nâ”â”â” Ablation Study (fig9): Component Contribution Analysis â”â”â”\n');
+
+N_ABL_ENV = N_ENV;   % ä¸ Section 5.5 å®Œå…¨ä¸€è‡´
+N_ABL_REP = N_SEED;  % ä¸ Section 5.5 å®Œå…¨ä¸€è‡´
+N_ABL     = N_STAT;  % åŒä¸€æ‰¹ 10 ç¯å¢ƒ Ã— 3 ç§å­ = 30 ä¸ªé…å¯¹æ¡ˆä¾‹
+fprintf('  è®¾è®¡: ä¸¥æ ¼å¤ç”¨ Section 5.5 (%d ç¯å¢ƒ Ã— %d ç§å­, N=%d)\n', ...
+    N_ABL_ENV, N_ABL_REP, N_ABL);
+
+ablationNames = {'Full RA-ALA', 'w/o Smooth', ...
+                 'w/o Headwind Guidance', 'w/o Unified Eval'};
+% æ¶ˆèå˜ä½“è¯´æ˜ï¼š
+%   Full RA-ALA       â€” å®Œæ•´æ–¹æ³•ï¼ˆåŸºå‡†ï¼‰
+%   w/o Smooth        â€” å»æ‰ evalRA_v2 å¹³æ»‘åº¦å¯¼å‘ç½šé¡¹
+%   w/o Headwind      â€” å°† windLookahead è®¾ä¸º 0ï¼Œå»æ‰é€†é£å‰ç»å¯¼å‘é¡¹
+%   w/o Unified Eval  â€” å»æ‰ç»Ÿä¸€é‡è¯„ä¼°ï¼Œç›´æ¥è¾“å‡º evalRA_v2 å†…éƒ¨é€‚åº”åº¦
+%                       æœ€ä¼˜è·¯å¾„ï¼ˆrawï¼‰ï¼Œä¸ç»è¿‡ Top-K æ¯”è¾ƒ raw vs smoothã€‚
+%                       è¯æ˜"ç»Ÿä¸€è¯„ä¼°é©±åŠ¨"çš„å®è´¨è´¡çŒ®ï¼š
+%                       è‹¥å†…éƒ¨é€‚åº”åº¦å£å¾„ä¸æŠ¥å‘Šå£å¾„ä¸ä¸€è‡´ï¼Œæœç´¢åˆ°çš„"æœ€ä¼˜è·¯å¾„"
+%                       åœ¨ç»Ÿä¸€è¯„ä¼°ä¸‹æœªå¿…çœŸçš„æœ€ä¼˜ã€‚
+nAbl = length(ablationNames);
+
+% â”€â”€ æ¶ˆèç”¨ ALA é…ç½®ï¼šä¸¥æ ¼å¤ç”¨ Section 5.5 çš„è®¡ç®—é¢„ç®— â”€â”€
+cfg_abl_base = ala_cfg_stat; % popSize=40, maxIter=80, rescue_max_ins=12
+
+% â”€â”€ æ„å»ºå„å˜ä½“ cfg â”€â”€
+cfgs_abl = cell(nAbl, 1);
+for aa = 1:nAbl
+    cfgs_abl{aa} = cfg_abl_base;
+end
+cfgs_abl{2}.ablate_smoothPenalty = true;
+cfgs_abl{3}.windLookahead = 0;
+cfgs_abl{4}.ablate_unifiedEval = true;
+
+% â”€â”€ ä¸¥æ ¼å¤ç”¨ Section 5.5 çš„ç¯å¢ƒä¸ RA-ALA å†…éƒ¨éšæœºç§å­ â”€â”€
+if ~exist('env_seeds_used','var') || numel(env_seeds_used) ~= N_ABL_ENV
+    error('Ablation requires the %d environment seeds produced by Section 5.5.', N_ABL_ENV);
+end
+if ~exist('stat_ra_seed','var') || numel(stat_ra_seed) ~= N_ABL
+    error('Ablation requires the %d RA-ALA run seeds recorded in Section 5.5.', N_ABL);
+end
+abl_env_seeds = env_seeds_used;
+abl_run_seeds = stat_ra_seed;
+fprintf('  å¤ç”¨ç¯å¢ƒ seeds: %s\n', mat2str(abl_env_seeds));
+fprintf('  å¤ç”¨ RA-ALA run seeds: %s\n\n', mat2str(abl_run_seeds));
+
+% â”€â”€ ç»“æœçŸ©é˜µ â”€â”€
+abl_J   = zeros(nAbl, N_ABL);
+abl_E   = zeros(nAbl, N_ABL);
+abl_T   = zeros(nAbl, N_ABL);
+abl_R   = zeros(nAbl, N_ABL);
+abl_Pen = zeros(nAbl, N_ABL);
+abl_feasible = false(nAbl, N_ABL);
+
+% â”€â”€ æ­£å¼è¿è¡Œ â”€â”€
+for aa = 1:nAbl
+    fprintf('  [%d/%d] %-20s: ', aa, nAbl, ablationNames{aa});
+    col = 0;
+    for ei = 1:N_ABL_ENV
+        % é‡å»ºå¯¹åº”ç¯å¢ƒ
+        rng(abl_env_seeds(ei));
+        env_run = CityEnvironment(mapSize, gridStep);
+        env_run.generate('high', windLevel, riskLevel, abl_env_seeds(ei));
+        env_run.setTaskPoints(startPt, goalPt);
+        cm_run = UnifiedCostModel();
+        cm_run.setEnvironment(env_run.windField, env_run.dynObstacles, env_run.heightMap);
+        pl_run = PathPlanners(env_run, cm_run);
+        pl_run.setBudget(15, 5000, 2000);
+
+        for ri = 1:N_ABL_REP
+            col = col + 1;
+            % Match the Section 5.5 RA-ALA seed exactly; all variants share it.
+            rng(abl_run_seeds(col));
+            try
+                [~,~,det_abl] = runRA_ALA(pl_run, cm_run, env_run, ...
+                    startPt, goalPt, 0, true, cfgs_abl{aa});
+                abl_J(aa,col)   = det_abl.J_final;
+                abl_E(aa,col)   = det_abl.E_total;
+                abl_T(aa,col)   = det_abl.T_total;
+                abl_R(aa,col)   = det_abl.R_dynamic;
+                abl_Pen(aa,col) = det_abl.penalty_total;
+                abl_feasible(aa,col) = logical(det_abl.feasible);
+            catch
+                abl_J(aa,col) = NaN; abl_E(aa,col) = NaN;
+                abl_T(aa,col) = NaN; abl_R(aa,col) = NaN; abl_Pen(aa,col) = NaN;
+                abl_feasible(aa,col) = false;
+            end
+            pct = col/N_ABL; blen = 15; filled = round(pct*blen);
+            fprintf('\r  [%d/%d] %-20s: [%s%s] %2d/%d', aa, nAbl, ...
+                ablationNames{aa}, repmat('â–ˆ',1,filled), ...
+                repmat('â–‘',1,blen-filled), col, N_ABL);
+        end
+    end
+    fprintf('\r  [%d/%d] %-20s: J=%.1fÂ±%.1f  E=%.1fÂ±%.1f  Pen=%.3f\n', ...
+        aa, nAbl, ablationNames{aa}, ...
+        mean(abl_J(aa,:),'omitnan'), std(abl_J(aa,:),'omitnan'), ...
+        mean(abl_E(aa,:),'omitnan'), std(abl_E(aa,:),'omitnan'), ...
+        mean(abl_Pen(aa,:),'omitnan'));
+end
+
+% Full RA-ALA should reproduce Section 5.5 case by case.
+same_nan_J = isequal(isnan(abl_J(1,:)), isnan(stat_J(1,:)));
+same_nan_E = isequal(isnan(abl_E(1,:)), isnan(stat_E(1,:)));
+same_nan_P = isequal(isnan(abl_Pen(1,:)), isnan(stat_P(1,:)));
+same_feasible = isequal(abl_feasible(1,:), stat_feasible(1,:));
+max_diff_J = max(abs(abl_J(1,:)   - stat_J(1,:)), [], 'omitnan');
+max_diff_E = max(abs(abl_E(1,:)   - stat_E(1,:)), [], 'omitnan');
+max_diff_P = max(abs(abl_Pen(1,:) - stat_P(1,:)), [], 'omitnan');
+repro_tol = 1e-9;
+if same_nan_J && same_nan_E && same_nan_P && same_feasible && ...
+        max_diff_J <= repro_tol && max_diff_E <= repro_tol && max_diff_P <= repro_tol
+    fprintf('\n  [å¤ç°æ£€æŸ¥] PASS: Full RA-ALA ä¸ Section 5.5 çš„ 30 ä¸ªç»“æœé€æ¡ˆä¾‹ä¸€è‡´ã€‚\n');
+else
+    warning(['Full RA-ALA did not exactly reproduce Section 5.5: ', ...
+        'max|dJ|=%.3g, max|dE|=%.3g, max|dPen|=%.3g.'], ...
+        max_diff_J, max_diff_E, max_diff_P);
+end
+
+% â”€â”€ æ‰“å°å‘½ä»¤è¡Œæ±‡æ€»è¡¨ â”€â”€
+fprintf('\nâ•”â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•—\n');
+fprintf('â•‘  æ¶ˆèå®éªŒæ±‡æ€» (%d ç¯å¢ƒÃ—%d ç§å­=N=%d, High å¤æ‚åº¦, t=0)             â•‘\n', N_ABL_ENV, N_ABL_REP, N_ABL);
+fprintf('â• â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•¦â•â•â•â•â•â•â•â•â•â•â•¦â•â•â•â•â•â•â•â•â•â•â•¦â•â•â•â•â•â•â•â•â•â•â•¦â•â•â•â•â•â•â•â•â•¦â•â•â•â•â•â•â•â•â•â•£\n');
+fprintf('â•‘  å˜ä½“                â•‘  J (å‡å€¼)â•‘  E (Wh)  â•‘  é£é™©    â•‘  æƒ©ç½š  â•‘ ä¸å¯è¡Œç‡â•‘\n');
+fprintf('â• â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•¬â•â•â•â•â•â•â•â•â•â•â•¬â•â•â•â•â•â•â•â•â•â•â•¬â•â•â•â•â•â•â•â•â•â•â•¬â•â•â•â•â•â•â•â•â•¬â•â•â•â•â•â•â•â•â•â•£\n');
+for aa = 1:nAbl
+    rel = '';
+    if aa > 1
+        delta_J = (mean(abl_J(aa,:),'omitnan') - mean(abl_J(1,:),'omitnan')) ...
+                  / mean(abl_J(1,:),'omitnan') * 100;
+        rel = sprintf(' (%+.1f%%)', delta_J);
+    end
+    infeas_rate = sum(~abl_feasible(aa,:)) / N_ABL * 100;
+    fprintf('â•‘  %-20sâ•‘  %6.2f%-3sâ•‘  %6.2f  â•‘  %6.4f  â•‘ %6.4f â•‘  %4.0f%%   â•‘\n', ...
+        ablationNames{aa}, ...
+        mean(abl_J(aa,:),'omitnan'),   rel, ...
+        mean(abl_E(aa,:),'omitnan'), ...
+        mean(abl_R(aa,:),'omitnan'), ...
+        mean(abl_Pen(aa,:),'omitnan'), infeas_rate);
+end
+fprintf('â•šâ•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•©â•â•â•â•â•â•â•â•â•â•â•©â•â•â•â•â•â•â•â•â•â•â•©â•â•â•â•â•â•â•â•â•â•â•©â•â•â•â•â•â•â•â•â•©â•â•â•â•â•â•â•â•â•â•\n');
+fprintf('  æ³¨: ä¸å¯è¡Œç‡æŒ‰ä¸¥æ ¼æ ‡å‡†è®¡ç®—ï¼šä»»ä¸€ç¡¬çº¦æŸè¿è§„æˆ–è¿è¡Œå¤±è´¥å‡ä¸å¯è¡Œï¼›ç›¸å¯¹å˜åŒ– = vs Full RA-ALA å‡å€¼\n');
+fprintf('  å®éªŒè®¾è®¡: ä¸¥æ ¼å¤ç”¨ Section 5.5 çš„ç¯å¢ƒã€RA-ALA ç§å­ä¸è®¡ç®—é¢„ç®—\n');
+fprintf('  ALAå®¹é‡: popSize=%d, maxIter=%d\n', cfg_abl_base.popSize, cfg_abl_base.maxIter);
+
+%% â”€â”€ ç»˜åˆ¶ fig9 â”€â”€
+plotAblationStudyFigure(abl_J, abl_E, abl_T, abl_R, abl_Pen, ...
+    ablationNames, N_ABL, 'fig9_ablation_study.png');
+
+save('fig9_ablation_same_cohort_data.mat', ...
+    'abl_J','abl_E','abl_T','abl_R','abl_Pen','abl_feasible','ablationNames', ...
+    'abl_env_seeds','abl_run_seeds','cfg_abl_base', ...
+    'stat_J','stat_E','stat_P','stat_feasible','stat_env','stat_ra_seed', ...
+    'N_ABL_ENV','N_ABL_REP','N_ABL');
+fprintf('  fig9 paired raw data saved: fig9_ablation_same_cohort_data.mat\n');
+fprintf('  fig9 (Ablation Study - Component Contribution) saved\n');
+
+%% ====================================================================
+%%  Cost-weight sensitivity analysis
+%%  Uses one pre-specified seed from each of the same 10 Section 5.5
+%%  environments. Raw J is compared only within a fixed weight setting.
+%% ====================================================================
+if RUN_WEIGHT_SENSITIVITY
+    runWeightSensitivityAnalysis('section55_same_cohort_data.mat');
+end
+if RUN_SPATIAL_RESOLUTION_SENSITIVITY
+    runSpatialResolutionSensitivity('section55_same_cohort_data.mat');
+end
+
+
+fprintf('\nå…¨éƒ¨å®Œæˆ!\n');
+
+%% ====================================================================
+%%  RA-ALA æ ¸å¿ƒç®—æ³•å‡½æ•°
+%% ====================================================================

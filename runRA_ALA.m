@@ -20,12 +20,10 @@ function [path, cost, details, stage_details] = runRA_ALA(...
 %    ä¸æŠŠ evalRA_v2 çš„å†…éƒ¨å€¼ç›´æ¥å½“æœ€ç»ˆè¾“å‡º.
 % =========================================================================
 
-    % noWindBias comparison variant: keep the wind field, propulsion model,
-    % and headwind-risk evaluation unchanged, but disable the wind-biased
-    % ALA walk operator for every caller of this copied project.
-    cfg.ablate_windBias = true;
+    % The released configuration retains the physical wind field and
+    % headwind guidance but does not use a wind-biased walk operator.
 
-    % >>>>> RUNTIME/COUNTING INSTRUMENTATION >>>>>
+    % Runtime and candidate-count instrumentation.
     t_total = tic;
     t_initialization = tic;
     timing = struct('initialization_s', 0, 'warm_start_s', 0, ...
@@ -51,7 +49,7 @@ function [path, cost, details, stage_details] = runRA_ALA(...
         'adopted', false);
     rescue_a_count = 0;
     rescue_b_count = 0;
-    % <<<<< RUNTIME/COUNTING INSTRUMENTATION END <<<<<
+    % End runtime and candidate-count instrumentation.
 
     start = start(:)'; goal = goal(:)';
     if length(start)<3, start=[start,60]; end
@@ -233,9 +231,8 @@ function [path, cost, details, stage_details] = runRA_ALA(...
     timing.initialization_s = toc(t_initialization);
 
     % ---- ALA ä¸»è¿­ä»£ ----
-    % >>>>> RUNTIME_ANALYSIS PATCH 2b (search timing) >>>>>
+    % Main-search timing.
     t_search = tic;
-    % <<<<<
     for iter = 1:maxIter
         theta       = 2 * atan(1 - iter/maxIter);
         sigma_decay = 1 - 0.6 * iter/maxIter;
@@ -245,27 +242,8 @@ function [path, cost, details, stage_details] = runRA_ALA(...
             if r1 < 0.3
                 newPos = pop(i,:) + E * (bestPos - pop(i,:));
             elseif r1 < 0.55
-                if isfield(cfg,'ablate_windBias') && cfg.ablate_windBias
-                    noise  = randn(1,dim).*(ub-lb)*0.08*sigma_decay;
-                    newPos = pop(i,:) + E * noise;
-                else
-                    midPt   = (start+goal)/2;
-                    w       = env.windField.getWind(midPt(1),midPt(2),midPt(3),t_start);
-                    windLat = dot(w(1:2), perpUnit);
-                    windBias = zeros(1,dim);
-                    for j=1:nWP, windBias((j-1)*2+1) = -windLat*3*sigma_decay; end
-                    noise  = randn(1,dim).*(ub-lb)*0.06*sigma_decay;
-                    % v9: windBias åœ¨ hard env ä¸­è‡ªé€‚åº”å¼±åŒ–, é¿å…æŠŠæœç´¢æ¨å‘ NFZ é›†ç¾¤
-                    %   diffScale=1.0 (ä¸­ç­‰ç¯å¢ƒ) â†’ windBias å¼ºåº¦ 0.30 (åŸå€¼ä¸å˜)
-                    %   diffScale=0.3 (æç¡¬ç¯å¢ƒ) â†’ windBias å¼ºåº¦ 0.09 (å‰Šå¼± 70%)
-                    %   diffScale=1.5 (ç©ºæ—·ç¯å¢ƒ) â†’ windBias å¼ºåº¦ 0.45 (ç•¥å¢å¼º)
-                    if isfield(cfg,'difficultyScale')
-                        wb_strength = 0.30 * cfg.difficultyScale;
-                    else
-                        wb_strength = 0.30;
-                    end
-                    newPos = pop(i,:) + E*noise + windBias*wb_strength;
-                end
+                noise  = randn(1,dim).*(ub-lb)*0.08*sigma_decay;
+                newPos = pop(i,:) + E*noise;
             elseif r1 < 0.8
                 l      = rand*2-1;
                 newPos = bestPos + E*exp(l)*cos(2*pi*l)*(pop(i,:)-bestPos)*sigma_decay;
@@ -319,126 +297,592 @@ function [path, cost, details, stage_details] = runRA_ALA(...
                 end
             end
 
-            % æ¯ PRINT_çN}¶‰ËkºwµçH[™ˆ[™ˆYˆ™\İÜ—ØÏLKœ™XZÎÈ[™‚ˆ	H8¥ 8¥ 9«izj©ˆ9§ 9i&Œù.*¹£ä¹à®y/cyïkˆ0åÈ9¥®yd$H0åÈ:-çyé®È0åÈújæ9n©¹ëe¹åiH8¥ 8¥ ˆ™\İÜ›™Ü[ˆH]Øİ\‹œ[˜[Wİİ[Âˆ™\İÜ›™ÜœHœĞNÂˆ›İ[™Ü›™H˜[ÙNÂ‚ˆ	H9`&z`"y£ä¹aiy/cyïk‚ˆ	HÜËPNˆX^
-K×ØËLJH9b,×ØÈ
-9«­y.bùbcJBˆ	HÜËPˆ×ØÈ9b,×ØÊÌH
-9«­y.bù.+K9g*œ˜X×ØÛÛ9/cyïkŠBˆ	HÜËPÎˆ×ØÊÌH9b,×ØÊÌˆ
-9«­y.bùd#‹:"éykf9g*
-Bˆ[œ×ÜÜÚ][ÛœÈHÛX^
-K×ØËLJK×Ø×NÂˆYˆ×ØÊÌHÚ^™JœĞKJBˆ[œ×ÜÜÚ][ÛœÈHÚ[œ×ÜÜÚ][ÛœË×ØÊÌWNÂˆ[™‚ˆ›Üˆ\HN›[™İ
-[œ×ÜÜÚ][ÛœÊBˆYˆ›İ[™Ü›™	‰ˆ™\İÜ›™Ü[ˆYKM‹œ™XZÎÈ[™ˆ[œ×ØY\ˆH[œ×ÜÜÚ][ÛœÊ\
-NÂ‚ˆ	H9£ä¹à®yæ¡9ênºeí9càº  ù/cyïk‚ˆ	HÜËPKĞÎˆ9/oùå*9è¬9¤§¹kd9à®y/cyïk¹/g9..¹£ª:`oùcàº  ù.+yoàÂˆ	HÜËPˆ9ì¯¹èk¹/oùå*9è¬9¤§¹b!¹¥l9/cyïk‚ˆ™Y—ÜHXÈ
-Èœ˜X×ØÛÛ
-Š˜Ë\XÊNÂ‚ˆ›ÜˆWÏLNˆYˆ›İ[™Ü›™	‰ˆ™\İÜ›™Ü[ˆYKM‹œ™XZÎÈ[™ˆ]—ÙHT”ÊWËŠNÂ‚ˆ›Üˆ\İÚOLN›[™İ
-UÕT—Ñ
-BˆÙ]HUÕT—Ñ
-\İÚJNÂ‚ˆ	HKKH:jæ9n©¹ëe¹åiHKÌ‹ÌÈKKBˆ›Üˆ—İHHNŒÂˆÙ]HÜØÛÛ
-ÈÙ]—Ù
-JJŠØœ×Ü—ØÛÛ
-ÑÙ]
-K‹‹‚ˆ]—Ù
-ŠJŠØœ×Ü—ØÛÛ
-ÑÙ]
-KNÂˆÙ]
-JHHX^
-KZ[ŠT×Ü˜ËÙ]
-JJJNÂˆÙ]
-ŠHHX^
-KZ[ŠT×Ü˜ËÙ]
-ŠJJNÂ‚ˆYˆ—İHOHBˆ	H9ëe¹åiLNˆ9î«ùª*¹d$K9/çy£ yodùbcy«­z-mùà®zjæ9n©‚ˆÙ]
-ÊHHœĞJZ[Š[œ×ØY\‹Ú^™JœĞKJJKÊNÂˆ[ÙZYˆ—İHOH‚ˆ	H9ëe¹åiLˆ:hçº-¢ºf§9è£zhmº`êˆX›İ™WŞˆHÜØÛÛ
-ÊH
-ÈØœ×Ü—ØÛÛ
-ÈMNÂˆYˆX›İ™WŞˆˆX^Ü˜ÈHKÛÛ[YNÈ[™ˆÙ]
-ÊHHX›İ™WŞÂˆ[ÙBˆ	H9ëe¹åiLÎˆ9¥§9d$y¢«9caûï"9ª*¹d$Jújæ9n©¹d#9«iyh§¹b¨;ï"Bˆ	H9g*9ª*¹d$y£ª:`oùæ¡9d#9¥íºh§yi%¹¢«:jæ9cb¹.*¹k¢yaj9cb¹o¡ˆ	H:` ¹å*9.£ºf§9è£yg*9¥§9."¹¥®y¢%º-ëùo¡:g :) yd#9¥íº)á:`oÂˆ	H9¬-9nlùd£9g ¹æí9¥®yd$yæ¡9g.¹¦kÂˆXY×ŞˆHœĞJZ[Š[œ×ØY\‹Ú^™JœĞKJJKÊH‹‹‚ˆ
-ÈØœ×Ü—ØÛÛ
-ˆNÂˆYˆXY×ŞˆˆX^Ü˜ÈHKÛÛ[YNÈ[™ˆÙ]
-ÊHHXY×ŞÂˆ[™‚ˆYˆš\Ù[\J[‹šZYÚX\
-Bˆ[X^
-KZ[ŠT×Ü˜Ë›İ[™
-Ù]
-JJJJNÂˆO[X^
-KZ[ŠT×Ü˜Ë›İ[™
-Ù]
-ŠJJJNÂˆÙ]
-ÊO[X^
-Ù]
-ÊKX^
-Z[’Ü˜Ë[‹šZYÚX\
-JJØÛÜ˜ÊJNÂˆ[™ˆÙ]
-ÊO[X^
-Ù]
-ÊKZ[’Ü˜ÊNÂˆÙ]
-ÊO[Z[ŠÙ]
-ÊKX^Ü˜ÊNÂ‚ˆ	H:/®yåc9¢*¹¥«y¨à9§éBˆXİX[ÙH›Ü›JÙ]
-NŒŠK[ÜØÛÛ
-NŒŠJNÂˆYˆXİX[Ù
-Øœ×Ü—ØÛÛ
-ÑÙ]
-JŒKÛÛ[YNÈ[™ˆYˆ[œ×ØY\ˆHÚ^™JœĞKJKÛÛ[YNÈ[™‚ˆœİHHÜœĞJNš[œ×ØY\‹ŠNÈÙ]ÈœĞJ[œ×ØY\ŠÌN™[™ŠWNÂˆ™\ØİYPWÜİ]Ë˜Ø[™Y]\×ÙÙ[™\˜]YH‹‹‚ˆ™\ØİYPWÜİ]Ë˜Ø[™Y]\×ÙÙ[™\˜]Y
-ÈNÂˆÚ•]HHÛÜİ[Ù[™]˜[X]T]
-œİKÜİ\YJNÂˆ™\ØİYPWÜİ]Ë˜Ø[™Y]\×Ù]˜[X]YH‹‹‚ˆ™\ØİYPWÜİ]Ë˜Ø[™Y]\×Ù]˜[X]Y
-ÈNÂˆ[•H]œ[˜[Wİİ[Â‚ˆYˆ[•™\İÜ›™Ü[ˆHYKM‚ˆ™\İÜ›™Ü[ˆH[•Âˆ™\İÜ›™ÜœHœİNÂˆ›İ[™Ü›™HYNÂˆYˆ]™™X\ÚX›Kœ™XZÎÈ[™ˆ[™ˆ[™	H—İBˆYˆ›İ[™Ü›™	‰ˆ™\İÜ›™Ü[ˆYKM‹œ™XZÎÈ[™ˆ[™	HUÕT—ÑˆYˆ›İ[™Ü›™	‰ˆ™\İÜ›™Ü[ˆYKM‹œ™XZÎÈ[™ˆ[™	H\œÂˆ[™	H[œ×ÜÜÚ][ÛœÂ‚ˆ	H8¥ 8¥ 9«izj©Nˆ9¦í9¥¬:-ëùo¡8¥ 8¥ ˆYˆ›İ[™Ü›™	‰ˆ™\İÜ›™Ü[ˆ™]—Ü[ˆHYKM‚ˆœĞHH™\İÜ›™ÜœÂˆ™]—Ü[H™\İÜ›™Ü[Âˆ[œ×İİ[H[œ×İİ[
-ÈNÂˆ\ÜĞWÛ[ÙHYNÂˆœš[Š	Èù¥dy£íKZ]\‰YH9£ä¹aiyîåz(c9à®Nˆ[ˆ	K¸¡¤‰K—‰Ë‹‹‚ˆ[œ×İİ[]Øİ\‹œ[˜[Wİİ[™\İÜ›™Ü[ŠNÂˆ[ÙBˆœš[ŠÉÈù¥dy£íWH9í+ú+¨z+á9/,	Y9.*¹`&z`"ygaù§*¹.©ùå'ú/æù. 9«iy¥.ye¡	Ë‹‹‚ˆ	Ê[IKŠK:` 9aîº/ëy.è×‰×K‹‹‚ˆ™\ØİYPWÜİ]Ë˜Ø[™Y]\×Ù]˜[X]Y]Øİ\‹œ[˜[Wİİ[
-NÂˆœ™XZÎÂˆ[™ˆYˆ™\İÜ›™Ü[ˆŒBˆœš[Š	Èù¥dy£íWH9bª9  yè¬9¤§¹mì¹­¢:fi
-[IKˆŒJW‰Ë™\İÜ›™Ü[ŠNÂˆœ™XZÎÂˆ[™ˆ[™	HÚ[B‚ˆ	H8¥ 8¥ 9aj9l`:aáùå*9b)9¥«H8¥ 8¥ ˆYˆ\ÜĞWÛ[ÙˆÚK]WHHÛÜİ[Ù[™]˜[X]T]
-œĞKÜİ\YJNÂˆ™\ØİYPWÜİ]Ë™š[˜[Ù]˜[X][ÛœÈH‹‹‚ˆ™\ØİYPWÜİ]Ë™š[˜[Ù]˜[X][ÛœÈ
-ÈNÂˆ]Kœ™\Z\—Ü[˜[HHÂˆ[HH]Kœ[˜[Wİİ[È™X\ĞHH]K™™X\ÚX›NÂˆYÜHH
-™X\ĞH	‰ˆ˜™\İ™X\ÊH‹‹‚ˆ
-[H™\İ[‹LYKMŠH‹‹‚ˆ
-XœÊ[KX™\İ[ŠOYKMˆ	‰ˆH™\İÛÜİÙš[˜[LYKMŠNÂˆYˆYÜBˆ™\ØİYPWÜİ]Ë˜YÜYHYNÂˆ™\İ]Ùš[˜[\œĞNÈ™\İÛÜİÙš[˜[ZNÂˆ™\İ]Ùš[˜[Y]NÈ™\İ™X\ÏY™X\ĞNÈ™\İ[\[NÂˆ™\İØÚÜÙ[—İYÏVØ™\İØÚÜÙ[—İYË	ÊÜ™\ØĞI×NÂˆœš[Š	Èù¥dy£íWH8¦!H9i&¹/cyïk¹îåz(c9¢$9b§ÈIKŒÙˆ™X\ÏIY[IKˆ[IKˆ
-9alIY9à®JW‰Ë‹‹‚ˆK™X\ĞK[K]Kœ[˜[WÙ[˜[ZX×ØÛÛ\Ú[Û‹[œ×İİ[
-NÂˆ[ÙBˆœš[Š	Èù¥dy£íWH9îåz(c9¥m9/dù§*¹¥.ye¡[OIKˆœÈ	K—‰Ë[K™\İ[ŠNÂˆ[™ˆ[ÙBˆœš[Š	Èù¥dy£íWH9¢`9§"y/cyïk¹gaù¥è9¥.ye¡‰ÊNÂˆ[™ˆ[™ˆØ]ÚYWĞBˆœš[Š	Èù¥dy£íWH9o ¹n.ˆ	\×‰ËYWĞK›Y\ÜØYÙJNÂˆ[™ˆ™\ØİYPWÜİ]ËœİXØÙ\ÜÙ[Ú[œÙ\[ÛœÈH[œ×İİ[Âˆ[Z[™Ëœ™\ØİYPWÜÈHØÊÜ™\ØİYPJNÂ‚ˆ	H8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥dˆ	H\ÜËPˆ:jæ9n©‹úgfy  y«­yî©ù¢«9caÈ
-:`.ú/¤y.#ycæ
-Bˆ	H8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥d8¥dˆÜ™\ØİYPˆHXÎÂˆ™\ØİYP—Üİ]Ë™^Xİ]YHYNÂˆBˆœĞˆH™\İ]Ùš[˜[Âˆ””ĞˆHÚ^™JœĞ‹JNÂˆß‹]ĞŒHHÛÜİ[Ù[™]˜[X]T]
-œĞ‹Üİ\YJNÂˆ™\ØİYP—Üİ]Ë™XYÛ›ÜİX×Ù]˜[X][ÛœÈH‹‹‚ˆ™\ØİYP—Üİ]Ë™XYÛ›ÜİX×Ù]˜[X][ÛœÈ
-ÈNÂˆWÜ˜ĞˆH]ĞŒØ\œš]˜[ÎÂˆYˆ[Y[
-WÜ˜ĞŠ_[””Ğ‹WÜ˜ĞXÛÛ\]P\›Ş\œŠœĞ‹Üİ\
-NÈ[™‚ˆ’SÓÔĞĞSOL‹NÈVWÓPT‘ÒSNÈ’SÓÕ‘TÒLŒÈ—Ñ’VĞLŒÂˆÙY×İš[ÛĞ^™\›ÜÊ””Ğ‹LKJNÈÙY×ÛYĞ^™\›ÜÊ””Ğ‹LKJNÂˆ›Üˆ×ĞLN›””Ğ‹LBˆP\œĞŠ×Ğ‹ŠNÈ\œĞŠ×ĞŠÌKŠNÂˆĞ[›Ü›J‹\PŠNÈYˆĞŒKÛÛ[YNÙ[™ˆ”İX—Ğ[X^
-RS—ÔÕP—ÔËÙZ[
-Ğ‹ÔÕP—ÔÔ
-JNÂˆ›Üˆ×ĞLN›”İX—Ğ‚ˆœ˜X×ĞJ×Ğ‹LJKÛ”İX—ĞÈĞ\PŠÙœ˜X×ĞŠŠ‹\PŠNÂˆYˆš\Ù[\J[‹šZYÚX\
-Bˆ[X^
-KZ[ŠT×Ü˜Ë›İ[™
-ĞŠJJJJNÈO[X^
-KZ[ŠT×Ü˜Ë›İ[™
-ĞŠŠJJJNÂˆÒĞY[‹šZYÚX\
-JNÈZ[‘—Ğ[X^
-Z[’Ü˜ËÒĞŠØÛÜ˜ÊNÂˆYˆĞŠÊOZ[‘—Ğ‚ˆ[Z[‘—Ğ‹\ĞŠÊNÈÙY×İš[ÛĞŠ×ĞŠO\ÙY×İš[ÛĞŠ×ĞŠJİÂˆÙY×ÛYĞŠ×ĞŠO[X^
-ÙY×ÛYĞŠ×ĞŠKŠ•’SÓÔĞĞSJÑVWÓPT‘ÒSŠNÂˆ[™ˆYˆĞŠÊOÒĞŠÌÂˆŒYÒĞŠÌË\ĞŠÊNÈÙY×İš[ÛĞŠ×ĞŠO\ÙY×İš[ÛĞŠ×ĞŠJİŒÂˆÙY×ÛYĞŠ×ĞŠO[X^
-ÙY×ÛYĞŠ×ĞŠKŒŠ•’SÓÔĞĞSJÙÒĞŠØÛÜ˜ÊÑVWÓPT‘ÒSŠNÂˆ[™ˆ[™ˆ[™ˆ[™ˆß‹ÛÜ—O\ÛÜ
-ÙY×İš[ÛĞ‹	Ù\ØÙ[™	ÊNÈ\ÜĞ—Û[ÙY˜[ÙNÂˆ›ÜˆÚWĞLN›Z[Š””Ğ‹LK—Ñ’VĞŠBˆ×Ğ\ÛÜŠÚWĞŠNÈYˆÙY×İš[ÛĞŠ×ĞŠO’SÓÕ‘TÒœ™XZÎÙ[™ˆY\ÙY×ÛYĞŠ×ĞŠNÂˆ›Üˆ™WĞVÚ×Ğ‹×ĞŠÌWBˆYˆ™WĞOL_™WĞO[””Ğ‹ÛÛ[YNÙ[™ˆYˆš\Ù[\J[‹šZYÚX\
-Bˆ[X^
-KZ[ŠT×Ü˜Ë›İ[™
-œĞŠ™WĞ‹JJJJNÈO[X^
-KZ[ŠT×Ü˜Ë›İ[™
-œĞŠ™WĞ‹ŠJJJNÂˆÒÙ™OY[‹šZYÚX\
-JNÂˆ[ÙKÒÙ™OLÙ[™ˆ\™Ù][X^
-œĞŠ™WĞ‹ÊJÛYX^
-Z[’Ü˜ËÒÙ™JØÛÜ˜ÊÑVWÓPT‘ÒSŠJNÂˆœĞŠ™WĞ‹ÊO[Z[ŠX^Ü˜Ë\™Ù]ŠNÈ\ÜĞ—Û[Ù]YNÂˆ[™ˆ[™ˆYˆ\ÜĞ—Û[ÙˆÚ‹]—OXÛÜİ[Ù[™]˜[X]T]
-œĞ‹Üİ\YJNÂˆ™\ØİYP—Üİ]Ë˜Ø[™Y]WÙ]˜[X][ÛœÈH‹‹‚ˆ™\ØİYP—Üİ]Ë˜Ø[™Y]WÙ]˜[X][ÛœÈ
-ÈNÂˆ]‹œ™\Z\—Ü[˜[OZ‹X™\İÛÜİÙš[˜[Âˆ[Y]‹œ[˜[Wİİ[È™X\ĞY]‹™™X\ÚX›NÂˆYÜJ™X\Ğ‰‰Ÿ˜™\İ™X\Ê_
-[™\İ[‹LYKMŠ_
-XœÊ[‹X™\İ[ŠOYKM‰‰š™\İÛÜİÙš[˜[LYKMŠNÂˆYˆYÜ‚ˆ™\ØİYP—Üİ]Ë˜YÜYHYNÂˆ™\İ]Ùš[˜[\œĞÈ™\İÛÜİÙš[˜[ZÈ™\İ]Ùš[˜[Y]Âˆ™\İ™X\ÏY™X\ĞÈ™\İ[\[Âˆ™\İØÚÜÙ[—İYÏVØ™\İØÚÜÙ[—İYË	ÊÜ™\ØĞ‰×NÂˆœš[Š	Èù¥dy£í—H8¦!H:jæ9n©‹úgfy  y/ë¹i#y¢$9b§ÈIKŒÙˆ™X\ÏIY[IK—‰Ë‹™X\Ğ‹[ŠNÂˆ[ÙBˆœš[Š	Èù¥dy£í—H9§*¹¥.ye¡[IKˆœÈ	K—‰Ë[‹™\İ[ŠNÂˆ[™ˆ[™ˆØ]ÚYWĞ‚ˆœš[Š	Èù¥dy£í—H9o ¹n.ˆ	\×‰ËYWĞ‹›Y\ÜØYÙJNÂˆ[™ˆ[Z[™Ëœ™\ØİYP—ÜÈHØÊÜ™\ØİYPŠNÂ‚ˆ[™	H˜™\İ™X\Â‚ˆ	Hˆ•S•SQWĞSSTÒTÈUÒ™S‘
-™\ØİYH[Z[™ÊH‚ˆ[Z[™Ëœ™\ØİYWİİ[ÜÈH[Z[™Ëœ™\ØİYPWÜÈ
-È[Z[™Ëœ™\ØİYP—ÜÎÂˆ	H‚ˆ	HKKKH:+â¹¥«y¥éyoåÎˆ9¢dùcl9."zf-¹«­Hˆ9d£9§ 9îâ:`"y¢êH
-Nˆ9d*ÈZ[9`&z`"JHKKKBˆœš[Š	Èú-ëùo¡:`"y¢êWH˜]ÈIKŒÙŠ™X\ÏIY[IKŠHÛ[ÛİIKŒÙŠ™X\ÏIY[IKŠHZ[IKŒÙŠ™X\ÏIY[IKŠW‰Ë‹‹‚ˆ™\İÜ˜]×Ù]’—Ùš[˜[™\İÜ˜]×Ù]™™X\ÚX›K™\İÜ˜]×Ù]œ[˜[Wİİ[‹‹‚ˆ™\İÜÛ[ÛİÙ]’—Ùš[˜[™\İÜÛ[ÛİÙ]™™X\ÚX›K™\İÜÛ[ÛİÙ]œ[˜[Wİİ[‹‹‚ˆ™\İÛZ[Ù]’—Ùš[˜[™\İÛZ[Ù]™™X\ÚX›K™\İÛZ[Ù]œ[˜[Wİİ[
-NÂˆœš[Š	Èú-ëùo¡:`"y¢êWH8¦!H9§ 9îâ:`"y¢êNˆ	\È
-IKŒÙ‹™X\ÚX›OIYY™”ØØ[OIKŒ™ŠW‰Ë‹‹‚ˆ™\İØÚÜÙ[—İYË™\İÛÜİÙš[˜[™\İ™X\Ë‹‹‚ˆÙ]Ü‘Y˜][
-Ù™Ë	ÙY™šXİ[TØØ[IËKŒ
-JNÂ‚ˆ]H™\İ]Ùš[˜[ÂˆÛÜİH™\İÛÜİÙš[˜[Âˆ]Z[ÈH™\İ]Ùš[˜[Âˆ]Z[Ëš[\›˜[ÜÙX\˜ÚØÛÜİH[\›˜[ÜÙX\˜ÚØÛÜİÂˆ]Z[Ë˜ÚÜÙ[—Ü]İ\HH™\İØÚÜÙ[—İYÎÈ	H:+¬9oez`"y¢êz-ëùo¡9ìnùg¢Â‚ˆ	Hˆ•S•SQWĞSSTÒTÈUÒ™Ì™H
-™\ØİYHÛİ[È
-È[Z[™È[È]Z[ÊH‚ˆ	H:+¨y¥l9cèùo¡ˆ:+éH[ˆ9§ 9îâ:aáùå*9æ¡:-ëùo¡9¦+ùd)¹k§ºfayn¥9å*9.¡ˆ™\ØİYPHÈ™\ØİYP‚ˆ	H
-9/§y£kˆ™\İØÚÜÙ[—İYÈ9.+yæ¡	ÊÜ™\ØĞIÈÈ	ÊÜ™\ØĞ‰È9¨!ú+¬È9«ãÈ[ˆ9cåˆÌJBˆ	H9¬êˆ:/æy¦+È¹n¥9å*9b,9§ 9îâ:-ëùo¡¹æ¡9«(y¥l9.#y¦+È¹l'z+åH¹«(y¥l
-9l'z+åy/a¹i,z-)yæ¡9.#z+¨Jxà ‚ˆ™\ØİYWØWØÛİ[HİX›JÛÛZ[œÊ™\İØÚÜÙ[—İYË	Ü™\ØĞIÊJNÂˆ™\ØİYWØ—ØÛİ[HİX›JÛÛZ[œÊ™\İØÚÜÙ[—İYË	Ü™\ØĞ‰ÊJNÂˆ™\ØİYPWÜİ]Ë˜YÜYHÙÚXØ[
-™\ØİYWØWØÛİ[
-NÂˆ™\ØİYP—Üİ]Ë˜YÜYHÙÚXØ[
-™\ØİYWØ—ØÛİ[
-NÂ‚ˆ[Z[™Ëİ[ÜÈHØÊİİ[
-NÂˆ[Z[™Ë›İ\—ÜÈHX^
-[Z[™Ëİ[ÜÈH[Z[™Ëš[š]X[^˜][Û—ÜÈH‹‹‚ˆ[Z[™ËœÙX\˜ÚÜÈH[Z[™ËÜ×ÜÈH[Z[™Ëœ™\ØİYPWÜÈH[Z[™Ëœ™\ØİYP—ÜÊNÂ‚ˆ]Z[Ë[Z[™ÈH[Z[™ÎÂˆ]Z[Ë˜Ø[™Y]WÜİ]ÈHØ[™Y]WÜİ]ÎÂˆ]Z[Ëœ™\ØİYPWÜİ]ÈH™\ØİYPWÜİ]ÎÂˆ]Z[Ëœ™\ØİYP—Üİ]ÈH™\ØİYP—Üİ]ÎÂˆ]Z[Ëœ™\ØİYWØWØÛİ[H™\ØİYWØWØÛİ[Âˆ]Z[Ëœ™\ØİYWØ—ØÛİ[H™\ØİYWØ—ØÛİ[Âˆ	H•S•SQWĞSSTÒTÈUÒ™Ì™HS‘‚ˆİYÙWÙ]Z[Ëœ˜]ÈH™\İÜ˜]×Ù]ÂˆİYÙWÙ]Z[ËœÛ[ÛİH™\İÜÛ[ÛİÙ]Âˆ	HİYÙWÙ]Z[Ëœ™\Z\ˆ9mì¹éîúfi;ï":+¯º+¨ycæ9¦í;ï&”™\Z\ˆ9ª(ygeùmì¹b(:fi;ï"BˆİYÙWÙ]Z[Ë˜ÚÜÙ[—Ü]İ\HH™\İØÚÜÙ[—İYÎÂˆİYÙWÙ]Z[Ëš[\›˜[ÜÙX\˜ÚØÛÜİH[\›˜[ÜÙX\˜ÚØÛÜİÂˆİYÙWÙ]Z[Ë[Z[™ÈH[Z[™ÎÂˆİYÙWÙ]Z[Ë˜Ø[™Y]WÜİ]ÈHØ[™Y]WÜİ]ÎÂˆİYÙWÙ]Z[Ëœ™\ØİYPWÜİ]ÈH™\ØİYPWÜİ]ÎÂˆİYÙWÙ]Z[Ëœ™\ØİYP—Üİ]ÈH™\ØİYP—Üİ]ÎÂ™[™‚‰IHOOOOOOOOOOOOOH9cà¹¥l9d$zaãÈ8¡¤ˆ9."yîí:-ëùo¡
-9.#¹c§ùâb9k£9aj9. :!í
-HOOOOOOOOOOOOOB‚‰IHOOOOOOOOOOOOOHH:/¡ybªNˆ9k¢yaj9keù«­z#­ùcåˆOOOOOOOOOOOOOB™[˜İ[ÛˆˆHÙ]Ü‘Y˜][
-Ë›˜[YK›
-BˆYˆ\ÙšY[
-Ë›˜[YJH	‰ˆš\Ù[\JËŠ›˜[YJJBˆˆHËŠ›˜[YJNÂˆ[ÙBˆˆH›Âˆ[™™[™
+            % æ¯ PRINT_ITER_EVERY è½®æ‰“å°è¯¦æƒ…
+            if exist('PRINT_ITER_EVERY','var') && PRINT_ITER_EVERY>0 && mod(iter,PRINT_ITER_EVERY)==0
+                fprintf('  iter=%3d  bestFit=%.4f  sigma_decay=%.3f\n', ...
+                    iter, bestFit, 1-0.6*iter/maxIter);
+            end
+        end
+    end
+
+    % =========================================================
+    % æ•è·æœç´¢é˜¶æ®µå†…éƒ¨æœ€ä¼˜é€‚åº”åº¦ (evalRA_v2 è¾“å‡º, å« smooth/NFZ/
+    % headwind å¯¼å‘æƒ©ç½š).  è¿™æ˜¯ ALA ä¼˜åŒ–å™¨"çœ‹åˆ°"çš„æœ€ä¼˜å€¼.
+    % å®ƒä¸æœ€ç»ˆ J çš„å·®è· = å„ç±»å¯¼å‘ç½šé¡¹å åŠ é‡ (ä¸å‚ä¸æ¯”è¾ƒ).
+    % =========================================================
+    % End main-search timing.
+    timing.search_s = toc(t_search);
+    timing.main_optimization_s = timing.search_s;
+    internal_search_cost = bestFit;
+
+    % ====================================================================
+    % é˜¶æ®µäºŒ: Top-K â†’ ä¸‰è·¯å¾„ç”Ÿæˆ â†’ ç»Ÿä¸€è¯„ä¼° â†’ æ‹©ä¼˜é€‰å‡ºæœ€ç»ˆè·¯å¾„
+    %
+    % æ ¸å¿ƒä¿®æ”¹: ä¸å†é»˜è®¤è¾“å‡º repair åè·¯å¾„.
+    % å¯¹æ¯ä¸ªå€™é€‰ç”Ÿæˆ raw / smooth / repair ä¸‰æ¡è·¯å¾„,
+    % æ¯æ¡è·¯å¾„å‡ç”¨ costModel.evaluatePath ç»Ÿä¸€è¯„ä¼°,
+    % ç„¶åæŒ‰ä»¥ä¸‹è§„åˆ™æ‹©ä¼˜:
+    %   1. ä¼˜å…ˆé€‰æ‹© evaluatePath ä¸¥æ ¼åˆ¤å®šä¸º feasible çš„è·¯å¾„
+    %   2. feasible å€™é€‰ä¸­å– final_J æœ€å°è€…
+    %   3. å…¨ä¸ feasible æ—¶, å– penalty_total æœ€å° (åŒåˆ™å– J æœ€å°) è€…
+    % ====================================================================
+    % â”€â”€ ablate_unifiedEvalï¼šè·³è¿‡ç»Ÿä¸€é‡è¯„ä¼°ï¼Œç›´æ¥è¾“å‡ºå†…éƒ¨é€‚åº”åº¦æœ€ä¼˜çš„ raw è·¯å¾„ â”€â”€
+    % è¿™æ˜¯æ¶ˆèå®éªŒ w/o Unified Eval å˜ä½“çš„å®ç°ï¼šè¯æ˜"ç»Ÿä¸€è¯„ä¼°é©±åŠ¨"çš„å®è´¨è´¡çŒ®ã€‚
+    % æ­£å¸¸æµç¨‹ï¼ševalRA_v2å†…éƒ¨é€‚åº”åº¦æœ€ä¼˜ä¸ªä½“ â†’ ä¸‰è·¯å¾„ç”Ÿæˆ â†’ evaluatePathç»Ÿä¸€é‡è¯„ä¼° â†’ æ‹©ä¼˜ã€‚
+    % æ¶ˆèæµç¨‹ï¼ševalRA_v2å†…éƒ¨é€‚åº”åº¦æœ€ä¼˜ä¸ªä½“ â†’ ç›´æ¥è¾“å‡ºå…¶rawè·¯å¾„ï¼ˆä¸ç»ç»Ÿä¸€é‡è¯„ä¼°ï¼‰ã€‚
+    % è‹¥ä¸¤æ¡è·¯å¾„çš„Jå€¼å·®å¼‚æ˜¾è‘—ï¼Œè¯´æ˜å†…éƒ¨å£å¾„å’ŒæŠ¥å‘Šå£å¾„ä¸ä¸€è‡´ï¼Œ"ç»Ÿä¸€è¯„ä¼°é©±åŠ¨"
+    % æ˜¯çœŸæ­£æ”¹å˜è·¯å¾„è´¨é‡çš„æœºåˆ¶ï¼Œè€Œéå£å·ã€‚
+    if isfield(cfg,'ablate_unifiedEval') && cfg.ablate_unifiedEval
+        t_direct = tic;
+        t_piece = tic;
+        raw_direct = param2path(bestPos);
+        timing.topk_generation_s = toc(t_piece);
+        candidate_stats.raw_generated = 1;
+
+        t_piece = tic;
+        [j_direct, det_direct] = costModel.evaluatePath(raw_direct, t_start, hasPayload);
+        timing.topk_evaluation_s = toc(t_piece);
+        candidate_stats.topk_candidates_evaluated = 1;
+        timing.topk_s = toc(t_direct);
+        timing.topk_overhead_s = max(0, timing.topk_s - ...
+            timing.topk_generation_s - timing.topk_evaluation_s);
+        path = raw_direct;
+        cost = j_direct;
+        details = det_direct;
+        details.final_unified_J   = j_direct;
+        details.internal_search_J = bestFit;
+        details.feasible          = det_direct.feasible;
+        details.chosen_path_type  = 'raw(internal-only,no-reeval)';
+        details.J_final           = j_direct;
+        stage_details.raw_J       = j_direct;
+        stage_details.smooth_J    = NaN;
+        stage_details.repair_J    = NaN;
+        % Finalize runtime diagnostics for an early return.
+        timing.total_s = toc(t_total);
+        timing.other_s = max(0, timing.total_s - timing.initialization_s - ...
+            timing.search_s - timing.topk_s);
+        details.timing          = timing;
+        details.candidate_stats = candidate_stats;
+        details.rescueA_stats   = rescueA_stats;
+        details.rescueB_stats   = rescueB_stats;
+        details.rescue_a_count  = 0;
+        details.rescue_b_count  = 0;
+        return;
+    end
+
+    % Top-K stage timing.
+    t_topk = tic;
+    K = min(5, popSize);
+    candidate_stats.topk_parent_count = K;
+    t_piece = tic;
+    [~, sortIdx] = sort(fitness, 'ascend');
+    topIdx       = sortIdx(1:K);
+    timing.topk_generation_s = timing.topk_generation_s + toc(t_piece);
+
+    % å…¨å±€æœ€ä¼˜ (è·¨ K ä¸ªå€™é€‰ Ã— 3 æ¡è·¯å¾„)
+    bestCost_final  = inf;
+    bestPath_final  = [];
+    bestDet_final   = struct();
+    best_raw_det    = struct();
+    best_smooth_det = struct();
+    best_repair_det = struct();
+    best_mild_det   = struct();   % v9: æ¸©å’Œå¹³æ»‘å€™é€‰çš„è¯Šæ–­ä¿¡æ¯
+    best_chosen_tag = 'none';   % è®°å½•æœ€ç»ˆé€‰ä¸­çš„è·¯å¾„ç±»å‹
+
+    % è¾…åŠ©: åœ¨ feasible çº¦æŸä¸‹æ¯”è¾ƒä¸¤æ¡è·¯å¾„
+    % è¿”å› true è¡¨ç¤º (candJ, candPen, candFeas) ä¼˜äºå½“å‰æœ€ä¼˜
+    isBetter = @(candJ, candPen, candFeas, curJ, curPen, curFeas) ...
+        (candFeas && ~curFeas) || ...                          % å¯è¡Œä¼˜äºä¸å¯è¡Œ
+        (candFeas &&  curFeas  && candJ   < curJ - 1e-9) || ...% åŒä¸ºå¯è¡Œå– J å°
+        (~candFeas && ~curFeas && candPen < curPen - 1e-9) || ...% åŒä¸å¯è¡Œå– pen å°
+        (~candFeas && ~curFeas && abs(candPen-curPen)<1e-9 && candJ < curJ - 1e-9);
+
+    bestFeas = false;
+    bestPen  = inf;
+
+    % v10: mild å€™é€‰ä»…åœ¨ hard env (diffScale < 0.8) å¯ç”¨, é¿å…å¯¹ä¸­ç­‰ env çš„å¹²æ‰°
+    enableMildCand = getOrDefault(cfg, 'difficultyScale', 1.0) < 0.8;
+
+    for ci = 1:K
+        t_piece = tic;
+        rawPath = param2path(pop(topIdx(ci),:));
+        timing.topk_generation_s = timing.topk_generation_s + toc(t_piece);
+        candidate_stats.raw_generated = candidate_stats.raw_generated + 1;
+
+        t_piece = tic;
+        smoothed = smoothPathSpline(rawPath, env, minH, maxH);
+        timing.smoothing_s = timing.smoothing_s + toc(t_piece);
+        candidate_stats.smooth_generated = candidate_stats.smooth_generated + 1;
+
+        % è¯„ä¼° raw / smooth (å›ºå®šä¸¤ä¸ªå€™é€‰)
+        t_piece = tic;
+        [raw_J,    raw_det]    = costModel.evaluatePath(rawPath,  t_start, hasPayload);
+        [smooth_J, smooth_det] = costModel.evaluatePath(smoothed, t_start, hasPayload);
+        timing.topk_evaluation_s = timing.topk_evaluation_s + toc(t_piece);
+        candidate_stats.topk_candidates_evaluated = ...
+            candidate_stats.topk_candidates_evaluated + 2;
+
+        % v10: mild å€™é€‰ â€” ä»…åœ¨ hard env å¯ç”¨, å¦åˆ™ç”¨ raw å ä½é¿å…æ—¥å¿—ä¸­æ–­
+        if enableMildCand
+            t_piece = tic;
+            mildPath = mildSmoothPath(rawPath);
+            timing.smoothing_s = timing.smoothing_s + toc(t_piece);
+            candidate_stats.mild_generated = candidate_stats.mild_generated + 1;
+
+            t_piece = tic;
+            [mild_J, mild_det] = costModel.evaluatePath(mildPath, t_start, hasPayload);
+            timing.topk_evaluation_s = timing.topk_evaluation_s + toc(t_piece);
+            candidate_stats.topk_candidates_evaluated = ...
+                candidate_stats.topk_candidates_evaluated + 1;
+            cand_paths = {rawPath,  smoothed, mildPath};
+            cand_dets  = {raw_det,  smooth_det, mild_det};
+            cand_Js    = [raw_J,    smooth_J,   mild_J];
+            cand_tags  = {'raw','smooth','mild'};
+            nCand = 3;
+        else
+            mild_det = raw_det;          % å ä½
+            mild_det.J_final = raw_J;
+            cand_paths = {rawPath,  smoothed};
+            cand_dets  = {raw_det,  smooth_det};
+            cand_Js    = [raw_J,    smooth_J];
+            cand_tags  = {'raw','smooth'};
+            nCand = 2;
+        end
+
+        t_piece = tic;
+        for ci2 = 1:nCand
+            cJ   = cand_Js(ci2);
+            cDet = cand_dets{ci2};
+            cFeas= cDet.feasible;
+            cPen = cDet.penalty_total;
+
+            if isBetter(cJ, cPen, cFeas, bestCost_final, bestPen, bestFeas)
+                bestCost_final  = cJ;
+                bestPath_final  = cand_paths{ci2};
+                bestDet_final   = cDet;
+                best_raw_det    = raw_det;
+                best_smooth_det = smooth_det;
+                best_repair_det = smooth_det;   % å…¼å®¹æ€§å ä½
+                best_mild_det   = mild_det;
+                best_chosen_tag = cand_tags{ci2};
+                bestFeas        = cFeas;
+                bestPen         = cPen;
+            end
+        end
+        timing.topk_selection_s = timing.topk_selection_s + toc(t_piece);
+    end
+
+    % å…œåº•: æ‰€æœ‰å€™é€‰å‡å¤±è´¥æ—¶å›é€€åˆ°æœ€ä¼˜å‚æ•°å‘é‡çš„ raw path
+    if isempty(bestPath_final) || bestCost_final >= inf
+        t_piece = tic;
+        bestPath_final = param2path(bestPos);
+        timing.topk_generation_s = timing.topk_generation_s + toc(t_piece);
+        candidate_stats.raw_generated = candidate_stats.raw_generated + 1;
+
+        t_piece = tic;
+        [bestCost_final, bestDet_final] = costModel.evaluatePath(bestPath_final, t_start, hasPayload);
+        timing.topk_evaluation_s = timing.topk_evaluation_s + toc(t_piece);
+        candidate_stats.topk_candidates_evaluated = ...
+            candidate_stats.topk_candidates_evaluated + 1;
+        bestDet_final.repair_penalty = 0;
+        best_raw_det    = bestDet_final;
+        best_smooth_det = bestDet_final;
+        best_repair_det = bestDet_final;
+        best_mild_det   = bestDet_final;   % v9: å…œåº•åŒæ­¥
+        best_chosen_tag = 'raw(fallback)';
+    end
+
+    % Complete Top-K timing and begin recovery timing.
+    timing.topk_s = toc(t_topk);
+    timing.topk_overhead_s = max(0, timing.topk_s - ...
+        timing.topk_generation_s - timing.smoothing_s - ...
+        timing.topk_evaluation_s - timing.topk_selection_s);
+    % ====================================================================
+    % å®šå‘äºŒæ¬¡æ•‘æ´ v10 â€” å¤šä½ç½®æ’ç‚¹ + é«˜åº¦å˜æ¢
+    %
+    % Pass-A å¯¹æ¯” v9 çš„æ”¹è¿›:
+    %   v9 æ¯è½®åªåœ¨ç¢°æ’æ®µ "ä¹‹å‰" æ’ç‚¹ (insert_after = k_c-1).
+    %   å½“ v9 iter1 çš„ç»•è¡Œç‚¹ä¸ p_k_c ä¹‹é—´å½¢æˆä¸€æ¡é•¿æ®µ (â‰ˆ156m, nSub=13),
+    %   è¯¥é•¿æ®µè‡ªèº«ç©¿è¶Šéšœç¢è½¨è¿¹äº§ç”Ÿ 2 ä¸ªæ–°ç¢°æ’å­ç‚¹.
+    %   v9 iter2 ç»§ç»­åœ¨ "ä¹‹å‰" æ’ç‚¹, å¯¹é•¿æ®µçš„èµ·ç‚¹æ²¡æœ‰æ”¹å˜æ•ˆæœ, å› æ­¤æ— æ”¹å–„.
+    %
+    %   v10 æ¯è½®å¯¹æœ€åç¢°æ’æ®µå°è¯• 3 ä¸ªæ’ç‚¹ä½ç½®:
+    %     Pos-A: æ®µä¹‹å‰ (k_c-1 / k_c ä¹‹é—´)  â† å»¶è¿Ÿåˆ°è¾¾æ®µèµ·ç‚¹
+    %     Pos-B: æ®µä¹‹ä¸­ (k_c / k_c+1 ä¹‹é—´, åœ¨ç¢°æ’åˆ†æ•° frac_col å¤„)
+    %            â† ç›´æ¥åœ¨ç¢°æ’ä½ç½®æ”¾å®‰å…¨èˆªè·¯ç‚¹, åˆ†å‰²é•¿æ®µ
+    %     Pos-C: æ®µä¹‹å (k_c+1 / k_c+2 ä¹‹é—´) â† å»¶è¿Ÿç¦»å¼€æ®µç»ˆç‚¹
+    %
+    %   å¯¹æ¯ä¸ªä½ç½®, å°è¯•:
+    %     Â· 8 æ–¹å‘ Ã— 8 è·ç¦» (30/60/100/150/200/300/400/500 m)
+    %     Â· + é«˜åº¦å˜æ¢: åœ¨çº¯æ¨ªå‘åŸºç¡€ä¸Šè¯•æ¢é£è¶Šéšœç¢é¡¶éƒ¨
+    %       pt(3) = max(current_z, op_col_z + r_obs + 15m)
+    %
+    %   å…± 3 ä½ç½® Ã— 8æ–¹å‘ Ã— 8è·ç¦» Ã— 3é«˜åº¦ = 576 å€™é€‰/è½® (v11æ‰©å±•)
+    %   å–ä½¿ P_dyn å‡å°‘æœ€å¤šçš„å€™é€‰; è‹¥æ— æ”¹å–„åˆ™é€€å‡ºè¿­ä»£.
+    %
+    % MAX_INS_TOTAL = 6, Pass-B é€»è¾‘ä¸å˜.
+    % ====================================================================
+    if ~bestFeas
+        rescueA_stats.triggered = true;
+        rescueB_stats.triggered = true;
+        MS_rc    = env.MAP_SIZE;
+        cl_rc    = costModel.H_clearance;
+        minH_rc  = minH;  maxH_rc = maxH;
+        SUB_SP   = 12;    MIN_SUB_RC = 3;
+        % MAX_INS_TOTAL: æ ¹æ®è¿è¡Œä¸Šä¸‹æ–‡è‡ªé€‚åº”è°ƒæ•´
+        %   ä¸»å®éªŒ  = 6  ï¼ˆæ•ˆç‡ä¼˜å…ˆï¼‰
+        %   ç»Ÿè®¡/æ¶ˆèå®éªŒé€šè¿‡ ala_cfg.rescue_max_ins ä¼ å…¥æ›´å¤§å€¼
+        if isfield(cfg,'rescue_max_ins') && cfg.rescue_max_ins > 0
+            MAX_INS_TOTAL = cfg.rescue_max_ins;
+        else
+            MAX_INS_TOTAL = 6;
+        end
+
+        % â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+        % Pass-A: å¤šä½ç½®è¿­ä»£å¼æ—¶ç©ºç»•è¡Œç‚¹æ’å…¥
+        % â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+        t_rescueA = tic;
+        ins_total = 0;
+        try
+            rp_A  = bestPath_final;
+            passA_mod = false;
+
+            if isempty(env.dynObstacles) || ~isfield(env.dynObstacles,'movingObs')
+                fprintf('    [æ•‘æ´A] æ— ç§»åŠ¨éšœç¢, è·³è¿‡\n');
+            else
+                rescueA_stats.executed = true;
+                DIRS = zeros(8,2);
+                for di_=1:8, ag=(di_-1)*pi/4; DIRS(di_,:)=[cos(ag),sin(ag)]; end
+                % v11: å¢åŠ  400m/500m å¤§æ­¥é•¿ï¼ˆåº”å¯¹å¤§è½¨é“åŠå¾„éšœç¢ï¼‰
+                DETOUR_D = [30, 60, 100, 150, 200, 300, 400, 500];
+                obsList_rc = env.dynObstacles.movingObs;
+
+                while ins_total < MAX_INS_TOTAL
+                    % â”€â”€ æ­¥éª¤1: é‡æ–°è¯„ä¼°, è·å–æœ€æ–° dyn_col_segs â”€â”€
+                    [j_cur, det_cur] = costModel.evaluatePath(rp_A, t_start, hasPayload);
+                    rescueA_stats.diagnostic_evaluations = ...
+                        rescueA_stats.diagnostic_evaluations + 1;
+                    if rescueA_stats.diagnostic_evaluations == 1 && ...
+                            isfield(det_cur,'dyn_col_segs')
+                        rescueA_stats.initial_conflict_segments = ...
+                            nnz(det_cur.dyn_col_segs > 0);
+                    end
+                    tA_rc = det_cur.t_arrivals;
+                    nRP_A = size(rp_A, 1);
+                    if numel(tA_rc) ~= nRP_A
+                        tA_rc = computeApproxTArr(rp_A, t_start);
+                    end
+
+                    if ~isfield(det_cur,'dyn_col_segs') || all(det_cur.dyn_col_segs==0)
+                        break;
+                    end
+
+                    % â”€â”€ æ­¥éª¤2: æ‰¾å½“å‰æœ€åç¢°æ’æ®µ â”€â”€
+                    [~, worst_seg_idx] = max(det_cur.dyn_col_segs);
+                    k_c = worst_seg_idx;
+                    if k_c < 1 || k_c >= size(rp_A,1), break; end
+
+                    p1c = rp_A(k_c,:);   p2c = rp_A(k_c+1,:);
+                    t1c = tA_rc(min(k_c,   numel(tA_rc)));
+                    t2c = tA_rc(min(k_c+1, numel(tA_rc)));
+                    d3c = norm(p2c-p1c);
+                    if d3c < 0.01, break; end
+                    nSub_c = max(MIN_SUB_RC, ceil(d3c/SUB_SP));
+
+                    % â”€â”€ æ­¥éª¤3: ç²¾ç¡®å®šä½ç¢°æ’å­ç‚¹ + éšœç¢ä¿¡æ¯ â”€â”€
+                    best_r_c=inf; t_col=(t1c+t2c)/2; frac_col=0.5;
+                    op_col=zeros(1,3); obs_r_col=1;
+                    for s_c=1:nSub_c
+                        frac_c=(s_c-0.5)/nSub_c;
+                        pt_c=p1c+frac_c*(p2c-p1c); t_c=t1c+frac_c*(t2c-t1c);
+                        for oi_c=1:length(obsList_rc)
+                            obs_c=obsList_rc(oi_c);
+                            op_c=env.dynObstacles.getPosition(oi_c,t_c);
+                            d_c=norm(pt_c-op_c);
+                            if d_c<obs_c.radius && d_c/obs_c.radius<best_r_c
+                                best_r_c=d_c/obs_c.radius;
+                                t_col=t_c; frac_col=frac_c;
+                                op_col=op_c; obs_r_col=obs_c.radius;
+                            end
+                        end
+                    end
+                    if best_r_c>=1, break; end
+
+                    % â”€â”€ æ­¥éª¤4: æœ€å¤š3ä¸ªæ’ç‚¹ä½ç½® Ã— 8æ–¹å‘ Ã— 8è·ç¦» Ã— 3é«˜åº¦ç­–ç•¥ â”€â”€
+                    best_rnd_J    = j_cur;
+                    best_rnd_pen  = det_cur.penalty_total;
+                    best_rnd_feas = det_cur.feasible;
+                    best_rnd_rp   = rp_A;
+                    found_rnd     = false;
+
+                    % å€™é€‰æ’å…¥ä½ç½®:
+                    %   Pos-A: max(1,k_c-1) åˆ° k_c (æ®µä¹‹å‰)
+                    %   Pos-B: k_c åˆ° k_c+1 (æ®µä¹‹ä¸­, åœ¨ frac_col ä½ç½®)
+                    %   Pos-C: k_c+1 åˆ° k_c+2 (æ®µä¹‹å, è‹¥å­˜åœ¨)
+                    ins_positions = [max(1,k_c-1), k_c];
+                    if k_c+1 < size(rp_A,1)
+                        ins_positions = [ins_positions, k_c+1];
+                    end
+
+                    for ip = 1:length(ins_positions)
+                        if found_rnd && best_rnd_feas, break; end
+                        ins_after = ins_positions(ip);
+
+                        % æ’ç‚¹çš„ç©ºé—´å‚è€ƒä½ç½®:
+                        %   Pos-A/C: ä½¿ç”¨ç¢°æ’å­ç‚¹ä½ç½®ä½œä¸ºæ¨é¿å‚è€ƒä¸­å¿ƒ
+                        %   Pos-B: ç²¾ç¡®ä½¿ç”¨ç¢°æ’åˆ†æ•°ä½ç½®
+                        ref_pt = p1c + frac_col*(p2c-p1c);
+
+                        for di_=1:8
+                            if found_rnd && best_rnd_feas, break; end
+                            ev_d = DIRS(di_,:);
+
+                            for dist_i=1:length(DETOUR_D)
+                                D_det = DETOUR_D(dist_i);
+
+                                % --- é«˜åº¦ç­–ç•¥ 1/2/3 ---
+                                for hz_try = 1:3
+                                    pt_det = op_col + [ev_d(1)*(obs_r_col+D_det), ...
+                                                       ev_d(2)*(obs_r_col+D_det), 0];
+                                    pt_det(1) = max(1,min(MS_rc,pt_det(1)));
+                                    pt_det(2) = max(1,min(MS_rc,pt_det(2)));
+
+                                    if hz_try == 1
+                                        % ç­–ç•¥1: çº¯æ¨ªå‘, ä¿æŒå½“å‰æ®µèµ·ç‚¹é«˜åº¦
+                                        pt_det(3) = rp_A(min(ins_after,size(rp_A,1)),3);
+                                    elseif hz_try == 2
+                                        % ç­–ç•¥2: é£è¶Šéšœç¢é¡¶éƒ¨
+                                        above_z = op_col(3) + obs_r_col + 15;
+                                        if above_z > maxH_rc - 5, continue; end
+                                        pt_det(3) = above_z;
+                                    else
+                                        % ç­–ç•¥3: æ–œå‘æŠ¬å‡ï¼ˆæ¨ªå‘+é«˜åº¦åŒæ­¥å¢åŠ ï¼‰
+                                        % åœ¨æ¨ªå‘æ¨é¿çš„åŒæ—¶é¢å¤–æŠ¬é«˜åŠä¸ªå®‰å…¨åŠå¾„
+                                        % é€‚ç”¨äºéšœç¢åœ¨æ–œä¸Šæ–¹æˆ–è·¯å¾„éœ€è¦åŒæ—¶è§„é¿
+                                        % æ°´å¹³å’Œå‚ç›´æ–¹å‘çš„åœºæ™¯
+                                        diag_z = rp_A(min(ins_after,size(rp_A,1)),3) ...
+                                                 + obs_r_col * 0.5;
+                                        if diag_z > maxH_rc - 5, continue; end
+                                        pt_det(3) = diag_z;
+                                    end
+
+                                    if ~isempty(env.heightMap)
+                                        rx=max(1,min(MS_rc,round(pt_det(1))));
+                                        ry=max(1,min(MS_rc,round(pt_det(2))));
+                                        pt_det(3)=max(pt_det(3),max(minH_rc,env.heightMap(rx,ry)+cl_rc));
+                                    end
+                                    pt_det(3)=max(pt_det(3),minH_rc);
+                                    pt_det(3)=min(pt_det(3),maxH_rc);
+
+                                    % è¾¹ç•Œæˆªæ–­æ£€æŸ¥
+                                    actual_d = norm(pt_det(1:2)-op_col(1:2));
+                                    if actual_d < (obs_r_col+D_det)*0.5, continue; end
+                                    if ins_after >= size(rp_A,1), continue; end
+
+                                    rp_try = [rp_A(1:ins_after,:); pt_det; rp_A(ins_after+1:end,:)];
+                                    rescueA_stats.candidates_generated = ...
+                                        rescueA_stats.candidates_generated + 1;
+                                    [jT, detT] = costModel.evaluatePath(rp_try, t_start, hasPayload);
+                                    rescueA_stats.candidates_evaluated = ...
+                                        rescueA_stats.candidates_evaluated + 1;
+                                    penT = detT.penalty_total;
+
+                                    if isBetter(jT, penT, detT.feasible, ...
+                                            best_rnd_J, best_rnd_pen, best_rnd_feas)
+                                        best_rnd_J    = jT;
+                                        best_rnd_pen  = penT;
+                                        best_rnd_feas = detT.feasible;
+                                        best_rnd_rp   = rp_try;
+                                        found_rnd     = true;
+                                        if detT.feasible, break; end
+                                    end
+                                end % hz_try
+                                if found_rnd && best_rnd_feas, break; end
+                            end % DETOUR_D
+                            if found_rnd && best_rnd_feas, break; end
+                        end % dirs
+                    end % ins_positions
+
+                    % â”€â”€ æ­¥éª¤5: æ›´æ–°è·¯å¾„ â”€â”€
+                    if found_rnd && isBetter(best_rnd_J, best_rnd_pen, ...
+                            best_rnd_feas, j_cur, det_cur.penalty_total, det_cur.feasible)
+                        rp_A    = best_rnd_rp;
+                        ins_total = ins_total + 1;
+                        passA_mod = true;
+                        fprintf('    [æ•‘æ´A-iter%d] æ’å…¥ç»•è¡Œç‚¹: pen %.4fâ†’%.4f\n', ...
+                            ins_total, det_cur.penalty_total, best_rnd_pen);
+                    else
+                        fprintf(['    [æ•‘æ´A] ç´¯è®¡è¯„ä¼°%dä¸ªå€™é€‰å‡æœªäº§ç”Ÿè¿›ä¸€æ­¥æ”¹å–„ ', ...
+                            '(pen=%.4f), é€€å‡ºè¿­ä»£\n'], ...
+                            rescueA_stats.candidates_evaluated, det_cur.penalty_total);
+                        break;
+                    end
+                    if best_rnd_feas
+                        fprintf('    [æ•‘æ´A] å·²æ¢å¤ä¸¥æ ¼å¯è¡Œæ€§ (pen=%.4f)\n', best_rnd_pen);
+                        break;
+                    end
+                end % while
+
+                % â”€â”€ å…¨å±€é‡‡ç”¨åˆ¤æ–­ â”€â”€
+                if passA_mod
+                    [jA, detA] = costModel.evaluatePath(rp_A, t_start, hasPayload);
+                    rescueA_stats.final_evaluations = ...
+                        rescueA_stats.final_evaluations + 1;
+                    detA.repair_penalty = 0;
+                    penA  = detA.penalty_total;  feasA = detA.feasible;
+                    adoptA = isBetter(jA, penA, feasA, ...
+                        bestCost_final, bestPen, bestFeas);
+                    if adoptA
+                        rescueA_stats.adopted = true;
+                        bestPath_final=rp_A; bestCost_final=jA;
+                        bestDet_final=detA; bestFeas=feasA; bestPen=penA;
+                        best_chosen_tag=[best_chosen_tag,'+rescA'];
+                        fprintf('    [æ•‘æ´A] â˜… å¤šä½ç½®ç»•è¡ŒæˆåŠŸ J=%.3f feas=%d pen=%.4f dyn=%.4f (å…±%dç‚¹)\n', ...
+                            jA,feasA,penA,detA.penalty_dynamic_collision,ins_total);
+                    else
+                        fprintf('    [æ•‘æ´A] ç»•è¡Œæ•´ä½“æœªæ”¹å–„ penA=%.4f vs %.4f\n',penA,bestPen);
+                    end
+                else
+                    fprintf('    [æ•‘æ´A] æ‰€æœ‰ä½ç½®å‡æ— æ”¹å–„\n');
+                end
+            end
+        catch me_A
+            fprintf('    [æ•‘æ´A] å¼‚å¸¸: %s\n', me_A.message);
+        end
+        rescueA_stats.successful_insertions = ins_total;
+        timing.rescueA_s = toc(t_rescueA);
+
+        % â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+        % Pass-B: é«˜åº¦/é™æ€æ®µçº§æŠ¬å‡ (é€»è¾‘ä¸å˜)
+        % â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+        t_rescueB = tic;
+        rescueB_stats.executed = true;
+        try
+            rp_B  = bestPath_final;
+            nRP_B = size(rp_B,1);
+            [~, det_B0] = costModel.evaluatePath(rp_B, t_start, hasPayload);
+            rescueB_stats.diagnostic_evaluations = ...
+                rescueB_stats.diagnostic_evaluations + 1;
+            tA_rcB = det_B0.t_arrivals;
+            if numel(tA_rcB)~=nRP_B, tA_rcB=computeApproxTArr(rp_B,t_start); end
+
+            VIOL_SCALE=2.5; EXTRA_MARGIN=8; VIOL_THRESH=0.02; N_FIX_B=20;
+            seg_viol_B=zeros(nRP_B-1,1); seg_lift_B=zeros(nRP_B-1,1);
+            for k_B=1:nRP_B-1
+                p1B=rp_B(k_B,:); p2B=rp_B(k_B+1,:);
+                d3B=norm(p2B-p1B); if d3B<0.01,continue;end
+                nSub_B=max(MIN_SUB_RC,ceil(d3B/SUB_SP));
+                for s_B=1:nSub_B
+                    frac_B=(s_B-0.5)/nSub_B; pt_B=p1B+frac_B*(p2B-p1B);
+                    if ~isempty(env.heightMap)
+                        rx=max(1,min(MS_rc,round(pt_B(1)))); ry=max(1,min(MS_rc,round(pt_B(2))));
+                        gH_B=env.heightMap(rx,ry); minF_B=max(minH_rc,gH_B+cl_rc);
+                        if pt_B(3)<minF_B
+                            v=minF_B-pt_B(3); seg_viol_B(k_B)=seg_viol_B(k_B)+v;
+                            seg_lift_B(k_B)=max(seg_lift_B(k_B),v*VIOL_SCALE+EXTRA_MARGIN);
+                        end
+                        if pt_B(3)<gH_B+3
+                            v2=gH_B+3-pt_B(3); seg_viol_B(k_B)=seg_viol_B(k_B)+v2;
+                            seg_lift_B(k_B)=max(seg_lift_B(k_B),v2*VIOL_SCALE+gH_B+cl_rc+EXTRA_MARGIN);
+                        end
+                    end
+                end
+            end
+            [~,sortB]=sort(seg_viol_B,'descend'); passB_mod=false;
+            for ki_B=1:min(nRP_B-1,N_FIX_B)
+                k_B=sortB(ki_B); if seg_viol_B(k_B)<VIOL_THRESH,break;end
+                lift=seg_lift_B(k_B);
+                for fe_B=[k_B,k_B+1]
+                    if fe_B==1||fe_B==nRP_B,continue;end
+                    if ~isempty(env.heightMap)
+                        rx=max(1,min(MS_rc,round(rp_B(fe_B,1)))); ry=max(1,min(MS_rc,round(rp_B(fe_B,2))));
+                        gH_fe=env.heightMap(rx,ry);
+                    else,gH_fe=0;end
+                    targetZ=max(rp_B(fe_B,3)+lift,max(minH_rc,gH_fe+cl_rc+EXTRA_MARGIN));
+                    rp_B(fe_B,3)=min(maxH_rc,targetZ); passB_mod=true;
+                end
+            end
+            if passB_mod
+                [jB,detB]=costModel.evaluatePath(rp_B,t_start,hasPayload);
+                rescueB_stats.candidate_evaluations = ...
+                    rescueB_stats.candidate_evaluations + 1;
+                detB.repair_penalty=jB-bestCost_final;
+                penB=detB.penalty_total; feasB=detB.feasible;
+                adoptB=isBetter(jB,penB,feasB,bestCost_final,bestPen,bestFeas);
+                if adoptB
+                    rescueB_stats.adopted = true;
+                    bestPath_final=rp_B; bestCost_final=jB; bestDet_final=detB;
+                    bestFeas=feasB; bestPen=penB;
+                    best_chosen_tag=[best_chosen_tag,'+rescB'];
+                    fprintf('    [æ•‘æ´B] â˜… é«˜åº¦/é™æ€ä¿®å¤æˆåŠŸ J=%.3f feas=%d pen=%.4f\n',jB,feasB,penB);
+                else
+                    fprintf('    [æ•‘æ´B] æœªæ”¹å–„ penB=%.4f vs %.4f\n',penB,bestPen);
+                end
+            end
+        catch me_B
+            fprintf('    [æ•‘æ´B] å¼‚å¸¸: %s\n', me_B.message);
+        end
+        timing.rescueB_s = toc(t_rescueB);
+
+    end  % ~bestFeas
+
+    % Complete recovery timing.
+    timing.rescue_total_s = timing.rescueA_s + timing.rescueB_s;
+
+    % ---- è¯Šæ–­æ—¥å¿—: æ‰“å°ä¸‰é˜¶æ®µ J å’Œæœ€ç»ˆé€‰æ‹© (v9: å« mild å€™é€‰) ----
+    fprintf('    [è·¯å¾„é€‰æ‹©] raw J=%.3f(feas=%d,pen=%.4f) | smooth J=%.3f(feas=%d,pen=%.4f) | mild J=%.3f(feas=%d,pen=%.4f)\n', ...
+        best_raw_det.J_final,    best_raw_det.feasible,    best_raw_det.penalty_total, ...
+        best_smooth_det.J_final, best_smooth_det.feasible, best_smooth_det.penalty_total, ...
+        best_mild_det.J_final,   best_mild_det.feasible,   best_mild_det.penalty_total);
+    fprintf('    [è·¯å¾„é€‰æ‹©] â˜… æœ€ç»ˆé€‰æ‹©: %s (J=%.3f, feasible=%d, diffScale=%.2f)\n', ...
+        best_chosen_tag, bestCost_final, bestFeas, ...
+        getOrDefault(cfg, 'difficultyScale', 1.0));
+
+    path    = bestPath_final;
+    cost    = bestCost_final;
+    details = bestDet_final;
+    details.internal_search_cost = internal_search_cost;
+    details.chosen_path_type     = best_chosen_tag;   % è®°å½•é€‰æ‹©è·¯å¾„ç±»å‹
+
+    % Attach runtime and recovery diagnostics to the returned details.
+    %  è®¡æ•°å£å¾„: è¯¥ run æœ€ç»ˆé‡‡ç”¨çš„è·¯å¾„æ˜¯å¦å®é™…åº”ç”¨äº† RescueA / RescueB
+    %  (ä¾æ® best_chosen_tag ä¸­çš„ '+rescA' / '+rescB' æ ‡è®°; æ¯ run å– 0/1)
+    %  æ³¨: è¿™æ˜¯"åº”ç”¨åˆ°æœ€ç»ˆè·¯å¾„"çš„æ¬¡æ•°, ä¸æ˜¯"å°è¯•"æ¬¡æ•° (å°è¯•ä½†å¤±è´¥çš„ä¸è®¡)ã€‚
+    rescue_a_count = double(contains(best_chosen_tag, 'rescA'));
+    rescue_b_count = double(contains(best_chosen_tag, 'rescB'));
+    rescueA_stats.adopted = logical(rescue_a_count);
+    rescueB_stats.adopted = logical(rescue_b_count);
+
+    timing.total_s = toc(t_total);
+    timing.other_s = max(0, timing.total_s - timing.initialization_s - ...
+        timing.search_s - timing.topk_s - timing.rescueA_s - timing.rescueB_s);
+
+    details.timing          = timing;
+    details.candidate_stats = candidate_stats;
+    details.rescueA_stats   = rescueA_stats;
+    details.rescueB_stats   = rescueB_stats;
+    details.rescue_a_count  = rescue_a_count;
+    details.rescue_b_count  = rescue_b_count;
+    % End runtime diagnostics.
+
+    stage_details.raw    = best_raw_det;
+    stage_details.smooth = best_smooth_det;
+    % stage_details.repair å·²ç§»é™¤ï¼ˆv4 è®¾è®¡å˜æ›´ï¼šRepair æ¨¡å—å·²åˆ é™¤ï¼‰
+    stage_details.chosen_path_type     = best_chosen_tag;
+    stage_details.internal_search_cost = internal_search_cost;
+    stage_details.timing               = timing;
+    stage_details.candidate_stats      = candidate_stats;
+    stage_details.rescueA_stats        = rescueA_stats;
+    stage_details.rescueB_stats        = rescueB_stats;
+end
+
+%% ============== å‚æ•°å‘é‡ â†’ ä¸‰ç»´è·¯å¾„ (ä¸åŸç‰ˆå®Œå…¨ä¸€è‡´) ==============
+
+%% ============== v9 è¾…åŠ©: å®‰å…¨å­—æ®µè·å– ==============
+function v = getOrDefault(s, fname, dflt)
+    if isfield(s, fname) && ~isempty(s.(fname))
+        v = s.(fname);
+    else
+        v = dflt;
+    end
+end
