@@ -1,9 +1,9 @@
-function summarizeReviewerOutcomes()
+function summarizeEvaluationOutcomes()
 % Re-evaluate the fixed Section 5.5 paths without rerunning any planner.
 
 projectDir = fileparts(mfilename('fullpath'));
 S = load(fullfile(projectDir,'section55_same_cohort_data.mat'));
-outDir = fullfile(projectDir,'reviewer_outcome_summary');
+outDir = fullfile(projectDir,'evaluation_outcomes');
 if ~exist(outDir,'dir'), mkdir(outDir); end
 
 nAlg = numel(S.algNames);
@@ -78,6 +78,6 @@ for a=1:nAlg
     caseTable=[caseTable;part]; %#ok<AGROW>
 end
 writetable(caseTable,fullfile(outDir,'case_level_evaluator_outputs.csv'));
-save(fullfile(outDir,'reviewer_outcome_summary.mat'),'counts','joint','caseTable');
+save(fullfile(outDir,'evaluation_outcomes.mat'),'counts','joint','caseTable');
 disp(counts); disp(joint);
 end
