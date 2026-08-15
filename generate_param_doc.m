@@ -79,7 +79,7 @@ p_w_climb        = 2.0;    % 爬升代价权重 w_c
 p_w_risk         = 10.0;   % 动态风险权重 w_r
 p_w_height       = 50.0;   % 高度惩罚导向权重 w_height (仅内部)
 p_lambda         = 100.0;  % 惩罚系数 λ
-p_feas_thresh    = 0.1;    % 可行性判据 P < feas_thresh
+p_feas_rule      = 'all hard-violation components equal zero'; % 严格逐分量可行性判定
 
 %% ---- 4. 无人机物理参数 ----
 p_m_frame        = 3.5;    % 机身质量 (kg)
@@ -238,7 +238,7 @@ W(sprintf('  %-30s = %-12.1f  %% 爬升代价权重 w_c', 'w_climb', p_w_climb))
 W(sprintf('  %-30s = %-12.1f  %% 动态风险权重 w_r', 'w_risk', p_w_risk));
 W(sprintf('  %-30s = %-12.1f  %% 高度导向权重 (仅内部search, 不进final J)', 'w_height', p_w_height));
 W(sprintf('  %-30s = %-12.1f  %% 惩罚系数 λ', 'lambda_penalty', p_lambda));
-W(sprintf('  %-30s = %-12.1f  %% 可行性判据阈值 P < %.1f', 'feas_thresh', p_feas_thresh, p_feas_thresh));
+W(sprintf('  %-30s = %s  %% 严格逐分量判定', 'feasibility', p_feas_rule));
 W('');
 W('  ---- 3.2 惩罚分项子采样参数 ----');
 W('  P_dyn: n_sub = max(3, ceil(d_k/12))  %% 动态碰撞子采样间距12m');
@@ -344,7 +344,7 @@ W(sprintf('  w_t            %-8.1f    min^-1      时间权重', p_w_time));
 W(sprintf('  w_c            %-8.1f    —           爬升代价权重', p_w_climb));
 W(sprintf('  w_r            %-8.1f    —           动态风险权重', p_w_risk));
 W(sprintf('  λ              %-8.1f    —           惩罚系数', p_lambda));
-W(sprintf('  P_thresh       %-8.1f    —           可行性判据阈值', p_feas_thresh));
+W('  feasibility     all hard-violation components equal zero');
 W(sprintf('  m_total        %-8.1f    kg          无人机总质量', p_m_total));
 W(sprintf('  v_cruise       %-8.1f    m/s         巡航速度', p_v_cruise));
 W(sprintf('  E_batt         %-8.1f    Wh          电池容量', p_E_batt));
@@ -398,7 +398,7 @@ params_table = {
     'w_c',    '2.0',    '—',      '爬升代价权重';
     'w_r',    '10.0',   '—',      '动态风险权重';
     'λ',      '100.0',  '—',      '惩罚系数';
-    'P阈值',  '0.1',    '—',      '可行性判据 P<0.1';
+    '可行性',  '各硬违规分量均为0', '—', '严格逐分量判定';
     'm',      '4.5',    'kg',     '无人机总质量(3.5+1.0)';
     'v',      '15.0',   'm/s',    '巡航速度';
     'E_batt', '200.0',  'Wh',     '电池总容量';
