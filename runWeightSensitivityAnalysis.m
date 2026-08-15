@@ -249,8 +249,7 @@ function outputs = runWeightSensitivityAnalysis(dataFile)
                     climbCost(row) = localField(det, 'C_climb', NaN);
                     dynamicRisk(row) = localField(det, 'R_dynamic', NaN);
                     penaltyTotal(row) = localField(det, 'penalty_total', NaN);
-                    feasible(row) = logical(localField(det, 'feasible', ...
-                        penaltyTotal(row) < 0.1));
+                    feasible(row) = logical(localField(det, 'feasible', false));
                     runStatus{row} = 'ok';
                 catch ME
                     feasible(row) = false;
