@@ -13,21 +13,23 @@ requiredFiles = {
     'UnifiedCostModel.m'
     'PathPlanners.m'
     'runRA_ALA.m'
-    'evalRA_v2.m'
-    'section55_same_cohort_data.mat'
-    'fig9_ablation_same_cohort_data.mat'
-    fullfile('evaluation_outcomes','case_level_evaluator_outputs.csv')
+    'evaluateRAALASearchFitness.m'
+    'renderDepartureTimeAdaptation.m'
+    'departure_time_case_data.mat'
+    'main_experiment_cohort.mat'
+    'ablation_same_cohort_results.mat'
+    fullfile('experiment_outcome_summary','case_level_evaluator_outputs.csv')
     fullfile('cluster_statistics_output','environment_level_summary.csv')
     fullfile('spatial_resolution_output','spatial_resolution_case_results.csv')
     fullfile('weight_sensitivity_results','weight_sensitivity_summary.csv')
-    fullfile('computational_budget_output','runtime_summary.csv')};
+    fullfile('computational_budget_output','planner_runtime_summary.csv')};
 
 missing = requiredFiles(~cellfun(@(f) isfile(fullfile(root,f)),requiredFiles));
 assert(isempty(missing),'Missing required package file(s): %s', ...
     strjoin(missing,', '));
 fprintf('Released source tree and readable result summaries: OK\n');
 
-archive = 'section55_same_cohort_data.mat';
+archive = 'main_experiment_cohort.mat';
 assert(isfile(archive), 'Missing released cohort archive: %s', archive);
 S = load(archive);
 requiredVars = {'env_seeds_used','stat_env','stat_ra_seed','stat_J', ...
@@ -44,7 +46,7 @@ assert(S.N_ENV==10 && S.N_SEED==3 && S.N_STAT==30, ...
 
 fprintf('Released archived cohort: OK\n');
 runClusterAwareStatistics(archive);
-regen_figures_11_13;
-regen_fig9;
+plotStatisticalFiguresFromArchive;
+plotAblationFigureFromArchive;
 fprintf('RA-ALA reproducibility-package verification completed successfully.\n');
 end

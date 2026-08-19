@@ -1,6 +1,6 @@
 CLUSTER-AWARE SECTION 5.5 STATISTICS
 
-Source: section55_same_cohort_data.mat
+Source: main_experiment_cohort.mat
 Independent unit: urban environment (N=10)
 Within-environment aggregation: median of three seeds for continuous outcomes.
 Feasibility criterion: no hard penalty (numerical tolerance 1e-12).

@@ -1,7 +1,7 @@
 COST-WEIGHT SENSITIVITY ANALYSIS
 ================================
 
-Source cohort: section55_same_cohort_data.mat
+Source cohort: main_experiment_cohort.mat
 Design: 10 fixed High-complexity environments, one pre-specified seed per environment.
 Settings: baseline plus 0.5x and 1.5x one-at-a-time perturbations of each reported weight.
 Base weights: w_energy=1, w_time=0.5, w_climb=2, w_risk=10, lambda_penalty=100.

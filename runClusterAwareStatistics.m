@@ -6,7 +6,7 @@ function results = runClusterAwareStatistics(dataFile,userOpts)
 
     projectDir = fileparts(mfilename('fullpath'));
     if nargin < 1 || isempty(dataFile)
-        dataFile = fullfile(projectDir,'section55_same_cohort_data.mat');
+        dataFile = fullfile(projectDir,'main_experiment_cohort.mat');
     elseif ~isfile(dataFile)
         dataFile = fullfile(projectDir,dataFile);
     end

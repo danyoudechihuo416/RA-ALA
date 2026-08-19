@@ -10,14 +10,14 @@ function outputs = runWeightSensitivityAnalysis(dataFile)
 
     projectDir = fileparts(mfilename('fullpath'));
     if nargin < 1 || isempty(dataFile)
-        dataFile = fullfile(projectDir, 'section55_same_cohort_data.mat');
+        dataFile = fullfile(projectDir, 'main_experiment_cohort.mat');
     elseif ~isfile(dataFile)
         dataFile = fullfile(projectDir, dataFile);
     end
 
     if ~isfile(dataFile)
-        error(['Section 5.5 cohort data were not found. Run RA_ALA_demo.m ', ...
-            'through Section 5.5 first so that section55_same_cohort_data.mat is created.']);
+        error(['Section 5.5 cohort data were not found. Run runMainExperiments.m ', ...
+            'through Section 5.5 first so that main_experiment_cohort.mat is created.']);
     end
 
     S = load(dataFile);
@@ -35,7 +35,7 @@ function outputs = runWeightSensitivityAnalysis(dataFile)
     if abs(double(S.main_collision_sample_spacing_m)-canonicalSpacingM) >= eps
         error('WeightSensitivity:ResolutionMismatch', ...
             ['The saved Section 5.5 cohort used %.3g m sampling, but the ', ...
-            'current canonical resolution is %.3g m. Rerun RA_ALA_demo first.'], ...
+            'current canonical resolution is %.3g m. Rerun runMainExperiments first.'], ...
             S.main_collision_sample_spacing_m,canonicalSpacingM);
     end
 

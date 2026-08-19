@@ -147,7 +147,7 @@ function writeT240Report(T,outputDir)
     idx = find(T.departure_time_s == 240,1);
     if isempty(idx), return; end
 
-    fid = fopen(fullfile(outputDir,'departure_time_t240_rescueA_report.txt'),'w');
+    fid = fopen(fullfile(outputDir,'departure_time_t240_diagnostics.txt'),'w');
     if fid < 0, return; end
     cleaner = onCleanup(@() fclose(fid));
 
@@ -188,6 +188,12 @@ end
 
 function writeHardwareTable(outputDir)
     cpu = strtrim(getenv('PROCESSOR_IDENTIFIER'));
+    if ispc
+        [status,cpuName] = system(['powershell -NoProfile -NonInteractive -Command ', ...
+            '"(Get-CimInstance Win32_Processor | Select-Object -First 1 ', ...
+            '-ExpandProperty Name)"']);
+        if status == 0 && ~isempty(strtrim(cpuName)), cpu = strtrim(cpuName); end
+    end
     logicalProcessors = strtrim(getenv('NUMBER_OF_PROCESSORS'));
     ramGB = NaN;
     try

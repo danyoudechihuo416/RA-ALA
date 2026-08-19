@@ -1,5 +1,5 @@
 function results = runComputationalBudgetAnalysis(userOpts)
-%RUNCOMPUTATIONALBUDGETANALYSIS Generate computational-budget and runtime evidence.
+%RUNCOMPUTATIONALBUDGETANALYSIS Generate budget and runtime evidence.
 %   Full run:
 %       results = runComputationalBudgetAnalysis();
 %
@@ -30,7 +30,7 @@ function results = runComputationalBudgetAnalysis(userOpts)
     algNames = {'RA-ALA','Energy-A*','Informed-RRT*','ST-EA*','Greedy'};
     budgetTable = buildBudgetPermissionsTable(opts, algNames);
     writetable(budgetTable, fullfile(opts.OutputDir, ...
-        'algorithm_budget_permissions.csv'));
+        'planner_budget_permissions.csv'));
     if opts.TableOnly
         results = struct('budget_permissions',budgetTable,'hardware',hardware, ...
             'options',opts);
@@ -113,8 +113,8 @@ function results = runComputationalBudgetAnalysis(userOpts)
 
     rawTable = rawStructToTable(R);
     summaryTable = summarizeRuntime(rawTable, algNames);
-    writetable(rawTable, fullfile(opts.OutputDir,'runtime_case_results.csv'));
-    writetable(summaryTable, fullfile(opts.OutputDir,'runtime_summary.csv'));
+    writetable(rawTable, fullfile(opts.OutputDir,'planner_runtime_raw.csv'));
+    writetable(summaryTable, fullfile(opts.OutputDir,'planner_runtime_summary.csv'));
 
     writeHumanReadableReport(opts.OutputDir, hardware, budgetTable, ...
         summaryTable, envSeeds, opts);
@@ -126,9 +126,9 @@ function results = runComputationalBudgetAnalysis(userOpts)
         'environment_seeds',envSeeds,'options',opts);
 
     fprintf('\nOutputs written to: %s\n', opts.OutputDir);
-    fprintf('  algorithm_budget_permissions.csv\n');
-    fprintf('  runtime_case_results.csv\n');
-    fprintf('  runtime_summary.csv\n');
+    fprintf('  planner_budget_permissions.csv\n');
+    fprintf('  planner_runtime_raw.csv\n');
+    fprintf('  planner_runtime_summary.csv\n');
     fprintf('  hardware_specifications.csv / hardware_specifications.txt\n');
     fprintf('  computational_budget_report.txt\n');
 end
@@ -153,8 +153,8 @@ function opts = defaultOptions(u)
     opts.ScreenGap = 1.3;
     opts.OutputDir = fullfile(pwd,'computational_budget_output');
     opts.EnvironmentSeeds = [483, 638, 855, 948, 1041, 1103, 1227, 1475, 2312, 2560];
-    opts.CohortFiles = {'section55_same_cohort_data.mat', ...
-        'environment_level_statistics.mat','fig9_ablation_same_cohort_data.mat'};
+    opts.CohortFiles = {'main_experiment_cohort.mat', ...
+        'environment_level_statistics.mat','ablation_same_cohort_results.mat'};
     opts.QuietRAALA = true;
     opts.TableOnly = false;
     opts.ALAConfig = struct('popSize',40,'maxIter',80,'nWaypoints',8, ...

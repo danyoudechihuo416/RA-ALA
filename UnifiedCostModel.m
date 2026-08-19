@@ -26,9 +26,9 @@ classdef UnifiedCostModel < handle
 %    details.penalty_battery           电池超限
 %    details.penalty_nfz               NFZ 穿越硬罚 (v12: 计入 penalty_total/J)
 %    details.NFZ_penalty               [兼容旧名] = penalty_nfz (现已加入 J)
-%    details.turn_or_smoothness_penalty 0 (仅在 evalRA_v2 搜索阶段存在)
-%    details.wind_lookahead_penalty     0 (仅在 evalRA_v2 搜索阶段存在)
-%    details.repair_penalty             0 (通过阶段对比诊断, 见 run_RA_ALA.m)
+%    details.turn_or_smoothness_penalty 0 (仅在 evaluateRAALASearchFitness 搜索阶段存在)
+%    details.wind_lookahead_penalty     0 (仅在 evaluateRAALASearchFitness 搜索阶段存在)
+%    details.repair_penalty             0 (通过阶段对比诊断, 见 runRA_ALA.m)
 %    details.feasible                   可行标志 (无任何硬约束违规)
 %
 %  接口兼容性:
@@ -122,10 +122,10 @@ classdef UnifiedCostModel < handle
         %%  主要修改: 修复端点重复计费; 新增 penalty_* 分解字段
         %% ================================================================
         function [J, details] = evaluatePath(obj, pathPts, t_start, hasPayload)
-            % Count calls to the shared path evaluator.
+            % >>>>> RUNTIME_ANALYSIS PATCH 1 (eval_count) >>>>>
             global EVAL_COUNTER;
             if ~isempty(EVAL_COUNTER), EVAL_COUNTER = EVAL_COUNTER + 1; end
-            % End evaluator-call instrumentation.
+            % <<<<< RUNTIME_ANALYSIS PATCH 1 END <<<<<
         % 评估单条路径的统一代价 (完整分解输出)
         %
         % 输入:
@@ -481,8 +481,8 @@ classdef UnifiedCostModel < handle
             details.penalty_nfz               = pen_nfz;   % v12: NFZ 硬约束, 已计入 penalty_total/J
             % 兼容旧字段名: 现等于进入 J 的 NFZ 硬罚 (不再是"仅诊断")
             details.NFZ_penalty               = pen_nfz;
-            details.turn_or_smoothness_penalty= 0;   % 仅 evalRA_v2 中
-            details.wind_lookahead_penalty    = 0;   % 仅 evalRA_v2 中
+            details.turn_or_smoothness_penalty= 0;   % 仅 evaluateRAALASearchFitness 中
+            details.wind_lookahead_penalty    = 0;   % 仅 evaluateRAALASearchFitness 中
             details.repair_penalty            = 0;   % 通过阶段对比诊断
             % 可行性与统计
             details.feasible = ~(pen_height>0 || pen_static>0 || pen_dyn>0 || ...
@@ -558,7 +558,7 @@ classdef UnifiedCostModel < handle
         end
 
         %% ================================================================
-        %%  checkStaticCollision (compatibility sampled helper)
+        %%  checkStaticCollision (legacy sampled helper)
         %% ================================================================
         function collision = checkStaticCollision(obj, p1, p2)
             collision = false;

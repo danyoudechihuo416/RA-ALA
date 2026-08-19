@@ -15,15 +15,11 @@ function [path, cost, details, stage_details] = runRA_ALA(...
 %  接口兼容: [path, cost, details] = runRA_ALA(...)  仍然有效
 %
 %  统一评估口径 (目标2):
-%    搜索阶段适应度 evalRA_v2 仍用于比较候选优劣 (含 NFZ/smooth 惩罚).
+%    搜索阶段适应度 evaluateRAALASearchFitness 仍用于比较候选优劣 (含 NFZ/smooth 惩罚).
 %    阶段二的最终 J 统一通过 costModel.evaluatePath 重新计算,
-%    不把 evalRA_v2 的内部值直接当最终输出.
+%    不把 evaluateRAALASearchFitness 的内部值直接当最终输出.
 % =========================================================================
-
-    % The released configuration retains the physical wind field and
-    % headwind guidance but does not use a wind-biased walk operator.
-
-    % Runtime and candidate-count instrumentation.
+    % >>>>> TIMING AND COUNTING INSTRUMENTATION >>>>>
     t_total = tic;
     t_initialization = tic;
     timing = struct('initialization_s', 0, 'warm_start_s', 0, ...
@@ -49,7 +45,7 @@ function [path, cost, details, stage_details] = runRA_ALA(...
         'adopted', false);
     rescue_a_count = 0;
     rescue_b_count = 0;
-    % End runtime and candidate-count instrumentation.
+    % <<<<< TIMING AND COUNTING INSTRUMENTATION END <<<<<
 
     start = start(:)'; goal = goal(:)';
     if length(start)<3, start=[start,60]; end
@@ -73,8 +69,7 @@ function [path, cost, details, stage_details] = runRA_ALA(...
 
     % ─────────── v9: 环境硬度自适应缩放注入 ───────────
     % 一次估算, 在整次 runRA_ALA 期间共用. 写入 cfg.difficultyScale 后
-    % evalRA_v2 内部的 NFZ/obs/headwind 罚项会自动按此因子缩放.
-    % 同时 walk operator 的 windBias 也会根据 difficultyScale 整体弱化.
+    % evaluateRAALASearchFitness 内部的 NFZ/obs/headwind 罚项会自动按此因子缩放.
     if ~(isfield(cfg,'difficultyScale') && ~isempty(cfg.difficultyScale))
         % 仅在外部未显式指定时才自动估算 (允许调用方覆盖)
         [diffScaleAuto, diffInfo] = estimateEnvDifficulty(env, start, goal);
@@ -83,7 +78,7 @@ function [path, cost, details, stage_details] = runRA_ALA(...
     end
 
     param2path = @(x) paramToPath(x, start, goal, nWP, dirUnit, perpUnit, totalDist, env, minH);
-    evalFcn    = @(x) evalRA_v2(x, param2path, t_start, hasPayload, costModel, env, cfg);
+    evalFcn    = @(x) evaluateRAALASearchFitness(x, param2path, t_start, hasPayload, costModel, env, cfg);
 
     % ---- 初始化种群 ----
     pop = zeros(popSize, dim);
@@ -231,8 +226,9 @@ function [path, cost, details, stage_details] = runRA_ALA(...
     timing.initialization_s = toc(t_initialization);
 
     % ---- ALA 主迭代 ----
-    % Main-search timing.
+    % >>>>> RUNTIME_ANALYSIS PATCH 2b (search timing) >>>>>
     t_search = tic;
+    % <<<<<
     for iter = 1:maxIter
         theta       = 2 * atan(1 - iter/maxIter);
         sigma_decay = 1 - 0.6 * iter/maxIter;
@@ -306,13 +302,14 @@ function [path, cost, details, stage_details] = runRA_ALA(...
     end
 
     % =========================================================
-    % 捕获搜索阶段内部最优适应度 (evalRA_v2 输出, 含 smooth/NFZ/
+    % 捕获搜索阶段内部最优适应度 (evaluateRAALASearchFitness 输出, 含 smooth/NFZ/
     % headwind 导向惩罚).  这是 ALA 优化器"看到"的最优值.
     % 它与最终 J 的差距 = 各类导向罚项叠加量 (不参与比较).
     % =========================================================
-    % End main-search timing.
+    % >>>>> RUNTIME_ANALYSIS PATCH 2b END (search timing) >>>>>
     timing.search_s = toc(t_search);
     timing.main_optimization_s = timing.search_s;
+    % <<<<<
     internal_search_cost = bestFit;
 
     % ====================================================================
@@ -328,8 +325,8 @@ function [path, cost, details, stage_details] = runRA_ALA(...
     % ====================================================================
     % ── ablate_unifiedEval：跳过统一重评估，直接输出内部适应度最优的 raw 路径 ──
     % 这是消融实验 w/o Unified Eval 变体的实现：证明"统一评估驱动"的实质贡献。
-    % 正常流程：evalRA_v2内部适应度最优个体 → 三路径生成 → evaluatePath统一重评估 → 择优。
-    % 消融流程：evalRA_v2内部适应度最优个体 → 直接输出其raw路径（不经统一重评估）。
+    % 正常流程：evaluateRAALASearchFitness内部适应度最优个体 → 三路径生成 → evaluatePath统一重评估 → 择优。
+    % 消融流程：evaluateRAALASearchFitness内部适应度最优个体 → 直接输出其raw路径（不经统一重评估）。
     % 若两条路径的J值差异显著，说明内部口径和报告口径不一致，"统一评估驱动"
     % 是真正改变路径质量的机制，而非口号。
     if isfield(cfg,'ablate_unifiedEval') && cfg.ablate_unifiedEval
@@ -357,7 +354,7 @@ function [path, cost, details, stage_details] = runRA_ALA(...
         stage_details.raw_J       = j_direct;
         stage_details.smooth_J    = NaN;
         stage_details.repair_J    = NaN;
-        % Finalize runtime diagnostics for an early return.
+        % >>>>> RUNTIME_ANALYSIS PATCH 2e (early-return path) >>>>>
         timing.total_s = toc(t_total);
         timing.other_s = max(0, timing.total_s - timing.initialization_s - ...
             timing.search_s - timing.topk_s);
@@ -367,11 +364,13 @@ function [path, cost, details, stage_details] = runRA_ALA(...
         details.rescueB_stats   = rescueB_stats;
         details.rescue_a_count  = 0;
         details.rescue_b_count  = 0;
+        % <<<<<
         return;
     end
 
-    % Top-K stage timing.
+    % >>>>> RUNTIME_ANALYSIS PATCH 2c (Top-K timing) >>>>>
     t_topk = tic;
+    % <<<<<
     K = min(5, popSize);
     candidate_stats.topk_parent_count = K;
     t_piece = tic;
@@ -492,11 +491,12 @@ function [path, cost, details, stage_details] = runRA_ALA(...
         best_chosen_tag = 'raw(fallback)';
     end
 
-    % Complete Top-K timing and begin recovery timing.
+    % >>>>> RUNTIME_ANALYSIS PATCH 2c END / 2d START (topk + rescue timing) >>>>>
     timing.topk_s = toc(t_topk);
     timing.topk_overhead_s = max(0, timing.topk_s - ...
         timing.topk_generation_s - timing.smoothing_s - ...
         timing.topk_evaluation_s - timing.topk_selection_s);
+    % <<<<<
     % ====================================================================
     % 定向二次救援 v10 — 多位置插点 + 高度变换
     %
@@ -826,8 +826,9 @@ function [path, cost, details, stage_details] = runRA_ALA(...
 
     end  % ~bestFeas
 
-    % Complete recovery timing.
+    % >>>>> RUNTIME_ANALYSIS PATCH 2d END (rescue timing) >>>>>
     timing.rescue_total_s = timing.rescueA_s + timing.rescueB_s;
+    % <<<<<
 
     % ---- 诊断日志: 打印三阶段 J 和最终选择 (v9: 含 mild 候选) ----
     fprintf('    [路径选择] raw J=%.3f(feas=%d,pen=%.4f) | smooth J=%.3f(feas=%d,pen=%.4f) | mild J=%.3f(feas=%d,pen=%.4f)\n', ...
@@ -844,7 +845,7 @@ function [path, cost, details, stage_details] = runRA_ALA(...
     details.internal_search_cost = internal_search_cost;
     details.chosen_path_type     = best_chosen_tag;   % 记录选择路径类型
 
-    % Attach runtime and recovery diagnostics to the returned details.
+    % >>>>> RUNTIME_ANALYSIS PATCH 2d/2e (rescue counts + timing into details) >>>>>
     %  计数口径: 该 run 最终采用的路径是否实际应用了 RescueA / RescueB
     %  (依据 best_chosen_tag 中的 '+rescA' / '+rescB' 标记; 每 run 取 0/1)
     %  注: 这是"应用到最终路径"的次数, 不是"尝试"次数 (尝试但失败的不计)。
@@ -863,7 +864,7 @@ function [path, cost, details, stage_details] = runRA_ALA(...
     details.rescueB_stats   = rescueB_stats;
     details.rescue_a_count  = rescue_a_count;
     details.rescue_b_count  = rescue_b_count;
-    % End runtime diagnostics.
+    % <<<<< RUNTIME_ANALYSIS PATCH 2d/2e END <<<<
 
     stage_details.raw    = best_raw_det;
     stage_details.smooth = best_smooth_det;

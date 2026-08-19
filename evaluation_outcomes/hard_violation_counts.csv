@@ -1,6 +1,0 @@
-Algorithm,Height,Static,Dynamic,ActiveNFZ,Battery,Multiple,Any
-RA-ALA,6,2,0,0,0,2,6
-Energy-A*,15,12,3,0,0,12,18
-Informed-RRT*,21,17,14,3,0,19,25
-ST-EA*,12,12,9,9,0,12,12
-Greedy,30,30,9,3,0,30,30

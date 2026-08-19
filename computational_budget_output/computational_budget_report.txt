@@ -5,7 +5,7 @@ Runs per environment: 3
 Environment seeds: [483 638 855 948 1041 1103 1227 1475 2312 2560]
 
 HARDWARE
-CPU: AMD64 Family 26 Model 68 Stepping 0, AuthenticAMD
+CPU: AMD Ryzen 7 9800X3D 8-Core Processor
 RAM: 31.11 GB
 OS: Microsoft Windows (kernel 10.0, amd64)
 MATLAB: 24.2.0.2712019 (R2024b)

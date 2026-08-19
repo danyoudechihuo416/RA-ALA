@@ -6,13 +6,13 @@ function results = runSpatialResolutionSensitivity(cohortFile,userOpts)
 %   stochasticity and avoids tripling the planning burden.
 %
 %   Full Section 5.5 cohort:
-%       R = runSpatialResolutionSensitivity('section55_same_cohort_data.mat');
+%       R = runSpatialResolutionSensitivity('main_experiment_cohort.mat');
 %
 %   A saved cohort is strongly preferred. For a standalone run, explicitly
 %   provide EnvironmentSeeds in userOpts.
 
     if nargin < 1 || isempty(cohortFile)
-        cohortFile = 'section55_same_cohort_data.mat';
+        cohortFile = 'main_experiment_cohort.mat';
     end
     if nargin < 2, userOpts = struct(); end
     opts = localDefaults(userOpts);
@@ -245,7 +245,7 @@ function [envSeeds,algSeeds,S,cfg,source,savedPaths] = localResolveCohort(file,o
     else
         if isempty(opts.EnvironmentSeeds)
             error('ResolutionSensitivity:CohortRequired', ...
-                ['Cohort file not found. Run RA_ALA_demo first or provide ', ...
+                ['Cohort file not found. Run runMainExperiments first or provide ', ...
                 'userOpts.EnvironmentSeeds explicitly.']);
         end
         envSeeds = opts.EnvironmentSeeds(:)';

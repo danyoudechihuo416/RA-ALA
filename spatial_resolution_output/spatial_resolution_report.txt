@@ -1,6 +1,6 @@
 SPATIAL COLLISION-SAMPLING RESOLUTION STUDY
 
-Cohort: section55_same_cohort_data.mat
+Cohort: main_experiment_cohort.mat
 Cases planned once: 30
 Planning/evaluation baseline: 1.5 m
 Design: fixed selected paths re-evaluated at [12 6 3 1.5 0.75] m.
