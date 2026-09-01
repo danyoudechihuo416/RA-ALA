@@ -39,18 +39,21 @@ function results = runComputationalBudgetAnalysis(userOpts)
     end
 
     envSeeds = resolveEnvironmentSeeds(opts);
-    nRows = numel(envSeeds)*opts.N_SEED*numel(algNames);
+    nRows = numel(envSeeds)*(2*opts.N_SEED+3);
     R = initializeRawResults(nRows);
     row = 0;
 
     fprintf('\nComputational-budget analysis\n');
-    fprintf('  Environments: %d; repeated runs/environment: %d\n', ...
+    fprintf('  Environments: %d; stochastic runs/environment: %d (deterministic: 1)\n', ...
         numel(envSeeds), opts.N_SEED);
     fprintf('  Timer excludes environment generation, plotting, and file export.\n\n');
 
     for e = 1:numel(envSeeds)
         envSeed = envSeeds(e);
         [env, costModel, planner] = makeEnvironment(opts, envSeed);
+        finalModel = UnifiedCostModel();
+        finalModel.setEnvironment(env.windField,env.dynObstacles,env.heightMap);
+        finalModel.setCollisionSampling(opts.FinalSpacingM,opts.MinSamples);
 
         for s = 1:opts.N_SEED
             commonSeed = envSeed + s*53;
@@ -58,6 +61,7 @@ function results = runComputationalBudgetAnalysis(userOpts)
                 e, numel(envSeeds), envSeed, s, opts.N_SEED);
 
             for a = 1:numel(algNames)
+                if s>1 && ~ismember(a,[1 3]), continue; end
                 row = row + 1;
                 algSeed = commonSeed + a*11;
                 rng(algSeed, 'twister');
@@ -68,10 +72,15 @@ function results = runComputationalBudgetAnalysis(userOpts)
                 R.environment_id(row) = e;
                 R.env_seed(row) = envSeed;
                 R.run_within_environment(row) = s;
-                R.algorithm_seed(row) = algSeed;
+                if a==1 || a==3
+                    R.algorithm_seed(row)=algSeed;
+                else
+                    R.algorithm_seed(row)=NaN; % deterministic planner
+                end
                 R.algorithm{row} = algNames{a};
 
                 tRun = tic;
+                timerFinal = []; beforeFinal = 0;
                 try
                     [path, details, info, searchFitnessCalls] = runOnePlanner( ...
                         a, planner, costModel, env, opts, algSeed);
@@ -91,17 +100,38 @@ function results = runComputationalBudgetAnalysis(userOpts)
                     R.budget_reached(row) = logical(safeGet(info,'budgetExhausted',a==1));
                     R.timed_out(row) = determineTimeout(info,a,opts);
                     R.path_points(row) = size(path,1);
+                    R.planning_J(row) = safeGet(details,'J_final',NaN);
+                    R.planning_feasible(row) = logical(safeGet(details,'feasible',false));
+                    R.final_evaluation_s(row) = 0;
+                    R.final_evaluatePath_calls(row) = 0;
+                    if ~isempty(path) && size(path,1)>=2 && logical(safeGet(info,'reachedGoal',true))
+                        beforeFinal = EVAL_COUNTER;
+                        timerFinal = tic;
+                        waitSchedule = safeGet(info,'waitBeforeSegmentS',[]);
+                        [~,details] = finalModel.evaluatePath(path,0,true,waitSchedule);
+                        R.final_evaluation_s(row) = toc(timerFinal);
+                        R.final_evaluatePath_calls(row) = EVAL_COUNTER-beforeFinal;
+                    else
+                        details = struct();
+                    end
+                    R.total_with_verification_s(row) = elapsed+R.final_evaluation_s(row);
                     R.J(row) = safeGet(details,'J_final',NaN);
                     R.penalty_total(row) = safeGet(details,'penalty_total',NaN);
                     R.final_feasible(row) = logical(safeGet(details,'feasible',false));
                     R.failure_reason{row} = classifyFailure('',path,details,info, ...
                         R.timed_out(row));
                     fprintf('| %s %.2fs eval=%d ', shortName(algNames{a}), ...
-                        elapsed, EVAL_COUNTER);
+                        elapsed, R.evaluatePath_calls(row));
                 catch ME
                     elapsed = toc(tRun);
-                    R.wall_clock_s(row) = elapsed;
-                    R.evaluatePath_calls(row) = EVAL_COUNTER;
+                    if ~isfinite(R.wall_clock_s(row))
+                        R.wall_clock_s(row) = elapsed;
+                        R.evaluatePath_calls(row) = EVAL_COUNTER;
+                    elseif ~isempty(timerFinal)
+                        R.final_evaluation_s(row) = toc(timerFinal);
+                        R.final_evaluatePath_calls(row) = EVAL_COUNTER-beforeFinal;
+                    end
+                    R.total_with_verification_s(row) = elapsed;
                     R.exception(row) = true;
                     R.failure_reason{row} = ['exception:', nonemptyId(ME)];
                     fprintf('| %s FAILED ', shortName(algNames{a}));
@@ -147,14 +177,16 @@ function opts = defaultOptions(u)
     opts.TimeBudgetS = 15;
     opts.NodeBudget = 5000;
     opts.RRTIterations = 1500;
+    opts.PlanningSpacingM = 0.75;
+    opts.FinalSpacingM = 0.75;
+    opts.MinSamples = 3;
     opts.TimeStepS = 2;
     opts.TimeHorizonS = 300;
     opts.ScreenMode = 'fixed';
     opts.ScreenGap = 1.3;
     opts.OutputDir = fullfile(pwd,'computational_budget_output');
     opts.EnvironmentSeeds = [483, 638, 855, 948, 1041, 1103, 1227, 1475, 2312, 2560];
-    opts.CohortFiles = {'main_experiment_cohort.mat', ...
-        'environment_level_statistics.mat','ablation_same_cohort_results.mat'};
+    opts.CohortFiles = {'main_experiment_cohort.mat'};
     opts.QuietRAALA = true;
     opts.TableOnly = false;
     opts.ALAConfig = struct('popSize',40,'maxIter',80,'nWaypoints',8, ...
@@ -162,6 +194,8 @@ function opts = defaultOptions(u)
 
     names = fieldnames(u);
     for i = 1:numel(names), opts.(names{i}) = u.(names{i}); end
+    validateattributes(opts.PlanningSpacingM,{'numeric'},{'scalar','positive','finite'});
+    validateattributes(opts.FinalSpacingM,{'numeric'},{'scalar','positive','finite','<=',opts.PlanningSpacingM});
     requiredCfg = struct('popSize',40,'maxIter',80,'nWaypoints',8, ...
         'riskWeight',15.0,'windLookahead',3,'rescue_max_ins',12);
     cfgNames = fieldnames(requiredCfg);
@@ -174,12 +208,12 @@ end
 
 function T = buildBudgetPermissionsTable(opts, algNames)
     algorithm = algNames(:);
-    comparison_level = repmat({'complete planner configuration'},5,1);
+    comparison_level = repmat({'system-level comparison under prespecified method-specific budgets'},5,1);
     temporal_reasoning = {
         'arrival-time-recursive unified evaluation inside search and final selection';
         'no; dynamic checks use departure-time approximation during graph search';
-        'no explicit temporal state; collision checks do not propagate arrival time';
-        'yes; state=(graph node,time bin), with exact propagated edge-arrival time';
+        'no explicit temporal state; canonical geometric 3-D Informed-RRT*';
+        'yes; state=(graph node,time bin), with propagated edge-arrival time and wait self-loops';
         'no; dynamic checks use departure-time approximation'};
     initialization = {
         'structured population + Greedy projection + Energy-A* warm start';
@@ -214,7 +248,7 @@ function T = buildBudgetPermissionsTable(opts, algNames)
     internal_search_fitness_calls = {
         sprintf('%d planned (= population x [initial + iterations])',opts.ALAConfig.popSize*(opts.ALAConfig.maxIter+1));
         'variable; one unified edge evaluation per relaxation attempt';
-        'variable; edge-energy and collision checks';
+        'one geometric sample per iteration; Euclidean-length tree objective';
         'variable; one unified edge evaluation per space-time transition attempt';
         'N/A'};
     candidate_policy = {
@@ -246,7 +280,9 @@ function T = buildBudgetPermissionsTable(opts, algNames)
     parameter_tuning = repmat({['fixed manuscript settings before this timing run; ', ...
         'parameter provenance must be documented in the manuscript']},5,1);
 
-    T = table(algorithm,comparison_level,temporal_reasoning,initialization, ...
+    planning_spacing_m = repmat(opts.PlanningSpacingM,5,1);
+    final_spacing_m = repmat(opts.FinalSpacingM,5,1);
+    T = table(algorithm,comparison_level,planning_spacing_m,final_spacing_m,temporal_reasoning,initialization, ...
         population_or_sample_size,iteration_node_budget,wall_clock_timeout, ...
         stopping_criteria,internal_search_fitness_calls,candidate_policy, ...
         smoothing_permitted,local_recovery_permitted,final_selection, ...
@@ -350,6 +386,7 @@ function [env,costModel,planner] = makeEnvironment(opts,envSeed)
     env.setTaskPoints(opts.Start,opts.Goal);
     costModel = UnifiedCostModel();
     costModel.setEnvironment(env.windField,env.dynObstacles,env.heightMap);
+    costModel.setCollisionSampling(opts.PlanningSpacingM,opts.MinSamples);
     planner = PathPlanners(env,costModel);
     planner.setBudget(opts.TimeBudgetS,opts.NodeBudget,opts.RRTIterations);
 end
@@ -395,6 +432,11 @@ function R = initializeRawResults(n)
     R.algorithm_seed = nan(n,1);
     R.algorithm = repmat({''},n,1);
     R.wall_clock_s = nan(n,1);
+    R.final_evaluation_s = nan(n,1);
+    R.final_evaluatePath_calls = nan(n,1);
+    R.total_with_verification_s = nan(n,1);
+    R.planning_J = nan(n,1);
+    R.planning_feasible = false(n,1);
     R.evaluatePath_calls = nan(n,1);
     R.search_fitness_calls = nan(n,1);
     R.rescueA_adopted = nan(n,1);
@@ -421,14 +463,16 @@ function T = rawStructToTable(R)
         R.search_time_s,R.topk_time_s,R.recovery_time_s, ...
         R.actual_iterations_or_nodes,R.planner_success,R.budget_reached, ...
         R.timed_out,R.exception,R.path_points,R.J,R.penalty_total, ...
-        R.final_feasible,R.failure_reason, ...
+        R.final_feasible,R.failure_reason,R.planning_J,R.planning_feasible, ...
+        R.final_evaluation_s,R.final_evaluatePath_calls,R.total_with_verification_s, ...
         'VariableNames',{'environment_id','env_seed','run_within_environment', ...
         'algorithm_seed','algorithm','wall_clock_s','evaluatePath_calls', ...
         'search_fitness_calls','rescueA_adopted','rescueB_adopted', ...
         'search_time_s','topk_time_s','recovery_time_s', ...
         'actual_iterations_or_nodes','planner_success','budget_reached', ...
         'timed_out','exception','path_points','J','penalty_total', ...
-        'final_feasible','failure_reason'});
+        'final_feasible','failure_reason','planning_J','planning_feasible', ...
+        'final_evaluation_s','final_evaluatePath_calls','total_with_verification_s'});
 end
 
 function S = summarizeRuntime(T,algNames)
@@ -441,6 +485,7 @@ function S = summarizeRuntime(T,algNames)
     evaluatePath_calls_median = nan(n,1);
     evaluatePath_calls_Q1 = nan(n,1); evaluatePath_calls_Q3 = nan(n,1);
     search_fitness_calls_median = nan(n,1);
+    final_evaluation_median_s = nan(n,1); total_with_verification_median_s = nan(n,1);
     timeout_count = zeros(n,1); exception_count = zeros(n,1);
     failure_count = zeros(n,1); feasibility_rate = nan(n,1);
 
@@ -462,6 +507,8 @@ function S = summarizeRuntime(T,algNames)
             evaluatePath_calls_Q3(a)=qtl(ev,.75);
         end
         if ~isempty(sf), search_fitness_calls_median(a)=median(sf); end
+        final_evaluation_median_s(a)=median(T.final_evaluation_s(mask),'omitnan');
+        total_with_verification_median_s(a)=median(T.total_with_verification_s(mask),'omitnan');
         timeout_count(a)=sum(T.timed_out(mask));
         exception_count(a)=sum(T.exception(mask));
         failure_count(a)=sum(~T.final_feasible(mask));
@@ -472,7 +519,8 @@ function S = summarizeRuntime(T,algNames)
         runtime_IQR_s,runtime_min_s,runtime_max_s, ...
         evaluatePath_calls_median,evaluatePath_calls_Q1, ...
         evaluatePath_calls_Q3,search_fitness_calls_median,timeout_count, ...
-        exception_count,failure_count,feasibility_rate);
+        exception_count,failure_count,feasibility_rate, ...
+        final_evaluation_median_s,total_with_verification_median_s);
 end
 
 function hardware = collectHardwareInfo()
@@ -567,7 +615,9 @@ function writeHumanReadableReport(outDir,H,B,S,seeds,opts)
     fid=fopen(fullfile(outDir,'computational_budget_report.txt'),'w');
     fprintf(fid,'COMPUTATIONAL-BUDGET REPORT\n\n');
     fprintf(fid,'Independent environments: %d\n',numel(seeds));
-    fprintf(fid,'Runs per environment: %d\n',opts.N_SEED);
+    fprintf(fid,'Stochastic runs per environment: %d; deterministic runs: 1.\n',opts.N_SEED);
+    fprintf(fid,'Planning: %.3g m; final verification: %.3g m.\n',opts.PlanningSpacingM,opts.FinalSpacingM);
+    fprintf(fid,'wall_clock_s and evaluatePath_calls cover the planner; final verification time/calls are separate.\n');
     fprintf(fid,'Environment seeds: %s\n\n',mat2str(seeds));
     fprintf(fid,'HARDWARE\nCPU: %s\nRAM: %.2f GB\nOS: %s\nMATLAB: %s\nParallel pool: %d\n\n', ...
         H.cpu_model,H.ram_gb,H.operating_system,H.matlab_version,H.parallel_pool_active);
@@ -590,7 +640,9 @@ function writeHumanReadableReport(outDir,H,B,S,seeds,opts)
         fprintf(fid,'  Recovery: %s\n',B.local_recovery_permitted{i});
         fprintf(fid,'  Failure rule: %s\n',B.failure_rule{i});
     end
-    fprintf(fid,'\nInterpretation boundary: these measurements compare complete planner configurations, not isolated update operators.\n');
+    fprintf(fid,['\nInterpretation boundary: results compare complete planner configurations ', ...
+        'under the prespecified method-specific algorithm budgets; they do not establish ', ...
+        'equal evaluator-call budgets or isolated operator superiority.\n']);
     fclose(fid);
 end
 
@@ -612,6 +664,9 @@ end
 function reason = classifyFailure(exceptionId,path,details,info,timedOut)
     if ~isempty(exceptionId), reason=['exception:',exceptionId]; return; end
     if logical(safeGet(details,'feasible',false)), reason='none'; return; end
+    if strcmp(safeGet(details,'evaluation_status',''),'time_solver_failure')
+        reason='time_solver_failure'; return;
+    end
     if timedOut, reason='timeout_without_feasible_output'; return; end
     if isempty(path) || size(path,1)<2, reason='no_path'; return; end
     if ~logical(safeGet(info,'reachedGoal',true)), reason='goal_not_reached'; return; end

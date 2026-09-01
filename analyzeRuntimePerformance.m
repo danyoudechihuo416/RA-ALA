@@ -41,8 +41,9 @@ algNames  = {'RA-ALA', 'Energy-A*', 'Informed-RRT*', 'Greedy'};
 nAlg = length(algNames);
 
 % Active ablation variants
-ablationNames = {'Full RA-ALA', 'w/o Smooth', ...
-                 'w/o Headwind Guidance', 'w/o Unified Eval'};
+ablationNames = {'Full RA-ALA', 'No smoothness guidance', ...
+                 'No headwind-exposure guidance', ...
+                 'No Top-K candidate re-evaluation and selection'};
 nAbl = length(ablationNames);
 
 % ALA 基础配置

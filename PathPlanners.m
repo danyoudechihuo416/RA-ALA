@@ -28,7 +28,7 @@ classdef PathPlanners < handle
         function obj = PathPlanners(env, costModel)
             obj.env = env;
             obj.costModel = costModel;
-            if ~isempty(env)
+            if ~isempty(env) && ~isempty(obj.env.heightMap)
                 obj.minH = max(obj.env.heightMap(:)) * 0.1 + 20;
             end
             % 从代价模型获取高度限制
@@ -204,11 +204,12 @@ classdef PathPlanners < handle
 
             % 重建路径
             if parent(goalIdx) == 0 && startIdx ~= goalIdx
-                path = [start(1:3); goal(1:3)];
+                path = zeros(0,3);
                 cost = inf;
                 info.success = false;
                 info.reachedGoal = false;
                 info.details = struct();
+                info.stopReason = 'open_set_or_budget_without_goal';
             else
                 pathIdx = goalIdx;
                 pathNodes = goalIdx;
@@ -229,9 +230,10 @@ classdef PathPlanners < handle
                 path(end,:) = goal(1:3);
 
                 [cost, pathDetails] = obj.costModel.evaluatePath(path, t_start, hasPayload);
-                info.success = true;
+                info.success = isfinite(cost) && pathDetails.feasible;
                 info.reachedGoal = true;
                 info.details = pathDetails;
+                info.stopReason = 'goal_reached';
             end
 
             info.time = toc;
@@ -303,6 +305,7 @@ classdef PathPlanners < handle
             arrival = inf(nStates,1);
             altitude = nan(nStates,1);
             parent = zeros(nStates,1,'uint32');
+            edgeWaitS = zeros(nStates,1);
             closed = false(nStates,1);
 
             startState = stateId(startIdx,1);
@@ -379,6 +382,7 @@ classdef PathPlanners < handle
                         arrival(nextState) = nextTime;
                         altitude(nextState) = targetH;
                         parent(nextState) = uint32(currentState);
+                        edgeWaitS(nextState) = 0;
                         f(nextState) = tentativeG+obj.heuristicUnified( ...
                             neighbor,goalIdx,nodes,hasPayload);
                         if ~ismember(nextState,openSet)
@@ -390,13 +394,39 @@ classdef PathPlanners < handle
                         end
                     end
                 end
+
+                % A self-loop advances time while preserving position and altitude.
+                currentBin = floor((currentState-1)/nNodes)+1;
+                nextBin = currentBin+1;
+                if nextBin <= nBins
+                    pWait = [double(nodes(currentNode,1:2)),currentH];
+                    [waitCost,waitDetails] = obj.costModel.evaluatePath( ...
+                        [pWait;pWait],currentTime,hasPayload,timeStep);
+                    nextState = stateId(currentNode,nextBin);
+                    if ~closed(nextState) && isfinite(waitCost) && waitDetails.feasible
+                        tentativeG = g(currentState)+waitCost;
+                        if tentativeG < g(nextState)
+                            g(nextState)=tentativeG;
+                            arrival(nextState)=currentTime+timeStep;
+                            altitude(nextState)=currentH;
+                            parent(nextState)=uint32(currentState);
+                            edgeWaitS(nextState)=timeStep;
+                            f(nextState)=tentativeG+obj.heuristicUnified( ...
+                                currentNode,goalIdx,nodes,hasPayload);
+                            if ~ismember(nextState,openSet)
+                                openSet(end+1,1)=nextState; %#ok<AGROW>
+                            end
+                        end
+                    end
+                end
             end
 
             if reachedState == 0
-                path = [start(1:3);goal(1:3)];
+                path = zeros(0,3);
                 cost = inf;
                 details = struct();
                 pathArrivalTimes = [];
+                waitBeforeSegmentS = [];
                 success = false;
             else
                 statePath = reachedState;
@@ -407,14 +437,17 @@ classdef PathPlanners < handle
                 end
                 path = zeros(numel(statePath),3);
                 pathArrivalTimes = zeros(numel(statePath),1);
+                waitBeforeSegmentS = zeros(max(0,numel(statePath)-1),1);
                 for i = 1:numel(statePath)
                     nodeIdx = mod(statePath(i)-1,nNodes)+1;
                     path(i,:) = [double(nodes(nodeIdx,1:2)),altitude(statePath(i))];
                     pathArrivalTimes(i) = arrival(statePath(i));
+                    if i > 1, waitBeforeSegmentS(i-1)=edgeWaitS(statePath(i)); end
                 end
                 path(1,:) = start(1:3);
                 path(end,:) = goal(1:3);
-                [cost,details] = obj.costModel.evaluatePath(path,t_start,hasPayload);
+                [cost,details] = obj.costModel.evaluatePath( ...
+                    path,t_start,hasPayload,waitBeforeSegmentS);
                 success = isfinite(cost) && details.feasible;
             end
 
@@ -436,6 +469,9 @@ classdef PathPlanners < handle
             info.timeHorizon = timeHorizon;
             info.timeBins = nBins;
             info.arrivalTimesSearch = pathArrivalTimes;
+            info.waitBeforeSegmentS = waitBeforeSegmentS;
+            info.waitActions = nnz(waitBeforeSegmentS>0);
+            info.totalWaitTimeS = sum(waitBeforeSegmentS);
             info.stopReason = stoppedBy;
         end
 
@@ -481,14 +517,12 @@ classdef PathPlanners < handle
                     break;
                 end
 
-                % 采样
-                if rand < goalBias || (bestCost < inf && rand < 0.3)
-                    if bestCost < inf
-                        % Informed sampling within ellipse
-                        sample = obj.sampleInformedEllipse(start, goal, bestCost);
-                    else
-                        sample = goal;
-                    end
+                % Canonical informed sampling for a 3-D path-length objective.
+                if rand < goalBias
+                    sample = goal;
+                elseif isfinite(bestCost)
+                    sample = obj.sampleInformedProlateHyperspheroid( ...
+                        start,goal,bestCost);
                 else
                     sample = obj.randomSample();
                 end
@@ -512,18 +546,18 @@ classdef PathPlanners < handle
                 newNode(3) = max(newNode(3), minZ);
 
                 % 碰撞检测
-                if obj.checkCollisionFree(nearestNode, newNode, t_start)
+                if obj.checkStaticPathFree(nearestNode,newNode)
                     % 找邻近节点
                     nearNodes = obj.findNear(tree.nodes, newNode, rewireRadius);
 
                     % 选择最优父节点
-                    minCost = tree.costs(nearestIdx) + obj.computeEdgeEnergy(nearestNode, newNode, t_start, hasPayload);
+                    minCost = tree.costs(nearestIdx) + norm(newNode-nearestNode);
                     minParent = nearestIdx;
 
                     for i = 1:length(nearNodes)
                         nIdx = nearNodes(i);
-                        if obj.checkCollisionFree(tree.nodes(nIdx,:), newNode, t_start)
-                            newCost = tree.costs(nIdx) + obj.computeEdgeEnergy(tree.nodes(nIdx,:), newNode, t_start, hasPayload);
+                        if obj.checkStaticPathFree(tree.nodes(nIdx,:),newNode)
+                            newCost = tree.costs(nIdx) + norm(newNode-tree.nodes(nIdx,:));
                             if newCost < minCost
                                 minCost = newCost;
                                 minParent = nIdx;
@@ -540,19 +574,20 @@ classdef PathPlanners < handle
                     % 重连
                     for i = 1:length(nearNodes)
                         nIdx = nearNodes(i);
-                        if nIdx ~= minParent
-                            newCost = minCost + obj.computeEdgeEnergy(newNode, tree.nodes(nIdx,:), t_start, hasPayload);
-                            if newCost < tree.costs(nIdx) && obj.checkCollisionFree(newNode, tree.nodes(nIdx,:), t_start)
+                        if nIdx ~= minParent && ~obj.isAncestor(tree,nIdx,newIdx)
+                            newCost = minCost + norm(tree.nodes(nIdx,:)-newNode);
+                            if newCost < tree.costs(nIdx) && obj.checkStaticPathFree(newNode,tree.nodes(nIdx,:))
+                                deltaCost = newCost-tree.costs(nIdx);
                                 tree.parents(nIdx) = newIdx;
-                                tree.costs(nIdx) = newCost;
+                                tree = obj.propagateSubtreeCostDelta(tree,nIdx,deltaCost);
                             end
                         end
                     end
 
                     % 检查是否到达目标
                     if norm(newNode - goal) < stepSize
-                        if obj.checkCollisionFree(newNode, goal, t_start)
-                            goalCost = minCost + obj.computeEdgeEnergy(newNode, goal, t_start, hasPayload);
+                        if obj.checkStaticPathFree(newNode,goal)
+                            goalCost = minCost + norm(goal-newNode);
                             if goalCost < bestCost
                                 bestCost = goalCost;
                                 % 重建路径
@@ -570,7 +605,7 @@ classdef PathPlanners < handle
             end
 
             if isempty(bestPath)
-                path = [start; goal];
+                path = zeros(0,3);
                 cost = inf;
                 info.success = false;
                 info.reachedGoal = false;
@@ -578,7 +613,7 @@ classdef PathPlanners < handle
             else
                 path = bestPath;
                 [cost, pathDetails] = obj.costModel.evaluatePath(path, t_start, hasPayload);
-                info.success = true;
+                info.success = isfinite(cost) && pathDetails.feasible;
                 info.reachedGoal = true;
                 info.details = pathDetails;
             end
@@ -590,6 +625,9 @@ classdef PathPlanners < handle
             info.timeBudget = obj.timeBudget;
             info.budgetExhausted = (actualIter >= maxIter) || (info.time >= obj.timeBudget);
             info.algorithm = 'Informed-RRT*';
+            info.internalObjective = 'three-dimensional Euclidean path length';
+            info.bestPathLengthM = bestCost;
+            info.finalEvaluatorCost = cost;
         end
 
         function sample = randomSample(obj)
@@ -599,36 +637,36 @@ classdef PathPlanners < handle
             sample = [x, y, z];
         end
 
-        function sample = sampleInformedEllipse(obj, start, goal, cBest)
-            % 在椭圆内采样
-            cMin = norm(goal - start);
-            if cBest <= cMin
+        function sample = sampleInformedProlateHyperspheroid(obj,start,goal,cBest)
+            % Uniform sample from the canonical 3-D informed subset.
+            cMin = norm(goal-start);
+            if ~isfinite(cBest) || cMin <= eps || cBest <= cMin
                 sample = obj.randomSample();
                 return;
             end
-
-            center = (start + goal) / 2;
-            a = cBest / 2;
-            c = cMin / 2;
-            b = sqrt(a^2 - c^2);
-
-            % 随机采样椭圆内的点
-            theta = rand * 2 * pi;
-            r = sqrt(rand);
-
-            % 椭圆坐标系
-            direction = (goal - start) / cMin;
-            perpXY = [-direction(2), direction(1), 0];
-            perpXY = perpXY / (norm(perpXY) + 0.001);
-
-            sample = center + a * r * cos(theta) * direction + b * r * sin(theta) * perpXY;
-            sample(3) = obj.minH + rand * (obj.maxH - obj.minH);
-
-            % 边界约束
-            sample(1) = max(1, min(obj.env.MAP_SIZE, sample(1)));
-            sample(2) = max(1, min(obj.env.MAP_SIZE, sample(2)));
+            a = cBest/2;
+            b = sqrt(max(cBest^2-cMin^2,0))/2;
+            e1 = (goal-start)'/cMin;
+            [~,axisIdx] = min(abs(e1));
+            helper = zeros(3,1); helper(axisIdx)=1;
+            e2 = cross(e1,helper); e2=e2/max(norm(e2),eps);
+            e3 = cross(e1,e2);
+            C = [e1,e2,e3];
+            center = (start+goal)'/2;
+            for attempt = 1:100
+                x = randn(3,1);
+                x = x/max(norm(x),eps)*rand^(1/3);
+                candidate = (center+C*diag([a,b,b])*x)';
+                inXY = all(candidate(1:2)>=1 & candidate(1:2)<=obj.env.MAP_SIZE);
+                inZ = candidate(3)>=obj.minH && candidate(3)<=obj.maxH;
+                if inXY && inZ
+                    sample = candidate;
+                    return;
+                end
+            end
+            % The midpoint belongs to both the informed subset and search domain.
+            sample = (start+goal)/2;
         end
-
         function [idx, node] = nearest(obj, nodes, sample)
             dists = sqrt(sum((nodes - sample).^2, 2));
             [~, idx] = min(dists);
@@ -640,37 +678,41 @@ classdef PathPlanners < handle
             nearIdx = find(dists < radius);
         end
 
-        function free = checkCollisionFree(obj, p1, p2, t)
+        function free = checkStaticPathFree(obj,p1,p2)
+            % Geometric collision check used by the canonical RRT* baseline.
             free = true;
-            nCheck = max(5, round(norm(p2-p1) / 10));
+            spacing = obj.costModel.collision_sample_spacing;
+            nCheck = max(5,ceil(norm(p2-p1)/spacing));
             for i = 0:nCheck
-                pt = p1 + (i/nCheck) * (p2 - p1);
-                ex = max(1, min(obj.env.MAP_SIZE, round(pt(1))));
-                ey = max(1, min(obj.env.MAP_SIZE, round(pt(2))));
-                if pt(3) < obj.env.heightMap(ex, ey) + 3
-                    free = false;
+                pt = p1+(i/nCheck)*(p2-p1);
+                ex=max(1,min(obj.env.MAP_SIZE,round(pt(1))));
+                ey=max(1,min(obj.env.MAP_SIZE,round(pt(2))));
+                minZ=max(obj.minH,obj.env.heightMap(ex,ey)+obj.costModel.H_clearance);
+                if pt(3) < minZ || pt(3) > obj.maxH
+                    free=false;
                     return;
-                end
-                if ~isempty(obj.env.dynObstacles)
-                    % 动态障碍 (依赖时刻)
-                    if obj.env.dynObstacles.checkCollision(pt(1), pt(2), pt(3), t)
-                        free = false;
-                        return;
-                    end
-                    % ★ NFZ 保守检测: 忽略时间窗, 只检查空间
-                    for nfi = 1:length(obj.env.dynObstacles.tempNFZ)
-                        nfz = obj.env.dynObstacles.tempNFZ(nfi);
-                        if ~nfz.active, continue; end
-                        dh = sqrt((pt(1)-nfz.center(1))^2 + (pt(2)-nfz.center(2))^2);
-                        if dh < nfz.radius * 1.15 && pt(3) >= nfz.height(1) && pt(3) <= nfz.height(2)
-                            free = false;
-                            return;
-                        end
-                    end
                 end
             end
         end
 
+        function tf = isAncestor(~,tree,candidateIdx,nodeIdx)
+            tf=false;
+            p=tree.parents(nodeIdx);
+            while p ~= 0
+                if p == candidateIdx, tf=true; return; end
+                p=tree.parents(p);
+            end
+        end
+        function tree = propagateSubtreeCostDelta(~,tree,rootIdx,deltaCost)
+            tree.costs(rootIdx)=tree.costs(rootIdx)+deltaCost;
+            frontier=rootIdx;
+            while ~isempty(frontier)
+                u=frontier(1); frontier(1)=[];
+                children=find(tree.parents==u);
+                tree.costs(children)=tree.costs(children)+deltaCost;
+                frontier=[frontier;children(:)]; %#ok<AGROW>
+            end
+        end
         %% ==================== ALA-based Planner ====================
         function [path, cost, info] = ALAPlanner(obj, start, goal, t_start, hasPayload, maxIter)
             % ALA-based: 使用人工旅鼠算法优化路径
@@ -832,20 +874,25 @@ classdef PathPlanners < handle
             if nargin < 4, t_start = 0; end
 
             tic;
-            path = obj.greedyPath(start, goal, t_start);
-            [cost, pathDetails] = obj.costModel.evaluatePath(path, t_start, hasPayload);
+            [path,reachedGoal] = obj.greedyPath(start,goal,t_start);
+            if reachedGoal
+                [cost,pathDetails] = obj.costModel.evaluatePath(path,t_start,hasPayload);
+            else
+                path=zeros(0,3); cost=inf; pathDetails=struct();
+            end
             info.time = toc;
             info.algorithm = 'Greedy';
-            info.success = (cost < inf);
-            info.reachedGoal = true;
+            info.success = reachedGoal && isfinite(cost) && pathDetails.feasible;
+            info.reachedGoal = reachedGoal;
             info.details = pathDetails;
+            if reachedGoal, info.stopReason='goal_reached'; else, info.stopReason='dead_end'; end
             info.iterations = 1;
             info.iterationBudget = 1;
             info.timeBudget = inf;
             info.budgetExhausted = false;
         end
 
-        function path = greedyPath(obj, start, goal, t_start)
+        function [path,reachedGoal] = greedyPath(obj, start, goal, t_start)
             % 贪心路径搜索
             % 确保start和goal是行向量
             start = start(:)';
@@ -940,6 +987,8 @@ classdef PathPlanners < handle
                 current = nextNode;
             end
 
+            reachedGoal = current == goalIdx;
+
             % 构建路径
             path = zeros(length(pathIdx), 3);
             path(1,:) = start(1:3);
@@ -951,10 +1000,12 @@ classdef PathPlanners < handle
                 z = max(nz + 5, obj.minH);
                 path(i,:) = [nx, ny, z];
             end
-            if norm(path(end,1:2) - goal(1:2)) > 1
-                path = [path; goal(1:3)];
-            else
-                path(end,:) = goal(1:3);
+            if reachedGoal
+                if norm(path(end,1:2)-goal(1:2)) > 1
+                    path=[path;goal(1:3)];
+                else
+                    path(end,:)=goal(1:3);
+                end
             end
         end
     end

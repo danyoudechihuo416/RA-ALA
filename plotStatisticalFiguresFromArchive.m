@@ -2,8 +2,11 @@
 close all;
 
 S = load('main_experiment_cohort.mat');
+if ~isfield(S,'stat_is_unique_trial')
+    error('Archive predates unique-trial bookkeeping; rerun runMainExperiments first.');
+end
 plotDistributionalRobustness(S.stat_J,S.stat_E,S.stat_feasible,S.stat_env, ...
-    S.env_seeds_used,S.algNames,'fig7_distributional_robustness.png');
+    S.env_seeds_used,S.algNames,'fig7_distributional_robustness.png',S.stat_is_unique_trial);
 
 clusterStats = runClusterAwareStatistics('main_experiment_cohort.mat');
 plotClusterAwareStatistics(clusterStats,'fig8_statistical_significance.png');

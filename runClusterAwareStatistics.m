@@ -22,12 +22,14 @@ function results = runClusterAwareStatistics(dataFile,userOpts)
             error('ClusterStats:MissingField','Missing %s in %s.',required{i},dataFile);
         end
     end
-    probe=UnifiedCostModel();
-    expectedSpacing=probe.collision_sample_spacing;
-    if abs(double(S.main_collision_sample_spacing_m)-expectedSpacing)>=eps
+    expectedSpacing=0.75;
+    if isfield(S,'final_verification_spacing_m')
+        expectedSpacing=double(S.final_verification_spacing_m);
+    end
+    if abs(double(S.main_collision_sample_spacing_m)-expectedSpacing)>=eps || ...
+            abs(expectedSpacing-0.75)>=eps
         error('ClusterStats:StaleMainCohort', ...
-            'Cohort spacing is %.3g m; rerun main experiments at %.3g m.', ...
-            S.main_collision_sample_spacing_m,expectedSpacing);
+            'Primary cohort must contain 0.75 m final certification results.');
     end
 
 
@@ -44,23 +46,31 @@ function results = runClusterAwareStatistics(dataFile,userOpts)
     envP = nan(nEnv,nAlg); envF = nan(nEnv,nAlg);
     envSuccess = zeros(nEnv,nAlg); envRuns = zeros(nEnv,nAlg);
     for e=1:nEnv
-        idx = find(S.stat_env==envSeeds(e));
+        idxAll = find(S.stat_env==envSeeds(e));
         for a=1:nAlg
+            idx=idxAll;
+            if isfield(S,'stat_is_unique_trial')
+                idx=idxAll(logical(S.stat_is_unique_trial(a,idxAll)));
+            end
             j = S.stat_J(a,idx); en = S.stat_E(a,idx); p = S.stat_P(a,idx);
             if isfield(S,'stat_feasible')
                 feasible = logical(S.stat_feasible(a,idx));
             else
                 feasible = p <= opts.PenaltyTolerance;
             end
-            ok = isfinite(j) & isfinite(en) & isfinite(p);
-            envRuns(e,a) = sum(ok);
-            if any(ok)
-                envJ(e,a) = median(j(ok));
-                envE(e,a) = median(en(ok));
-                envP(e,a) = median(p(ok));
-                envSuccess(e,a) = sum(feasible(ok));
-                envF(e,a) = envSuccess(e,a)/sum(ok);
+            validEvaluation = isfinite(j) & isfinite(en) & isfinite(p);
+            feasibleMetric = validEvaluation & feasible;
+            envRuns(e,a) = numel(idx); % failed searches remain infeasible trials
+            if any(feasibleMetric)
+                envJ(e,a) = median(j(feasibleMetric));
+                envE(e,a) = median(en(feasibleMetric));
             end
+            if any(validEvaluation)
+                % Penalty retains the violation burden of infeasible outputs.
+                envP(e,a) = median(p(validEvaluation));
+            end
+            envSuccess(e,a) = sum(feasibleMetric);
+            envF(e,a) = envSuccess(e,a)/envRuns(e,a);
         end
     end
 
@@ -132,6 +142,7 @@ function T = localContinuousTests(algNames,J,E,P,bootIdx,opts)
     W_minus=nan(nRows,1); nonzero_N=zeros(nRows,1); p_raw=nan(nRows,1);
     p_holm=nan(nRows,1); rank_biserial=nan(nRows,1);
     effect_direction=repmat({'positive favors RA-ALA'},nRows,1);
+    analysis_population=cell(nRows,1);
     calculation_method=repmat({['exact signed-rank enumeration; average ranks ', ...
         'for ties; zero differences discarded']},nRows,1);
     r=0;
@@ -142,18 +153,27 @@ function T = localContinuousTests(algNames,J,E,P,bootIdx,opts)
             ok=isfinite(x(:,1)) & isfinite(x(:,b));
             d=x(ok,b)-x(ok,1);
             metric{r}=metricNames{m}; unit{r}=units{m}; baseline{r}=algNames{b};
-            environment_N(r)=sum(ok); median_RA(r)=median(x(ok,1));
-            median_baseline(r)=median(x(ok,b));
-            median_difference_baseline_minus_RA(r)=median(d);
-            [ci_low(r),ci_high(r)]=localBootstrapCI(d,bootIdx(:,1:opts.BootstrapReplicates),@median,opts.Alpha);
-            [p_raw(r),W_plus(r),W_minus(r),nonzero_N(r),rank_biserial(r)] = ...
-                localExactSignedRank(d);
+            if m<=2
+                analysis_population{r}='environments with feasible outputs from both methods';
+            else
+                analysis_population{r}='environments with numerically valid outputs from both methods';
+            end
+            environment_N(r)=sum(ok);
+            if any(ok)
+                median_RA(r)=median(x(ok,1));
+                median_baseline(r)=median(x(ok,b));
+                median_difference_baseline_minus_RA(r)=median(d);
+                [ci_low(r),ci_high(r)]=localBootstrapCI(d,[],@median,opts.Alpha,opts.BootstrapReplicates);
+                [p_raw(r),W_plus(r),W_minus(r),nonzero_N(r),rank_biserial(r)] = ...
+                    localExactSignedRank(d);
+            end
         end
         p_holm(metricRows)=localHolm(p_raw(metricRows));
     end
     T=table(metric,unit,baseline,environment_N,median_RA,median_baseline, ...
         median_difference_baseline_minus_RA,ci_low,ci_high,W_plus,W_minus, ...
-        nonzero_N,p_raw,p_holm,rank_biserial,effect_direction,calculation_method);
+        nonzero_N,p_raw,p_holm,rank_biserial,effect_direction, ...
+        analysis_population,calculation_method);
 end
 
 function T = localFeasibilityRates(algNames,F,S,N,bootIdx,opts)
@@ -192,7 +212,7 @@ function T = localOmnibus(~,J,E,P,F)
     outcomes={'Composite cost';'Energy';'Hard-constraint penalty';'Feasibility proportion'};
     X={J,E,P,F}; statistic=nan(4,1); degrees_of_freedom=nan(4,1);
     p_value=nan(4,1); environment_N=zeros(4,1); algorithms_N=zeros(4,1);
-    test=repmat({'Friedman block test with environment as block'},4,1);
+    test=repmat({'Asymptotic Friedman block test with environment as block'},4,1);
     for i=1:4
         [statistic(i),degrees_of_freedom(i),p_value(i),environment_N(i),algorithms_N(i)] = ...
             localFriedman(X{i});
@@ -234,12 +254,15 @@ function adj = localHolm(p)
     tmp=zeros(m,1); tmp(ord)=vals; adj(ok)=tmp;
 end
 
-function [lo,hi] = localBootstrapCI(x,bootIdx,fun,alpha)
+function [lo,hi] = localBootstrapCI(x,bootIdx,fun,alpha,varargin)
     x=x(:); x=x(isfinite(x)); n=numel(x);
     if n==0, lo=NaN; hi=NaN; return; end
+    requestedB=[];
+    if ~isempty(varargin), requestedB=varargin{1}; end
     idx=bootIdx;
-    if size(idx,1)~=n
-        B=size(idx,2); idx=randi(n,n,B);
+    if isempty(idx) || size(idx,1)~=n
+        if isempty(requestedB), B=20000; else, B=requestedB; end
+        idx=randi(n,n,B);
     end
     B=size(idx,2); vals=zeros(B,1);
     for b=1:B, vals(b)=fun(x(idx(:,b))); end
@@ -281,12 +304,14 @@ function localWriteReport(file,dataFile,opts,nEnv,algNames,C,F,FP,O)
     fid=fopen(file,'w'); cleanup=onCleanup(@()fclose(fid)); %#ok<NASGU>
     fprintf(fid,'CLUSTER-AWARE SECTION 5.5 STATISTICS\n\n');
     fprintf(fid,'Source: %s\nIndependent unit: urban environment (N=%d)\n',dataFile,nEnv);
-    fprintf(fid,'Within-environment aggregation: median of three seeds for continuous outcomes.\n');
+    fprintf(fid,'Within-environment aggregation: median of unique trials.\n');
+    fprintf(fid,'Cost and energy contrasts require feasible outputs from both methods.\n');
+    fprintf(fid,'Penalty contrasts summarize all numerically valid evaluated outputs.\n');
     fprintf(fid,'Feasibility criterion: no hard penalty (numerical tolerance %.3g).\n',opts.PenaltyTolerance);
     fprintf(fid,'Algorithms: %s\n\n',strjoin(algNames,', '));
     fprintf(fid,'OMNIBUS TESTS\n');
     for i=1:height(O)
-        fprintf(fid,'%s: Friedman Q=%.6g, df=%g, p=%.6g\n', ...
+        fprintf(fid,'%s: asymptotic Friedman Q=%.6g, df=%g, p=%.6g\n', ...
             O.outcomes{i},O.statistic(i),O.degrees_of_freedom(i),O.p_value(i));
     end
     fprintf(fid,'\nFEASIBILITY RATES WITH CLUSTER BOOTSTRAP CI\n');

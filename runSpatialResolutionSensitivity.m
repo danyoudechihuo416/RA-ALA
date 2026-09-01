@@ -1,5 +1,5 @@
 function results = runSpatialResolutionSensitivity(cohortFile,userOpts)
-%RUNSPATIALRESOLUTIONSENSITIVITY Audit 12/6/3/1.5 m collision sampling.
+%RUNSPATIALRESOLUTIONSENSITIVITY Audit fixed paths down to 0.375 m sampling.
 %   The RA-ALA path is planned once at PlanningSpacingM and then held fixed
 %   while the unified evaluator is rerun at each requested spacing. This
 %   isolates numerical collision-detection resolution from optimizer
@@ -18,7 +18,7 @@ function results = runSpatialResolutionSensitivity(cohortFile,userOpts)
     opts = localDefaults(userOpts);
     if ~exist(opts.OutputDir,'dir'), mkdir(opts.OutputDir); end
 
-    [envSeeds,algorithmSeeds,settings,cfg,cohortSource,savedPaths] = ...
+    [envSeeds,algorithmSeeds,settings,cfg,cohortSource,savedPaths,reuseMask] = ...
         localResolveCohort(cohortFile,opts);
     nEnv = numel(envSeeds);
     nSeed = size(algorithmSeeds,2);
@@ -66,10 +66,14 @@ function results = runSpatialResolutionSensitivity(cohortFile,userOpts)
             planner.setBudget(opts.TimeBudgetS,opts.NodeBudget,opts.RRTIterations);
             timer = tic;
             try
-                if ~isempty(savedPaths{ei,si})
+                if reuseMask(ei,si)
                     path = savedPaths{ei,si};
                     planning_time_s(caseCounter) = 0;
                     planning_status{caseCounter} = 'reused_saved_path';
+                    if isempty(path) || size(path,1)<2
+                        error('ResolutionSensitivity:SavedPlannerFailure', ...
+                            'The archived trial has no output path; it remains a failed trial.');
+                    end
                 else
                     if opts.Quiet
                         evalc('[path,~,detPlan] = runRA_ALA(planner,cmPlan,env,settings.Start,settings.Goal,0,true,cfg);');
@@ -90,7 +94,7 @@ function results = runSpatialResolutionSensitivity(cohortFile,userOpts)
                 end
                 paths{caseCounter} = path;
             catch ME
-                planning_time_s(caseCounter) = toc(timer);
+                if ~reuseMask(ei,si), planning_time_s(caseCounter) = toc(timer); end
                 planning_status{caseCounter} = ['failed:',localExceptionId(ME)];
                 path = [];
             end
@@ -129,6 +133,11 @@ function results = runSpatialResolutionSensitivity(cohortFile,userOpts)
                     total_collision_subsamples(row) = det.total_collision_subsamples;
                     total_nfz_subsamples(row) = det.total_nfz_subsamples;
                     run_status{row} = 'ok';
+                    if ~det.numerically_valid
+                        run_status{row} = det.evaluation_status;
+                        J(row)=NaN; energy_Wh(row)=NaN; arrival_time_s(row)=NaN;
+                        dynamic_risk(row)=NaN; penalty_total(row)=NaN;
+                    end
                 catch ME
                     run_status{row} = ['failed:',localExceptionId(ME)];
                 end
@@ -154,7 +163,7 @@ function results = runSpatialResolutionSensitivity(cohortFile,userOpts)
         cohortSource,opts,summary,stability,nCases);
     save(fullfile(opts.OutputDir,'spatial_resolution_results.mat'), ...
         'raw','summary','stability','paths','planning_time_s', ...
-        'planning_status','envSeeds','algorithmSeeds','settings','cfg','opts');
+        'planning_status','envSeeds','algorithmSeeds','settings','cfg','opts','reuseMask');
 
     results = struct('raw',raw,'summary',summary,'stability',stability, ...
         'paths',{paths},'planning_time_s',planning_time_s, ...
@@ -163,7 +172,7 @@ function results = runSpatialResolutionSensitivity(cohortFile,userOpts)
 end
 
 function opts = localDefaults(u)
-    opts = struct('SpacingsM',[12 6 3 1.5 0.75],'PlanningSpacingM',1.5, ...
+    opts = struct('SpacingsM',[6 3 1.5 0.75 0.375],'PlanningSpacingM',0.75, ...
         'ReuseSavedPaths',true, ...
         'MinSamples',3,'N_ENV',10,'N_SEED',3,'EnvironmentSeeds',[], ...
         'AlgorithmSeeds',[],'MapSize',1000,'GridStep',10, ...
@@ -176,6 +185,9 @@ function opts = localDefaults(u)
     names = fieldnames(u);
     for i=1:numel(names), opts.(names{i})=u.(names{i}); end
     validateattributes(opts.SpacingsM,{'numeric'},{'vector','positive','finite'});
+    validateattributes(opts.PlanningSpacingM,{'numeric'},{'scalar','positive','finite'});
+    validateattributes(opts.N_ENV,{'numeric'},{'scalar','integer','positive'});
+    validateattributes(opts.N_SEED,{'numeric'},{'scalar','integer','positive'});
     if ~any(abs(opts.SpacingsM-3)<eps) || ~any(abs(opts.SpacingsM-6)<eps)
         error('ResolutionSensitivity:RequiredSpacings', ...
             'SpacingsM must include both 6 m and 3 m.');
@@ -186,7 +198,7 @@ function opts = localDefaults(u)
     end
 end
 
-function [envSeeds,algSeeds,S,cfg,source,savedPaths] = localResolveCohort(file,opts)
+function [envSeeds,algSeeds,S,cfg,source,savedPaths,reuseMask] = localResolveCohort(file,opts)
     S = struct('MapSize',opts.MapSize,'GridStep',opts.GridStep, ...
         'WindLevel',opts.WindLevel,'RiskLevel',opts.RiskLevel, ...
         'Start',opts.Start,'Goal',opts.Goal);
@@ -208,16 +220,17 @@ function [envSeeds,algSeeds,S,cfg,source,savedPaths] = localResolveCohort(file,o
         if isfield(L,'ala_cfg_stat'), cfg=L.ala_cfg_stat; end
         algSeeds = nan(numel(envSeeds),opts.N_SEED);
         savedPaths = cell(numel(envSeeds),opts.N_SEED);
-        savedSpacingMatches = opts.ReuseSavedPaths && ...
-            isfield(L,'main_collision_sample_spacing_m') && ...
-            isscalar(L.main_collision_sample_spacing_m) && ...
-            abs(double(L.main_collision_sample_spacing_m)-opts.PlanningSpacingM)<eps;
-        if opts.ReuseSavedPaths && ~savedSpacingMatches
-            warning('ResolutionSensitivity:SavedPathResolutionMismatch', ...
-                ['Saved paths will not be reused because their planning ', ...
-                'resolution is missing or differs from %.3g m. Paths will ', ...
-                'be replanned at the requested resolution.'], ...
-                opts.PlanningSpacingM);
+        reuseMask = false(size(savedPaths));
+        if opts.ReuseSavedPaths
+            sampling = resolveCohortEvaluationSettings(L);
+            if sampling.PlanningSpacingM ~= opts.PlanningSpacingM || sampling.MinSamples ~= opts.MinSamples
+                error('ResolutionSensitivity:SavedPathResolutionMismatch', ...
+                    ['Requested planning settings differ from the archive. Match the settings ', ...
+                    'or explicitly set ReuseSavedPaths=false to request a new planning study.']);
+            end
+            if ~all(isfield(L,{'stat_paths','stat_env','stat_ra_seed'}))
+                error('ResolutionSensitivity:MissingPaths','Saved-path reuse requires paths and case seeds.');
+            end
         end
         for e=1:numel(envSeeds)
             if isfield(L,'stat_env') && isfield(L,'stat_ra_seed')
@@ -227,17 +240,22 @@ function [envSeeds,algSeeds,S,cfg,source,savedPaths] = localResolveCohort(file,o
                 candidates = [];
             end
             for s=1:opts.N_SEED
-                if s<=numel(candidates), algSeeds(e,s)=candidates(s);
-                else, algSeeds(e,s)=envSeeds(e)+s*53;
+                if s<=numel(candidates)
+                    algSeeds(e,s)=candidates(s);
+                elseif opts.ReuseSavedPaths
+                    error('ResolutionSensitivity:MissingTrial', ...
+                        'Environment %d has fewer than %d archived trials.',envSeeds(e),opts.N_SEED);
+                else
+                    algSeeds(e,s)=envSeeds(e)+s*53+11;
                 end
-                if savedSpacingMatches && isfield(L,'stat_paths') && ...
-                        isfield(L,'stat_env') && ...
-                        isfield(L,'stat_ra_seed')
+                if opts.ReuseSavedPaths
                     idx=find(L.stat_env==envSeeds(e) & ...
                         L.stat_ra_seed==algSeeds(e,s),1);
-                    if ~isempty(idx) && size(L.stat_paths,1)>=1
-                        savedPaths{e,s}=L.stat_paths{1,idx};
+                    if isempty(idx) || size(L.stat_paths,2)<idx
+                        error('ResolutionSensitivity:MissingTrial','Missing saved trial for environment %d.',envSeeds(e));
                     end
+                    savedPaths{e,s}=L.stat_paths{1,idx};
+                    reuseMask(e,s)=true;
                 end
             end
         end
@@ -251,12 +269,13 @@ function [envSeeds,algSeeds,S,cfg,source,savedPaths] = localResolveCohort(file,o
         envSeeds = opts.EnvironmentSeeds(:)';
         envSeeds = envSeeds(1:min(opts.N_ENV,numel(envSeeds)));
         if isempty(opts.AlgorithmSeeds)
-            algSeeds = envSeeds(:)+(1:opts.N_SEED)*53;
+            algSeeds = envSeeds(:)+(1:opts.N_SEED)*53+11;
         else
             algSeeds = opts.AlgorithmSeeds;
             algSeeds = algSeeds(1:numel(envSeeds),1:opts.N_SEED);
         end
         savedPaths = cell(numel(envSeeds),opts.N_SEED);
+        reuseMask = false(size(savedPaths));
         source = 'explicit userOpts.EnvironmentSeeds';
     end
 end
@@ -269,7 +288,7 @@ end
 
 function S = localSummary(T,spacings)
     n=numel(spacings);
-    spacing_m=spacings(:); N=zeros(n,1); median_J=nan(n,1);
+    spacing_m=spacings(:); N=zeros(n,1); evaluated_N=zeros(n,1); median_J=nan(n,1);
     median_energy_Wh=nan(n,1); median_arrival_time_s=nan(n,1);
     median_dynamic_risk=nan(n,1); median_penalty=nan(n,1);
     feasible_rate=nan(n,1); static_violation_count=zeros(n,1);
@@ -277,19 +296,20 @@ function S = localSummary(T,spacings)
     median_evaluation_time_s=nan(n,1); median_subsamples=nan(n,1);
     for i=1:n
         m=T.spacing_m==spacings(i) & strcmp(T.run_status,'ok');
-        N(i)=sum(m); median_J(i)=localMedian(T.J(m));
+        allCases=T.spacing_m==spacings(i);
+        N(i)=sum(allCases); evaluated_N(i)=sum(m); median_J(i)=localMedian(T.J(m));
         median_energy_Wh(i)=localMedian(T.energy_Wh(m));
         median_arrival_time_s(i)=localMedian(T.arrival_time_s(m));
         median_dynamic_risk(i)=localMedian(T.dynamic_risk(m));
         median_penalty(i)=localMedian(T.penalty_total(m));
-        feasible_rate(i)=mean(T.feasible(m));
+        feasible_rate(i)=sum(T.feasible(m))/N(i);
         static_violation_count(i)=sum(T.static_violation(m));
         dynamic_violation_count(i)=sum(T.dynamic_violation(m));
         nfz_violation_count(i)=sum(T.nfz_violation(m));
         median_evaluation_time_s(i)=localMedian(T.evaluation_time_s(m));
         median_subsamples(i)=localMedian(T.total_collision_subsamples(m));
     end
-    S=table(spacing_m,N,median_J,median_energy_Wh,median_arrival_time_s, ...
+    S=table(spacing_m,N,evaluated_N,median_J,median_energy_Wh,median_arrival_time_s, ...
         median_dynamic_risk,median_penalty,feasible_rate, ...
         static_violation_count,dynamic_violation_count,nfz_violation_count, ...
         median_evaluation_time_s,median_subsamples);
@@ -333,7 +353,8 @@ function localWriteReport(file,source,opts,S,C,nCases)
     fprintf(fid,'SPATIAL COLLISION-SAMPLING RESOLUTION STUDY\n\n');
     fprintf(fid,'Cohort: %s\nCases planned once: %d\n',source,nCases);
     fprintf(fid,'Planning/evaluation baseline: %.3g m\n',opts.PlanningSpacingM);
-    fprintf(fid,'Design: fixed selected paths re-evaluated at %s m.\n\n',mat2str(opts.SpacingsM));
+    fprintf(fid,'Design: fixed selected paths re-evaluated at %s m.\n',mat2str(opts.SpacingsM));
+    fprintf(fid,'N includes archived planning failures; evaluated_N counts successfully evaluated paths.\n\n');
     fprintf(fid,'SUMMARY\n');
     for i=1:height(S)
         fprintf(fid,'%.3g m: N=%d, median J=%.6g, median T=%.6g s, feasible=%.1f%%, static/dynamic/NFZ=%d/%d/%d\n', ...

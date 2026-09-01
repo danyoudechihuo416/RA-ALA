@@ -324,11 +324,10 @@ function [path, cost, details, stage_details] = runRA_ALA(...
     %   3. 全不 feasible 时, 取 penalty_total 最小 (同则取 J 最小) 者
     % ====================================================================
     % ── ablate_unifiedEval：跳过统一重评估，直接输出内部适应度最优的 raw 路径 ──
-    % 这是消融实验 w/o Unified Eval 变体的实现：证明"统一评估驱动"的实质贡献。
+    % This implements the w/o Top-K Re-evaluation ablation.
     % 正常流程：evaluateRAALASearchFitness内部适应度最优个体 → 三路径生成 → evaluatePath统一重评估 → 择优。
     % 消融流程：evaluateRAALASearchFitness内部适应度最优个体 → 直接输出其raw路径（不经统一重评估）。
-    % 若两条路径的J值差异显著，说明内部口径和报告口径不一致，"统一评估驱动"
-    % 是真正改变路径质量的机制，而非口号。
+    % The comparison isolates candidate re-evaluation and selection.
     if isfield(cfg,'ablate_unifiedEval') && cfg.ablate_unifiedEval
         t_direct = tic;
         t_piece = tic;
@@ -522,7 +521,8 @@ function [path, cost, details, stage_details] = runRA_ALA(...
     %
     % MAX_INS_TOTAL = 6, Pass-B 逻辑不变.
     % ====================================================================
-    if ~bestFeas
+    % Recovery requires a resolved timeline; numerical failure is not a conflict.
+    if ~bestFeas && isfinite(bestCost_final)
         rescueA_stats.triggered = true;
         rescueB_stats.triggered = true;
         MS_rc    = env.MAP_SIZE;

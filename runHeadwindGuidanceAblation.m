@@ -1,5 +1,5 @@
 %% Incrementally add the w/o Headwind Guidance ablation.
-% Reuses the exact Full, w/o Smooth, and w/o Unified Eval results already
+% Reuses Full, w/o Smooth, and w/o Top-K Re-evaluation results already
 % stored for Section 5.5. Only the 30 windLookahead=0 searches are run.
 
 clearvars;
@@ -36,7 +36,10 @@ end
 old_names = string(old.ablationNames);
 idx_full = find(old_names == "Full RA-ALA", 1);
 idx_smooth = find(old_names == "w/o Smooth", 1);
-idx_unified = find(old_names == "w/o Unified Eval", 1);
+idx_unified = find(old_names == "w/o Top-K Re-evaluation", 1);
+if isempty(idx_unified)
+    idx_unified = find(old_names == "w/o Unified Eval", 1); % legacy label
+end
 if isempty(idx_full) || isempty(idx_smooth) || isempty(idx_unified)
     error('Could not locate the three reusable valid variants in %s.', old_file);
 end
@@ -118,8 +121,9 @@ for ei = 1:N_ABL_ENV
     end
 end
 
-ablationNames = {'Full RA-ALA','w/o Smooth', ...
-    'w/o Headwind Guidance','w/o Unified Eval'};
+ablationNames = {'Full RA-ALA','No smoothness guidance', ...
+    'No headwind-exposure guidance', ...
+    'No Top-K candidate re-evaluation and selection'};
 abl_J = [old.abl_J(idx_full,:); old.abl_J(idx_smooth,:); head_J; old.abl_J(idx_unified,:)];
 abl_E = [old.abl_E(idx_full,:); old.abl_E(idx_smooth,:); head_E; old.abl_E(idx_unified,:)];
 abl_T = [old.abl_T(idx_full,:); old.abl_T(idx_smooth,:); head_T; old.abl_T(idx_unified,:)];
@@ -161,4 +165,3 @@ disp(summary_table);
 
 plotAblationFigureFromArchive;
 fprintf('Incremental headwind ablation and Figure 9 regeneration completed.\n');
-

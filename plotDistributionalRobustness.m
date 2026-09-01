@@ -1,14 +1,20 @@
-function fig = plotDistributionalRobustness(stat_J, stat_E, stat_feasible, stat_env, env_seeds_used, algNames, outputFile)
+function fig = plotDistributionalRobustness(stat_J, stat_E, stat_feasible, stat_env, env_seeds_used, algNames, outputFile, uniqueTrial)
 %PLOTDISTRIBUTIONALROBUSTNESS Plot all-path distributions by environment.
-% Three runs within each environment are reduced to a median using all paths.
+% Stochastic runs within each environment are reduced to a median; deterministic
+% planners contribute their single unique run rather than copied plotting slots.
 % Penalty-dominated values remain in the statistics but are marked off-scale.
 
 if nargin < 7 || isempty(outputFile)
     outputFile = 'fig7_distributional_robustness.png';
 end
+if nargin < 8 || isempty(uniqueTrial)
+    uniqueTrial = true(size(stat_feasible));
+end
+if ~isequal(size(uniqueTrial),size(stat_feasible))
+    error('uniqueTrial must have the same size as stat_feasible.');
+end
 nAlg = numel(algNames);
 nEnv = numel(env_seeds_used);
-nStat = size(stat_J,2);
 colors = [0.75 0.13 0.13; 0.16 0.50 0.73; 0.15 0.63 0.25; ...
           0.49 0.18 0.56; 0.58 0.58 0.58];
 
@@ -16,17 +22,20 @@ Jenv = nan(nAlg,nEnv); Eenv = nan(nAlg,nEnv);
 for ei = 1:nEnv
     inEnv = stat_env == env_seeds_used(ei);
     for a = 1:nAlg
-        Jenv(a,ei) = median(stat_J(a,inEnv),'omitnan');
-        Eenv(a,ei) = median(stat_E(a,inEnv),'omitnan');
+        use = inEnv & uniqueTrial(a,:);
+        Jenv(a,ei) = median(stat_J(a,use),'omitnan');
+        Eenv(a,ei) = median(stat_E(a,use),'omitnan');
     end
 end
 
 fig = figure('Units','centimeters','Position',[2 2 36 21], ...
     'Color','w','ToolBar','none','MenuBar','none');
-sgtitle({sprintf('Distributional Robustness across %d Independent Urban Environments',nEnv), 'Three Runs per Environment; High Complexity; t=0 s'}, 'FontName','Times New Roman','FontSize',22,'FontWeight','bold');
+sgtitle({sprintf('Environment-Level Outcome Distributions (%d Independent Environments)',nEnv), ...
+    'High complexity; t_0 = 0 s'}, ...
+    'FontName','Times New Roman','FontSize',22,'FontWeight','bold');
 metrics = {Jenv,Eenv};
-titles = {'Unified Cost J_{final}','Energy E (Wh)'};
-positions = {[0.070 0.160 0.410 0.660],[0.565 0.160 0.410 0.660]};
+titles = {'Composite Score J_{final}','Energy E (Wh)'};
+positions = {[0.070 0.135 0.410 0.690],[0.565 0.135 0.410 0.690]};
 
 for m = 1:2
     ax = axes(fig,'Position',positions{m}); hold(ax,'on');
@@ -79,7 +88,8 @@ for m = 1:2
                 'Color',0.48*colors(a,:),'BackgroundColor','w', ...
                 'EdgeColor',colors(a,:),'Margin',2,'Interpreter','none');
         end
-        text(ax,a,yCount,sprintf('feas. %d/%d',sum(stat_feasible(a,:)),nStat), ...
+        use = uniqueTrial(a,:);
+        text(ax,a,yCount,sprintf('feas. %d/%d',sum(stat_feasible(a,use)),sum(use)), ...
             'HorizontalAlignment','center','FontName','Times New Roman','FontSize',13, ...
             'FontWeight','bold','Color',[0.76 0.08 0.08],'BackgroundColor','w', ...
             'EdgeColor',[0.86 0.25 0.25],'Margin',1);
@@ -87,10 +97,5 @@ for m = 1:2
     title(ax,titles{m},'FontName','Times New Roman','FontSize',21,'FontWeight','bold');
     ylabel(ax,[titles{m},' (log scale)'],'FontName','Times New Roman','FontSize',20,'FontWeight','bold');
 end
-annotation(fig,'textbox',[0.16 0.025 0.68 0.050], ...
-    'String',['Boxes summarize all paths after environment-level aggregation; ', ...
-              'penalty-dominated values are marked off-scale.'], ...
-    'HorizontalAlignment','center','VerticalAlignment','middle','FontName','Times New Roman', ...
-    'FontSize',16,'FontAngle','italic','LineStyle','none');
 exportPublicationFigure(fig,outputFile);
 end

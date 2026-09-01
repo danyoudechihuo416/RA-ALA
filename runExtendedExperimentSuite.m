@@ -89,7 +89,8 @@ fprintf('  环境: %s城市, %d建筑, %d障碍, %d禁飞区\n\n', ...
 fprintf('━━━━━━ 实验1: 消融实验 ━━━━━━\n');
 
 % 消融变体定义
-ablationNames = {'Full RA-ALA', 'w/o Smooth', 'w/o Headwind Guidance'};
+ablationNames = {'Full RA-ALA', 'No smoothness guidance', ...
+    'No headwind-exposure guidance'};
 nAbl = length(ablationNames);
 
 % 为每个变体构建 cfg

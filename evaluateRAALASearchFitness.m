@@ -29,6 +29,10 @@ function J = evaluateRAALASearchFitness(x, param2path, t_start, hasPayload, cost
     % Repair 模块现仅保留为 Top-K 后处理的可选候选（且只在 ablate_repair=false 时启用）。
     nPts = size(path, 1);
     [J, det] = costModel.evaluatePath(path, t_start, hasPayload);
+    if ~isfinite(J)
+        J = Inf; % Do not use an undefined timeline for auxiliary guidance.
+        return;
+    end
 
     % ---- 风险权重增强 (量级已在 final_J 中, 仅放大差异) ----
     J = J + (cfg.riskWeight - 10) * det.R_dynamic;

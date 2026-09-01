@@ -148,14 +148,20 @@ classdef CityEnvironment < handle
 
         function generateWindField(obj, level)
             % 生成时变风场 (所有等级都启用时变特性, 用于验证时变感知)
+            params.gust_factor = 2.8;
+            params.canyon_accel = 1.8;
+            params.urban_gain_cap = Inf;
+            params.time_speed_amplitude = 0.4;
+            params.smooth_gust_envelope = false;
+            params.scenario_version = 'legacy-stress-preset';
             switch level
                 case 'weak'
                     params.v_base = 3.0;
                     params.turbulence = 0.15;
                     params.gust_prob = 0.03;
                 case 'medium'
-                    params.v_base = 6.0;
-                    params.turbulence = 0.25;
+                    params.v_base = 3.0;
+                    params.turbulence = 0.15;
                     params.gust_prob = 0.08;
                 case 'strong'
                     params.v_base = 11.0;
@@ -166,14 +172,22 @@ classdef CityEnvironment < handle
                     params.turbulence = 0.45;
                     params.gust_prob = 0.15;
                 otherwise
-                    params.v_base = 6.0;
-                    params.turbulence = 0.25;
+                    level = 'medium';
+                    params.v_base = 3.0;
+                    params.turbulence = 0.15;
                     params.gust_prob = 0.08;
+            end
+            if strcmp(level,'medium')
+                % Synthetic light-to-moderate scenario, not weather calibration.
+                params.gust_factor = 0.5; % additive peak: v_base * gust_factor
+                params.canyon_accel = 1.3;
+                params.urban_gain_cap = 1.3; % combined canyon amplification
+                params.time_speed_amplitude = 0.2;
+                params.smooth_gust_envelope = true;
+                params.scenario_version = 'bounded-medium-v1';
             end
 
             params.dir_base = rand * 2 * pi;
-            params.gust_factor = 2.8;
-            params.canyon_accel = 1.8;
             % 核心: 所有风场都启用时变, 确保不同出发时刻环境不同
             params.time_varying = true;
 
@@ -188,8 +202,10 @@ classdef CityEnvironment < handle
             wx_base = params.v_base * cos(params.dir_base);
             wy_base = params.v_base * sin(params.dir_base);
 
-            windMapX = ones(gN) * wx_base;
-            windMapY = ones(gN) * wy_base;
+            wakeMap = ones(gN);
+            canyonMap = ones(gN);
+            gainCap = Inf;
+            if isfield(params,'urban_gain_cap'), gainCap = params.urban_gain_cap; end
 
             % 建筑物影响
             for b = 1:size(obj.buildings, 1)
@@ -210,22 +226,21 @@ classdef CityEnvironment < handle
                             wake_decay = exp(-along / (2*bh));
                             cross_decay = exp(-(cross/max(hh_eff,1))^2);
                             wake_factor = 1 - 0.6 * wake_decay * cross_decay;
-                            windMapX(gi,gj) = windMapX(gi,gj) * wake_factor;
-                            windMapY(gi,gj) = windMapY(gi,gj) * wake_factor;
+                            wakeMap(gi,gj) = wakeMap(gi,gj) * wake_factor;
                         end
 
                         if abs(along) < hw_eff*1.5 && abs(cross) > hh_eff && abs(cross) < hh_eff*3
                             canyon_factor = 1 + (params.canyon_accel - 1) * ...
                                 exp(-(abs(cross)-hh_eff)^2 / hh_eff^2);
-                            windMapX(gi,gj) = windMapX(gi,gj) * canyon_factor;
-                            windMapY(gi,gj) = windMapY(gi,gj) * canyon_factor;
+                            canyonMap(gi,gj) = min(gainCap,canyonMap(gi,gj)*canyon_factor);
                         end
                     end
                 end
             end
 
-            wf.windMap.X = windMapX;
-            wf.windMap.Y = windMapY;
+            wf.windMap.X = wx_base * wakeMap .* canyonMap;
+            wf.windMap.Y = wy_base * wakeMap .* canyonMap;
+            wf.windMap.canyonGain = canyonMap;
             wf.windMap.gridStep = gs;
             wf.windMap.gridN = gN;
             wf.params = params;
@@ -270,8 +285,10 @@ classdef CityEnvironment < handle
                 wx = wx_new;
                 wy = wy_new;
 
-                % (2) 风速幅值随时间波动: ±40%, 周期约120秒
-                speed_factor = 1 + 0.4 * sin(2*pi*t / 120 + x/500);
+                % Periodic speed modulation; amplitude is scenario-specific.
+                amplitude = 0.4;
+                if isfield(p,'time_speed_amplitude'), amplitude = p.time_speed_amplitude; end
+                speed_factor = 1 + amplitude * sin(2*pi*t / 120 + x/500);
                 wx = wx * speed_factor;
                 wy = wy * speed_factor;
 
@@ -284,6 +301,10 @@ classdef CityEnvironment < handle
             if gust_hash < p.gust_prob * 100
                 gust_dir = mod(gust_hash * 0.0628 + t*0.01, 2*pi); % 阵风方向也随时间变
                 gust_speed = p.v_base * p.gust_factor;
+                if isfield(p,'smooth_gust_envelope') && p.smooth_gust_envelope
+                    % Zero value and slope at each 10-s window boundary.
+                    gust_speed = gust_speed * sin(pi*mod(t,10)/10)^2;
+                end
                 wx = wx + gust_speed * cos(gust_dir);
                 wy = wy + gust_speed * sin(gust_dir);
             end

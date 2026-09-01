@@ -22,7 +22,8 @@ classdef UnifiedCostModel < handle
 %    details.penalty_total             总惩罚 (= Penalty, 进入 J 计算)
 %    details.penalty_height            高度约束违反 (H_min/H_max)
 %    details.penalty_static_collision  静态建筑物碰撞
-%    details.penalty_dynamic_collision 动态障碍物碰撞
+%    details.penalty_scene_entry       moving-obstacle or active-NFZ scene entry
+%    details.penalty_dynamic_collision legacy alias of penalty_scene_entry
 %    details.penalty_battery           电池超限
 %    details.penalty_nfz               NFZ 穿越硬罚 (v12: 计入 penalty_total/J)
 %    details.NFZ_penalty               [兼容旧名] = penalty_nfz (现已加入 J)
@@ -77,8 +78,15 @@ classdef UnifiedCostModel < handle
 
         % ==================== Collision-sampling resolution ====================
         % Shared by building, moving-obstacle, and active-NFZ checks.
-        collision_sample_spacing = 1.5; % m; final main-experiment resolution
+        collision_sample_spacing = 1.5; % m; planning/search-stage resolution
         min_collision_samples = 3;
+        wait_sample_interval = 1.0; % s; sampling for explicit loiter edges
+        ground_speed_floor = 0.5;   % m/s; signed-progress acceptance threshold and diagnostic floor
+        time_iteration_tolerance = 1e-6; % s
+        time_iteration_max = 8;
+        time_root_max_evaluations = 64;
+        time_max_subdivision_depth = 6;
+        time_max_evaluations_per_subsegment = 512;
     end
 
     methods
@@ -121,7 +129,7 @@ classdef UnifiedCostModel < handle
         %%  evaluatePath — 时变一致性 + 惩罚分解版
         %%  主要修改: 修复端点重复计费; 新增 penalty_* 分解字段
         %% ================================================================
-        function [J, details] = evaluatePath(obj, pathPts, t_start, hasPayload)
+        function [J, details] = evaluatePath(obj, pathPts, t_start, hasPayload, waitBeforeSegmentS)
             % >>>>> RUNTIME_ANALYSIS PATCH 1 (eval_count) >>>>>
             global EVAL_COUNTER;
             if ~isempty(EVAL_COUNTER), EVAL_COUNTER = EVAL_COUNTER + 1; end
@@ -146,6 +154,15 @@ classdef UnifiedCostModel < handle
                 details = obj.emptyDetails(t_start);
                 return;
             end
+            if nargin < 5 || isempty(waitBeforeSegmentS)
+                waitBeforeSegmentS = zeros(N-1,1);
+            end
+            waitBeforeSegmentS = double(waitBeforeSegmentS(:));
+            if numel(waitBeforeSegmentS) ~= N-1 || ...
+                    any(~isfinite(waitBeforeSegmentS)) || any(waitBeforeSegmentS < 0)
+                error('UnifiedCostModel:InvalidWaitSchedule', ...
+                    'waitBeforeSegmentS must contain N-1 finite nonnegative values.');
+            end
 
             % ---- 质量相关常量 ----
             if hasPayload
@@ -169,7 +186,9 @@ classdef UnifiedCostModel < handle
             % ---- 分解惩罚段累加器 ----
             Ph_seg = zeros(N-1, 1);   % 高度
             Ps_seg = zeros(N-1, 1);   % 静态碰撞
-            Pd_seg = zeros(N-1, 1);   % 动态碰撞
+            Pd_seg = zeros(N-1, 1);
+            Pk_seg = zeros(N-1, 1);   % track-holding violation
+            Pn_wait_seg = zeros(N-1,1); % active-NFZ violation during waits   % 动态碰撞
 
             % ---- 到达时刻 ----
             t_arrivals = zeros(N, 1);
@@ -179,6 +198,17 @@ classdef UnifiedCostModel < handle
             SUB_SPACING = obj.collision_sample_spacing;
             MIN_SUB     = obj.min_collision_samples;
             total_subsamples = 0;
+            max_time_iterations_used = 0;
+            timeOptions = struct('tolerance',obj.time_iteration_tolerance, ...
+                'max_iterations',obj.time_iteration_max, ...
+                'max_root_evaluations',obj.time_root_max_evaluations, ...
+                'max_depth',obj.time_max_subdivision_depth, ...
+                'max_evaluations',obj.time_max_evaluations_per_subsegment);
+            timeStats = struct('fixed_point_failures',0,'root_attempts',0, ...
+                'root_successes',0,'subdivisions',0,'wind_evaluations',0, ...
+                'max_depth_used',0,'max_accepted_residual_s',0);
+            pen_nfz_motion = 0;
+            total_nfz_subsamples = 0;
 
             % ==============================================================
             %  逐段循环
@@ -188,57 +218,107 @@ classdef UnifiedCostModel < handle
                 p2 = pathPts(k+1, :);
 
                 dx = p2(1)-p1(1); dy = p2(2)-p1(2); dz = p2(3)-p1(3);
-                d_horiz = sqrt(dx^2 + dy^2);
-                d_3d    = sqrt(dx^2 + dy^2 + dz^2);
-
-                if d_3d < 0.01
-                    t_arrivals(k+1) = t_current;
-                    continue;
-                end
-
-                if d_horiz > 0.01
-                    dir_h = [dx, dy] / d_horiz;
-                else
-                    dir_h = [0, 0];
-                end
-                gamma   = atan2(dz, d_horiz);
-                v_horiz = obj.v_cruise * cos(gamma);
-                v_vert  = obj.v_cruise * sin(gamma);
-
-                nSub  = max(MIN_SUB, ceil(d_3d / SUB_SPACING));
-                d_sub = d_3d / nSub;
-                total_subsamples = total_subsamples + nSub;
+                d_horiz = hypot(dx,dy);
+                d_3d = norm(p2-p1);
 
                 E_seg_acc = 0; T_seg_acc = 0; R_seg_acc = 0;
                 P_seg_acc = 0; Ph_acc = 0; Ps_acc = 0; Pd_acc = 0;
+                Pk_acc = 0; Pn_wait_acc = 0;
+
+                % An explicit wait is part of the time-parameterized path.
+                wait_s = waitBeforeSegmentS(k);
+                if wait_s > 0
+                    nWait = max(2,ceil(wait_s/obj.wait_sample_interval));
+                    dt_wait = wait_s/nWait;
+                    for ws = 1:nWait
+                        t_wait = t_current+(ws-0.5)*dt_wait;
+                        E_seg_acc = E_seg_acc+P_hover*dt_wait/3600;
+                        T_seg_acc = T_seg_acc+dt_wait;
+                        if ~isempty(obj.dynObstacles)
+                            R_seg_acc = R_seg_acc+ ...
+                                obj.evaluateRiskAtPoint(p1,t_wait)*dt_wait/60;
+                            if obj.checkCollision(p1,t_wait)
+                                pen = 1/nWait;
+                                P_seg_acc = P_seg_acc+pen;
+                                Pd_acc = Pd_acc+pen;
+                            end
+                            try
+                                for ni = 1:length(obj.dynObstacles.tempNFZ)
+                                    nfz = obj.dynObstacles.tempNFZ(ni);
+                                    if ~nfz.active || t_wait < nfz.t_start || t_wait > nfz.t_end
+                                        continue;
+                                    end
+                                    dh = norm(p1(1:2)-nfz.center);
+                                    if dh < nfz.radius && p1(3) >= nfz.height(1) && p1(3) <= nfz.height(2)
+                                        Pn_wait_acc = Pn_wait_acc+(1-dh/nfz.radius)/nWait;
+                                    end
+                                end
+                            catch
+                            end
+                        end
+                    end
+                    t_current = t_current+wait_s;
+                end
+
+                if d_3d < 0.01
+                    E_segments(k)=E_seg_acc; T_segments(k)=T_seg_acc;
+                    R_risk_seg(k)=R_seg_acc; Penalty_seg(k)=P_seg_acc;
+                    Pd_seg(k)=Pd_acc; Pn_wait_seg(k)=Pn_wait_acc;
+                    t_arrivals(k+1)=t_current;
+                    continue;
+                end
+
+                if d_horiz > 0.01, dir_h=[dx,dy]/d_horiz; else, dir_h=[0,0]; end
+                nSub = max(MIN_SUB,ceil(d_3d/SUB_SPACING));
                 t_sub = t_current;
 
                 % ---- 子采样循环 ----
                 for s = 1:nSub
-                    frac_mid = (s - 0.5) / nSub;
-                    pt_sub   = p1 + frac_mid * (p2 - p1);
-
-                    % (a) 风场查询
-                    wind_vec = [0, 0, 0];
-                    if ~isempty(obj.windField)
-                        try
-                            wind_vec = obj.windField.getWind(...
-                                pt_sub(1), pt_sub(2), pt_sub(3), t_sub);
-                        catch; end
+                    a_sub = p1+(s-1)/nSub*(p2-p1);
+                    b_sub = p1+s/nSub*(p2-p1);
+                    [timeSamples,stepInfo] = solveArrivalTimeStep(a_sub,b_sub,t_sub, ...
+                        obj.windField,obj.v_cruise,obj.ground_speed_floor,timeOptions);
+                    max_time_iterations_used = max(max_time_iterations_used, ...
+                        stepInfo.max_fixed_point_iterations);
+                    for field = {'fixed_point_failures','root_attempts','root_successes', ...
+                            'subdivisions','wind_evaluations'}
+                        name = field{1};
+                        timeStats.(name) = timeStats.(name)+stepInfo.(name);
                     end
-
-                    % (b) 风分量分解
-                    v_wind_along = dot(wind_vec(1:2), dir_h);
-                    v_wind_cross = norm(wind_vec(1:2) - v_wind_along * dir_h);
-                    v_wind_vert  = wind_vec(3);
-
-                    % (c) 空速/地速
-                    v_air_horiz = v_horiz - v_wind_along;
-                    v_air_vert  = v_vert  - v_wind_vert;
-                    v_air    = sqrt(v_air_horiz^2 + v_wind_cross^2 + v_air_vert^2);
-                    v_air    = max(v_air, 0.5);
-                    v_ground = sqrt((v_horiz + v_wind_along)^2 + v_wind_cross^2);
-                    v_ground = max(v_ground, 0.5);
+                    timeStats.max_depth_used = max(timeStats.max_depth_used,stepInfo.max_depth_used);
+                    timeStats.max_accepted_residual_s = max(timeStats.max_accepted_residual_s, ...
+                        stepInfo.max_accepted_residual_s);
+                    if ~stepInfo.converged
+                        J = Inf;
+                        details = obj.failedTimeDetails(t_start,N,k,s,stepInfo, ...
+                            t_arrivals,waitBeforeSegmentS);
+                        details.time_solver = timeStats;
+                        details.max_time_iterations_used = max_time_iterations_used;
+                        details.total_collision_subsamples = total_subsamples;
+                        return;
+                    end
+                    total_subsamples = total_subsamples+numel(timeSamples);
+                    for leaf = 1:numel(timeSamples)
+                    sample = timeSamples(leaf);
+                    pt_sub = sample.point;
+                    t_sub = sample.start_time;
+                    dt_sub = sample.duration;
+                    kin = sample.kinematics;
+                    sampleWeight = sample.length/d_3d;
+                    if ~kin.feasible
+                        P_seg_acc = P_seg_acc+sampleWeight;
+                        Pk_acc = Pk_acc+sampleWeight;
+                    end
+                    air_velocity = kin.airVelocity;
+                    v_air_horiz = norm(air_velocity(1:2));
+                    v_air_vert = air_velocity(3);
+                    v_air = norm(air_velocity);
+                    v_ground = kin.groundSpeed;
+                    if d_horiz > 0.01
+                        v_wind_cross = abs(dot(air_velocity(1:2),[-dir_h(2),dir_h(1)]));
+                    else
+                        v_wind_cross = norm(air_velocity(1:2));
+                    end
 
                     % (d) 功率 (动量理论)
                     mu = max(v_air_horiz, 0) / (v_i_hover + 0.01);
@@ -265,7 +345,6 @@ classdef UnifiedCostModel < handle
                                   P_climb_raw + P_cross, P_hover * 0.3);
 
                     % (e) 子段时间与能耗
-                    dt_sub = d_sub / v_ground;
                     E_sub  = P_total * dt_sub / 3600;
 
                     % (f) 动态风险 + 碰撞检测
@@ -274,7 +353,7 @@ classdef UnifiedCostModel < handle
                         risk_sub = obj.evaluateRiskAtPoint(pt_sub, t_risk);
                         R_seg_acc = R_seg_acc + risk_sub * dt_sub / 60;
                         if obj.checkCollision(pt_sub, t_risk)
-                            pen = 1 / nSub;
+                            pen = sampleWeight;
                             P_seg_acc = P_seg_acc + pen;
                             Pd_acc    = Pd_acc    + pen;
                         end
@@ -285,7 +364,7 @@ classdef UnifiedCostModel < handle
                         rx = max(1, min(size(obj.staticMap,1), round(pt_sub(1))));
                         ry = max(1, min(size(obj.staticMap,2), round(pt_sub(2))));
                         if pt_sub(3) < obj.staticMap(rx, ry) + 3
-                            pen = 1 / nSub;
+                            pen = sampleWeight;
                             P_seg_acc = P_seg_acc + pen;
                             Ps_acc    = Ps_acc    + pen;
                         end
@@ -301,19 +380,35 @@ classdef UnifiedCostModel < handle
                     end
                     min_allowed = max(obj.H_min, ground_h + obj.H_clearance);
                     if pt_sub(3) < min_allowed
-                        pen = (min_allowed - pt_sub(3)) / 10 / nSub;
+                        pen = (min_allowed - pt_sub(3)) / 10 * sampleWeight;
                         P_seg_acc = P_seg_acc + pen;
                         Ph_acc    = Ph_acc    + pen;
                     end
                     if pt_sub(3) > obj.H_max
-                        pen = (pt_sub(3) - obj.H_max) / 10 / nSub;
+                        pen = (pt_sub(3) - obj.H_max) / 10 * sampleWeight;
                         P_seg_acc = P_seg_acc + pen;
                         Ph_acc    = Ph_acc    + pen;
                     end
 
+                    % NFZ activation uses the accepted local timeline, not
+                    % waypoint interpolation that would smear explicit waits.
+                    if ~isempty(obj.dynObstacles) && isfield(obj.dynObstacles,'tempNFZ')
+                        total_nfz_subsamples = total_nfz_subsamples+1;
+                        for ni = 1:numel(obj.dynObstacles.tempNFZ)
+                            nfz = obj.dynObstacles.tempNFZ(ni);
+                            if ~nfz.active || sample.mid_time < nfz.t_start || sample.mid_time > nfz.t_end
+                                continue;
+                            end
+                            dh = norm(pt_sub(1:2)-nfz.center);
+                            if dh < nfz.radius && pt_sub(3) >= nfz.height(1) && pt_sub(3) <= nfz.height(2)
+                                pen_nfz_motion = pen_nfz_motion+(1-dh/nfz.radius)*sampleWeight;
+                            end
+                        end
+                    end
                     E_seg_acc = E_seg_acc + E_sub;
                     T_seg_acc = T_seg_acc + dt_sub;
                     t_sub     = t_sub + dt_sub;
+                    end % accepted time-solver leaves
                 end  % 子采样循环
 
                 % ==============================================================
@@ -354,6 +449,8 @@ classdef UnifiedCostModel < handle
                 Ph_seg(k)      = Ph_acc;
                 Ps_seg(k)      = Ps_acc;
                 Pd_seg(k)      = Pd_acc;
+                Pk_seg(k)      = Pk_acc;
+                Pn_wait_seg(k) = Pn_wait_acc;
 
                 t_current = t_sub;
                 t_arrivals(k+1) = t_current;
@@ -403,37 +500,8 @@ classdef UnifiedCostModel < handle
                 Penalty     = Penalty + pen_battery;
             end
 
-            % ---- NFZ hard-constraint penalty ----
-            % Uses the same distance-based interval as the static and moving-
-            % obstacle checks, with interpolation between recursive arrivals.
-            pen_nfz = 0;
-            total_nfz_subsamples = 0;
-            if ~isempty(obj.dynObstacles) && isfield(obj.dynObstacles,'tempNFZ')
-                for k = 1:N-1
-                    p1n = pathPts(k,:);   t1n = t_arrivals(k);
-                    p2n = pathPts(k+1,:); t2n = t_arrivals(k+1);
-                    d_nfz = norm(p2n-p1n);
-                    if d_nfz < 0.01, continue; end
-                    NFZ_NSUB = max(MIN_SUB,ceil(d_nfz/SUB_SPACING));
-                    total_nfz_subsamples = total_nfz_subsamples + NFZ_NSUB;
-                    for s = 1:NFZ_NSUB
-                        frac = (s-0.5)/NFZ_NSUB;
-                        ptn = p1n + frac*(p2n-p1n);
-                        ttn = t1n + frac*(t2n-t1n);
-                        for ni = 1:length(obj.dynObstacles.tempNFZ)
-                            nfz = obj.dynObstacles.tempNFZ(ni);
-                            if ~nfz.active || ttn < nfz.t_start || ttn > nfz.t_end
-                                continue;
-                            end
-                            dh = norm(ptn(1:2)-nfz.center);
-                            if dh < nfz.radius && ...
-                                    ptn(3) >= nfz.height(1) && ptn(3) <= nfz.height(2)
-                                pen_nfz = pen_nfz + (1-dh/nfz.radius)/NFZ_NSUB;
-                            end
-                        end
-                    end
-                end
-            end
+            % NFZ checks share each accepted subsegment's space-time sample.
+            pen_nfz = sum(Pn_wait_seg)+pen_nfz_motion;
             Penalty = Penalty + pen_nfz;
 
             % 高度违规计数 (仅统计, 不加入 Penalty)
@@ -468,6 +536,14 @@ classdef UnifiedCostModel < handle
             % ==============================================================
             %  输出 details (目标1: 完整代价分解)
             % ==============================================================
+            details.numerically_valid = true;
+            details.time_converged = true;
+            details.evaluation_status = 'evaluated';
+            details.time_failure = [];
+            details.time_solver = timeStats;
+            details.time_root_max_evaluations = obj.time_root_max_evaluations;
+            details.time_max_subdivision_depth = obj.time_max_subdivision_depth;
+            details.time_max_evaluations_per_subsegment = obj.time_max_evaluations_per_subsegment;
             details.J_final                   = J;
             details.E_total                   = E_total;
             details.T_total                   = T_total;
@@ -476,7 +552,9 @@ classdef UnifiedCostModel < handle
             details.penalty_total             = Penalty;
             details.penalty_height            = pen_height;
             details.penalty_static_collision  = pen_static;
-            details.penalty_dynamic_collision = pen_dyn;
+            details.penalty_scene_entry       = pen_dyn;
+            details.penalty_dynamic_collision = pen_dyn; % legacy field retained for archive compatibility
+            details.penalty_kinematic         = sum(Pk_seg);
             details.penalty_battery           = pen_battery;
             details.penalty_nfz               = pen_nfz;   % v12: NFZ 硬约束, 已计入 penalty_total/J
             % 兼容旧字段名: 现等于进入 J 的 NFZ 硬罚 (不再是"仅诊断")
@@ -486,7 +564,7 @@ classdef UnifiedCostModel < handle
             details.repair_penalty            = 0;   % 通过阶段对比诊断
             % 可行性与统计
             details.feasible = ~(pen_height>0 || pen_static>0 || pen_dyn>0 || ...
-                pen_battery>0 || pen_nfz>0);
+                pen_battery>0 || pen_nfz>0 || sum(Pk_seg)>0);
             details.heightViolations          = heightViolations;
             details.E_segments                = E_segments;
             details.T_segments                = T_segments;
@@ -497,6 +575,12 @@ classdef UnifiedCostModel < handle
             details.minimum_collision_samples = MIN_SUB;
             details.total_collision_subsamples= total_subsamples;
             details.total_nfz_subsamples      = total_nfz_subsamples;
+            details.wait_before_segment_s     = waitBeforeSegmentS;
+            details.total_wait_time_s          = sum(waitBeforeSegmentS);
+            details.time_iteration_tolerance_s = obj.time_iteration_tolerance;
+            details.time_iteration_max        = obj.time_iteration_max;
+            details.max_time_iterations_used  = max_time_iterations_used;
+            details.velocity_convention       = 'prescribed-airspeed 3-D track holding';
             % ★ 段级动态碰撞定位 (供 RescueA 直接复用, 避免重新扫描)
             %   dyn_col_segs(k) = Pd_seg(k): 段 k 的动态碰撞惩罚 (>0 表示有碰撞)
             %   结合 t_arrivals 可精确重建碰撞子点时刻和位置
@@ -594,7 +678,41 @@ classdef UnifiedCostModel < handle
     end
 
     methods (Access = private)
+        function d = failedTimeDetails(obj,tStart,nPoints,segment,sample,info,arrivals,waits)
+            d = obj.emptyDetails(tStart);
+            d.evaluation_status = 'time_solver_failure';
+            d.time_failure = struct('segment',segment,'nominal_sample',sample, ...
+                'point',info.failure_point,'reason',info.reason, ...
+                'last_residual_s',info.last_residual_s);
+            % Inf is a rejection sentinel, not a measured physical penalty.
+            % Individual physical constraints are unknown after propagation stops.
+            for field = {'penalty_height','penalty_static_collision', ...
+                    'penalty_scene_entry','penalty_dynamic_collision','penalty_kinematic', ...
+                    'penalty_battery','penalty_nfz','NFZ_penalty'}
+                d.(field{1}) = NaN;
+            end
+            d.E_segments = NaN(nPoints-1,1);
+            d.T_segments = NaN(nPoints-1,1);
+            d.dyn_col_segs = NaN(nPoints-1,1);
+            d.t_arrivals = NaN(nPoints,1);
+            d.t_arrivals(1:segment) = arrivals(1:segment);
+            d.t_end = NaN;
+            d.SoC_end = NaN;
+            d.wait_before_segment_s = waits;
+            d.total_wait_time_s = sum(waits);
+        end
+
         function d = emptyDetails(obj, t_start) %#ok<INUSL>
+            d.numerically_valid = false;
+            d.time_converged = false;
+            d.evaluation_status = 'empty_path';
+            d.time_failure = [];
+            d.time_solver = struct('fixed_point_failures',0,'root_attempts',0, ...
+                'root_successes',0,'subdivisions',0,'wind_evaluations',0, ...
+                'max_depth_used',0,'max_accepted_residual_s',0);
+            d.time_root_max_evaluations = obj.time_root_max_evaluations;
+            d.time_max_subdivision_depth = obj.time_max_subdivision_depth;
+            d.time_max_evaluations_per_subsegment = obj.time_max_evaluations_per_subsegment;
             d.J_final                   = inf;
             d.E_total                   = inf;
             d.T_total                   = inf;
@@ -603,7 +721,9 @@ classdef UnifiedCostModel < handle
             d.penalty_total             = inf;
             d.penalty_height            = inf;
             d.penalty_static_collision  = inf;
+            d.penalty_scene_entry       = inf;
             d.penalty_dynamic_collision = inf;
+            d.penalty_kinematic         = inf;
             d.penalty_battery           = 0;
             d.penalty_nfz               = 0;
             d.NFZ_penalty               = 0;
@@ -621,6 +741,12 @@ classdef UnifiedCostModel < handle
             d.minimum_collision_samples = obj.min_collision_samples;
             d.total_collision_subsamples= 0;
             d.total_nfz_subsamples      = 0;
+            d.wait_before_segment_s     = [];
+            d.total_wait_time_s          = 0;
+            d.time_iteration_tolerance_s = obj.time_iteration_tolerance;
+            d.time_iteration_max        = obj.time_iteration_max;
+            d.max_time_iterations_used  = 0;
+            d.velocity_convention       = 'prescribed-airspeed 3-D track holding';
         end
     end
 end

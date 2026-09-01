@@ -1,0 +1,13 @@
+planner,failure_reason,count
+RA-ALA,execution_constraint_violation,6
+RA-ALA,none,24
+Energy-A*,execution_constraint_violation,3
+Energy-A*,none,6
+Energy-A*,open_set_or_budget_without_goal,1
+Informed-RRT*,execution_constraint_violation,12
+Informed-RRT*,goal_not_reached,9
+Informed-RRT*,none,9
+ST-EA*,none,6
+ST-EA*,open_set_empty,2
+ST-EA*,wall_clock_timeout,2
+Greedy,execution_constraint_violation,10

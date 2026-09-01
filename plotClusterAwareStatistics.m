@@ -13,14 +13,14 @@ function fig = plotClusterAwareStatistics(results, outputFile)
 
     C = results.continuous;
     metrics = {'Composite cost','Energy'};
-    metricTitles = {'Unified Cost J','Energy E'};
+    metricTitles = {'Composite Score J','Energy E'};
     colors = [0.16 0.50 0.73; 0.15 0.63 0.25; ...
               0.49 0.18 0.56; 0.58 0.58 0.58];
 
     fig = figure('Units','centimeters','Position',[1 1 48 30], ...
         'Color','w','ToolBar','none','MenuBar','none');
     layout = tiledlayout(2,2,'TileSpacing','loose','Padding','loose');
-    title(layout,'Environment-Level Paired Inference (N = 10 Environments)', ...
+    title(layout,'Environment-Level Paired Inference (Pairwise N Shown)', ...
         'FontSize',22,'FontWeight','bold','FontName','Times New Roman');
 
     for m = 1:numel(metrics)
@@ -35,7 +35,9 @@ function fig = plotClusterAwareStatistics(results, outputFile)
         axP = nexttile(layout,m);
         hold(axP,'on');
         p = T.p_holm;
-        pPlot = max(p,1e-4);
+        pPlot = p;
+        pPlot(~isfinite(pPlot)) = 1;
+        pPlot = max(pPlot,1e-4);
         b = barh(axP,y,pPlot,0.58,'FaceColor','flat','EdgeColor','k', ...
             'LineWidth',0.8,'BaseValue',1e-4);
         b.CData = barColors;
@@ -46,10 +48,12 @@ function fig = plotClusterAwareStatistics(results, outputFile)
             'FontSize',19,'LineWidth',1.1,'TickDir','out');
 
         for i = 1:n
-            if p(i) < 0.001
-                valueLabel = 'p_{Holm} < 0.001';
+            if ~isfinite(p(i))
+                valueLabel = sprintf('N = %d; not estimable',T.environment_N(i));
+            elseif p(i) < 0.001
+                valueLabel = sprintf('N = %d; p_{Holm} < 0.001',T.environment_N(i));
             else
-                valueLabel = sprintf('p_{Holm} = %.3f',p(i));
+                valueLabel = sprintf('N = %d; p_{Holm} = %.3f',T.environment_N(i),p(i));
             end
             text(axP,0.82,i,valueLabel,'HorizontalAlignment','right', ...
                 'VerticalAlignment','middle','FontSize',17, ...
@@ -68,7 +72,9 @@ function fig = plotClusterAwareStatistics(results, outputFile)
         axR = nexttile(layout,m+2);
         hold(axR,'on');
         effect = T.rank_biserial;
-        b = barh(axR,y,effect,0.58,'FaceColor','flat', ...
+        effectPlot = effect;
+        effectPlot(~isfinite(effectPlot)) = 0;
+        b = barh(axR,y,effectPlot,0.58,'FaceColor','flat', ...
             'EdgeColor','k','LineWidth',0.8);
         b.CData = barColors;
         xline(axR,0,'-','Color','k','LineWidth',1.2);
@@ -78,14 +84,20 @@ function fig = plotClusterAwareStatistics(results, outputFile)
 
         for i = 1:n
             % Put positive-effect labels left of zero and negative labels right.
-            if effect(i) >= 0
+            if ~isfinite(effect(i))
+                xText = 0;
+                align = 'center';
+                effectLabel = sprintf('N = %d; not estimable',T.environment_N(i));
+            elseif effect(i) >= 0
                 xText = -0.055;
                 align = 'right';
+                effectLabel = sprintf('N = %d; r_{rb} = %+.3f',T.environment_N(i),effect(i));
             else
                 xText = 0.055;
                 align = 'left';
+                effectLabel = sprintf('N = %d; r_{rb} = %+.3f',T.environment_N(i),effect(i));
             end
-            text(axR,xText,i,sprintf('r_{rb} = %+.3f',effect(i)), ...
+            text(axR,xText,i,effectLabel, ...
                 'HorizontalAlignment',align,'VerticalAlignment','middle', ...
                 'FontSize',17,'FontWeight','bold', ...
                 'FontName','Times New Roman','Interpreter','tex', ...

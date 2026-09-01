@@ -1,607 +1,403 @@
-function outputs = runWeightSensitivityAnalysis(dataFile)
-%RUNWEIGHTSENSITIVITYANALYSIS One-at-a-time sensitivity of reported cost weights.
-%
-% The analysis reuses the ten Section 5.5 High-complexity environments and
-% the first pre-specified algorithm seed from each environment. RA-ALA is
-% re-optimized for every weight setting. The three baseline paths are
-% generated once per environment and re-evaluated under every setting,
-% because their implemented path-generation objectives do not use the
-% reported composite-cost weights.
+function outputs = runWeightSensitivityAnalysis(dataFile,userOpts)
+%RUNWEIGHTSENSITIVITYANALYSIS RA-ALA one-at-a-time weight sensitivity.
+%   Only RA-ALA is re-optimized. This is a within-method calibration audit,
+%   not a cross-planner ranking experiment. Composite scores from different
+%   weight definitions are reported for traceability but are not compared.
 
     projectDir = fileparts(mfilename('fullpath'));
+    if nargin < 2, userOpts = struct(); end
+    opts = struct('OutputDir',fullfile(projectDir,'ra_weight_sensitivity_results'), ...
+        'MakeFigure',true,'Resume',true,'CheckOnly',false);
+    names = fieldnames(userOpts);
+    for i=1:numel(names)
+        if ~isfield(opts,names{i})
+            error('WeightSensitivity:UnknownOption','Unknown option: %s',names{i});
+        end
+        opts.(names{i})=userOpts.(names{i});
+    end
+    switches = {'MakeFigure','Resume','CheckOnly'};
+    for i=1:numel(switches)
+        validateattributes(opts.(switches{i}),{'logical','numeric'}, ...
+            {'scalar','binary'},mfilename,switches{i});
+        opts.(switches{i})=logical(opts.(switches{i}));
+    end
     if nargin < 1 || isempty(dataFile)
-        dataFile = fullfile(projectDir, 'main_experiment_cohort.mat');
+        dataFile=fullfile(projectDir,'main_experiment_cohort.mat');
     elseif ~isfile(dataFile)
-        dataFile = fullfile(projectDir, dataFile);
+        dataFile=fullfile(projectDir,dataFile);
     end
-
     if ~isfile(dataFile)
-        error(['Section 5.5 cohort data were not found. Run runMainExperiments.m ', ...
-            'through Section 5.5 first so that main_experiment_cohort.mat is created.']);
+        error('WeightSensitivity:MissingCohort', ...
+            'Authoritative Figure 7-8 cohort not found: %s',dataFile);
     end
-
-    S = load(dataFile);
-    required = {'env_seeds_used','stat_env','stat_ra_seed','stat_J', ...
+    S=load(dataFile);
+    required={'env_seeds_used','stat_env','stat_ra_seed','stat_J', ...
         'ala_cfg_stat','mapSize','gridStep','windLevel','riskLevel', ...
         'startPt','goalPt','main_collision_sample_spacing_m'};
-    for k = 1:numel(required)
-        if ~isfield(S, required{k})
-            error('Missing variable "%s" in %s.', required{k}, dataFile);
+    for i=1:numel(required)
+        if ~isfield(S,required{i})
+            error('WeightSensitivity:MissingField','Missing %s in %s.', ...
+                required{i},dataFile);
         end
     end
-
-    probeCostModel = UnifiedCostModel();
-    canonicalSpacingM = probeCostModel.collision_sample_spacing;
-    if abs(double(S.main_collision_sample_spacing_m)-canonicalSpacingM) >= eps
-        error('WeightSensitivity:ResolutionMismatch', ...
-            ['The saved Section 5.5 cohort used %.3g m sampling, but the ', ...
-            'current canonical resolution is %.3g m. Rerun runMainExperiments first.'], ...
-            S.main_collision_sample_spacing_m,canonicalSpacingM);
+    sampling=resolveCohortEvaluationSettings(S);
+    if abs(sampling.PlanningSpacingM-0.75)>eps || ...
+            abs(sampling.FinalSpacingM-0.75)>eps
+        error('WeightSensitivity:WrongCohort', ...
+            'RA-ALA weight sensitivity requires the 0.75 m Figure 7-8 cohort.');
     end
+    provenance=validationProvenance(dataFile);
 
-    envSeeds = S.env_seeds_used(:)';
-    nEnv = numel(envSeeds);
-    if nEnv ~= 10
-        warning('Expected 10 Section 5.5 environments, but found %d.', nEnv);
-    end
-
-    raSeeds = nan(1, nEnv);
-    baseStatIndex = nan(1, nEnv);
-    for ei = 1:nEnv
-        idx = find(S.stat_env == envSeeds(ei), 1, 'first');
+    envSeeds=S.env_seeds_used(:)';
+    nEnv=numel(envSeeds);
+    raSeeds=nan(1,nEnv);
+    baseStatIndex=nan(1,nEnv);
+    for ei=1:nEnv
+        idx=find(S.stat_env==envSeeds(ei),1,'first');
         if isempty(idx)
-            error('No Section 5.5 run seed was found for environment seed %d.', envSeeds(ei));
+            error('WeightSensitivity:MissingSeed', ...
+                'No RA-ALA seed found for environment %d.',envSeeds(ei));
         end
-        baseStatIndex(ei) = idx;
-        raSeeds(ei) = S.stat_ra_seed(idx);
+        baseStatIndex(ei)=idx;
+        raSeeds(ei)=S.stat_ra_seed(idx);
     end
-
-    cfg = S.ala_cfg_stat;
-    tStart = 0;
-    hasPayload = true;
-    algNames = {'RA-ALA','Energy-A*','Informed-RRT*','ST-EA*','Greedy'};
-    nAlg = numel(algNames);
-
-    [configTable, weightConfigs] = localBuildWeightConfigs();
-    nConfig = height(configTable);
-
-    outputDir = fullfile(projectDir, 'weight_sensitivity_results');
-    if ~exist(outputDir, 'dir')
-        mkdir(outputDir);
+    cfg=S.ala_cfg_stat;
+    [configTable,weightConfigs]=localBuildWeightConfigs();
+    nConfig=height(configTable);
+    if opts.CheckOnly
+        outputs=struct('preflight_passed',true,'cohort_file',dataFile, ...
+            'sampling',sampling,'environment_count',nEnv, ...
+            'configuration_count',nConfig,'options',opts);
+        fprintf('RA-ALA weight-sensitivity input checks passed. No planning started.\n');
+        return;
     end
-    writetable(configTable, fullfile(outputDir, 'weight_sensitivity_configurations.csv'));
+    if ~exist(opts.OutputDir,'dir'), mkdir(opts.OutputDir); end
+    writetable(configTable,fullfile(opts.OutputDir, ...
+        'ra_weight_sensitivity_configurations.csv'));
 
-    nRows = nConfig * nEnv * nAlg;
-    configId = zeros(nRows,1);
-    configName = cell(nRows,1);
-    variedComponent = cell(nRows,1);
-    multiplier = nan(nRows,1);
-    environmentId = zeros(nRows,1);
-    environmentSeed = zeros(nRows,1);
-    algorithmName = cell(nRows,1);
-    algorithmSeed = nan(nRows,1);
-    J = nan(nRows,1);
-    energyWh = nan(nRows,1);
-    flightTimeS = nan(nRows,1);
-    climbCost = nan(nRows,1);
-    dynamicRisk = nan(nRows,1);
-    penaltyTotal = nan(nRows,1);
-    feasible = false(nRows,1);
-    planningTimeS = nan(nRows,1);
-    evaluationTimeS = nan(nRows,1);
-    pathReusedAcrossWeights = false(nRows,1);
-    runStatus = repmat({'not_run'}, nRows, 1);
-    completedEnv = false(nEnv,1);
+    nRows=nConfig*nEnv;
+    ConfigID=zeros(nRows,1);
+    ConfigName=cell(nRows,1);
+    VariedComponent=cell(nRows,1);
+    Multiplier=nan(nRows,1);
+    EnvironmentID=zeros(nRows,1);
+    EnvironmentSeed=zeros(nRows,1);
+    AlgorithmSeed=zeros(nRows,1);
+    J=nan(nRows,1);
+    Energy_Wh=nan(nRows,1);
+    FlightTime_s=nan(nRows,1);
+    ClimbCost=nan(nRows,1);
+    DynamicRisk=nan(nRows,1);
+    PenaltyTotal=nan(nRows,1);
+    Feasible=false(nRows,1);
+    PlanningTime_s=nan(nRows,1);
+    EvaluationTime_s=nan(nRows,1);
+    RunStatus=repmat({'not_run'},nRows,1);
+    completedEnv=false(nEnv,1);
 
-    checkpointFile = fullfile(outputDir, 'weight_sensitivity_checkpoint.mat');
-    if isfile(checkpointFile)
-        C = load(checkpointFile);
-        sameDesign = isfield(C,'checkpointEnvSeeds') && ...
-            isequal(C.checkpointEnvSeeds(:)', envSeeds) && ...
+    sourceText=strrep(fileread([mfilename('fullpath'),'.m']), ...
+        sprintf('\r\n'),sprintf('\n'));
+    checkpointDesign=struct('version',3,'analysis','RA-ALA-only', ...
+        'provenance',provenance,'sampling',sampling,'configuration',cfg, ...
+        'raSeeds',raSeeds,'source',sourceText);
+    checkpointFile=fullfile(opts.OutputDir, ...
+        'ra_weight_sensitivity_checkpoint_v3.mat');
+    if opts.Resume && isfile(checkpointFile)
+        C=load(checkpointFile);
+        sameDesign=isfield(C,'checkpointEnvSeeds') && ...
+            isequal(C.checkpointEnvSeeds(:)',envSeeds) && ...
             isfield(C,'checkpointConfigTable') && ...
-            isequaln(C.checkpointConfigTable, configTable) && ...
-            isfield(C,'checkpointSpacingM') && ...
-            isequal(C.checkpointSpacingM,canonicalSpacingM);
-        if sameDesign
-            configId = C.configId;
-            configName = C.configName;
-            variedComponent = C.variedComponent;
-            multiplier = C.multiplier;
-            environmentId = C.environmentId;
-            environmentSeed = C.environmentSeed;
-            algorithmName = C.algorithmName;
-            algorithmSeed = C.algorithmSeed;
-            J = C.J;
-            energyWh = C.energyWh;
-            flightTimeS = C.flightTimeS;
-            climbCost = C.climbCost;
-            dynamicRisk = C.dynamicRisk;
-            penaltyTotal = C.penaltyTotal;
-            feasible = C.feasible;
-            planningTimeS = C.planningTimeS;
-            evaluationTimeS = C.evaluationTimeS;
-            pathReusedAcrossWeights = C.pathReusedAcrossWeights;
-            runStatus = C.runStatus;
-            completedEnv = C.completedEnv;
-            fprintf('Resuming weight sensitivity analysis: %d/%d environments completed.\n', ...
-                sum(completedEnv), nEnv);
-        else
-            warning('An incompatible sensitivity checkpoint was ignored.');
+            isequaln(C.checkpointConfigTable,configTable) && ...
+            isfield(C,'checkpointDesign') && ...
+            isequaln(C.checkpointDesign,checkpointDesign);
+        if ~sameDesign
+            error('WeightSensitivity:CheckpointMismatch', ...
+                ['The RA-ALA checkpoint belongs to another code/cohort design. ', ...
+                'Choose another OutputDir or archive the old checkpoint.']);
         end
+        fields={'ConfigID','ConfigName','VariedComponent','Multiplier', ...
+            'EnvironmentID','EnvironmentSeed','AlgorithmSeed','J','Energy_Wh', ...
+            'FlightTime_s','ClimbCost','DynamicRisk','PenaltyTotal','Feasible', ...
+            'PlanningTime_s','EvaluationTime_s','RunStatus','completedEnv'};
+        for i=1:numel(fields), eval([fields{i},'=C.',fields{i},';']); end
+        fprintf('Resuming RA-ALA weight sensitivity: %d/%d environments complete.\n', ...
+            sum(completedEnv),nEnv);
     end
 
-    fprintf('\n=== Cost-weight sensitivity analysis ===\n');
-    fprintf('Design: %d fixed High-complexity environments x %d weight settings.\n', ...
-        nEnv, nConfig);
-    fprintf('RA-ALA is re-optimized; baseline paths are generated once per environment.\n');
+    fprintf('\nRA-ALA one-at-a-time weight sensitivity\n');
+    fprintf('  Design: %d environments x %d configurations\n',nEnv,nConfig);
+    fprintf('  Planning/final spacing: %.3g/%.3g m\n', ...
+        sampling.PlanningSpacingM,sampling.FinalSpacingM);
+    fprintf('  Baseline planners are not rerun in this within-method analysis.\n');
 
-    for ei = 1:nEnv
-        if completedEnv(ei)
-            continue;
-        end
+    for ei=1:nEnv
+        if completedEnv(ei), continue; end
+        envSeed=envSeeds(ei);
+        rng(envSeed,'twister');
+        env=CityEnvironment(S.mapSize,S.gridStep);
+        env.generate('high',S.windLevel,S.riskLevel,envSeed);
+        env.setTaskPoints(S.startPt,S.goalPt);
+        fprintf('\nEnvironment %d/%d (seed=%d)\n',ei,nEnv,envSeed);
 
-        envSeed = envSeeds(ei);
-        fprintf('\nEnvironment %d/%d (seed=%d)\n', ei, nEnv, envSeed);
-        rng(envSeed);
-        env = CityEnvironment(S.mapSize, S.gridStep);
-        env.generate('high', S.windLevel, S.riskLevel, envSeed);
-        env.setTaskPoints(S.startPt, S.goalPt);
+        for ci=1:nConfig
+            row=(ci-1)*nEnv+ei;
+            ConfigID(row)=ci;
+            ConfigName{row}=configTable.ConfigName{ci};
+            VariedComponent{row}=configTable.VariedComponent{ci};
+            Multiplier(row)=configTable.Multiplier(ci);
+            EnvironmentID(row)=ei;
+            EnvironmentSeed(row)=envSeed;
+            AlgorithmSeed(row)=raSeeds(ei);
 
-        % Only baselines whose search objective is independent of the reported
-        % J weights are generated once. ST-EA* is replanned for every setting.
-        cmBase = localCreateCostModel(env, weightConfigs(1));
-        plannerBase = PathPlanners(env, cmBase);
-        plannerBase.setBudget(15, 5000, 2000);
-        baselinePaths = cell(nAlg,1);
-        baselinePlanningTime = nan(nAlg,1);
-        baselineStatus = repmat({'not_applicable'}, nAlg, 1);
-
-        for ai = [2 3 5]
-            algSeed = envSeed + 53 + ai * 11;
-            rng(algSeed);
-            timer = tic;
+            cm=localCreateCostModel(env,weightConfigs(ci), ...
+                sampling.PlanningSpacingM,sampling.MinSamples);
+            cmFinal=localCreateCostModel(env,weightConfigs(ci), ...
+                sampling.FinalSpacingM,sampling.MinSamples);
+            planner=PathPlanners(env,cm);
+            planner.setBudget(15,5000,2000);
+            rng(raSeeds(ei),'twister');
+            timer=tic;
             try
-                switch ai
-                    case 2
-                        [baselinePaths{ai},~,~] = plannerBase.energyAStar( ...
-                            S.startPt, S.goalPt, tStart, hasPayload);
-                    case 3
-                        [baselinePaths{ai},~,~] = plannerBase.informedRRTStar( ...
-                            S.startPt, S.goalPt, tStart, hasPayload, 1500);
-                    case 5
-                        [baselinePaths{ai},~,~] = plannerBase.greedyPlanner( ...
-                            S.startPt, S.goalPt, tStart, hasPayload);
+                evalc('[path,~,detSearch,stage] = runRA_ALA(planner,cm,env,S.startPt,S.goalPt,0,true,cfg);');
+                PlanningTime_s(row)=toc(timer);
+                if isempty(path) || size(path,1)<2
+                    error('WeightSensitivity:EmptyPath','RA-ALA returned no path.');
                 end
-                baselinePlanningTime(ai) = toc(timer);
-                if isempty(baselinePaths{ai})
-                    baselineStatus{ai} = 'empty_path';
-                else
-                    baselineStatus{ai} = 'ok';
+                if isfield(stage,'timing') && isfield(stage.timing,'total_s')
+                    PlanningTime_s(row)=stage.timing.total_s;
                 end
+                timerEval=tic;
+                [~,det]=cmFinal.evaluatePath(path,0,true);
+                EvaluationTime_s(row)=toc(timerEval);
+                if ~det.numerically_valid
+                    RunStatus{row}=det.evaluation_status;
+                    continue;
+                end
+                J(row)=localField(det,'J_final',NaN);
+                Energy_Wh(row)=localField(det,'E_total',NaN);
+                FlightTime_s(row)=localField(det,'T_total',NaN);
+                ClimbCost(row)=localField(det,'C_climb',NaN);
+                DynamicRisk(row)=localField(det,'R_dynamic',NaN);
+                PenaltyTotal(row)=localField(det,'penalty_total',NaN);
+                Feasible(row)=logical(localField(det,'feasible',false));
+                RunStatus{row}='ok';
             catch ME
-                baselinePlanningTime(ai) = toc(timer);
-                baselineStatus{ai} = ['failed: ', ME.identifier];
-                baselinePaths{ai} = [];
+                PlanningTime_s(row)=toc(timer);
+                RunStatus{row}=['failed:',localExceptionId(ME)];
+                warning('RA-ALA config %d, environment %d failed: %s', ...
+                    ci,ei,ME.message);
             end
         end
 
-        for ci = 1:nConfig
-            cm = localCreateCostModel(env, weightConfigs(ci));
-            planner = PathPlanners(env, cm);
-            planner.setBudget(15, 5000, 2000);
-
-            for ai = 1:nAlg
-                row = ((ci-1)*nEnv + (ei-1))*nAlg + ai;
-                configId(row) = ci;
-                configName{row} = configTable.ConfigName{ci};
-                variedComponent{row} = configTable.VariedComponent{ci};
-                multiplier(row) = configTable.Multiplier(ci);
-                environmentId(row) = ei;
-                environmentSeed(row) = envSeed;
-                algorithmName{row} = algNames{ai};
-
-                try
-                    if ai == 1
-                        algorithmSeed(row) = raSeeds(ei);
-                        rng(raSeeds(ei));
-                        timer = tic;
-                        capturedText = evalc(['[pathRA,~,det,stage] = runRA_ALA(', ...
-                            'planner,cm,env,S.startPt,S.goalPt,tStart,hasPayload,cfg);']); %#ok<NASGU>
-                        planningTimeS(row) = toc(timer);
-                        if isempty(pathRA)
-                            error('WeightSensitivity:EmptyRAPath', 'RA-ALA returned an empty path.');
-                        end
-                        if isfield(stage,'timing') && isfield(stage.timing,'total_s')
-                            planningTimeS(row) = stage.timing.total_s;
-                        end
-                        evaluationTimeS(row) = localNestedField(stage, ...
-                            {'timing','topk_evaluation_s'}, NaN);
-                        pathReusedAcrossWeights(row) = false;
-                    elseif ai == 4
-                        algorithmSeed(row) = envSeed + 53 + ai * 11;
-                        rng(algorithmSeed(row));
-                        timer = tic;
-                        [pathST,~,infoST] = planner.timeExpandedEnergyAStar( ...
-                            S.startPt,S.goalPt,tStart,hasPayload,2,300);
-                        planningTimeS(row) = toc(timer);
-                        if isempty(pathST) || ~infoST.reachedGoal
-                            error('WeightSensitivity:EmptySTPath', ...
-                                'ST-EA* did not reach the goal (%s).',infoST.stopReason);
-                        end
-                        det = infoST.details;
-                        evaluationTimeS(row) = NaN;
-                        pathReusedAcrossWeights(row) = false;
-                    else
-                        algorithmSeed(row) = envSeed + 53 + ai * 11;
-                        if ~strcmp(baselineStatus{ai}, 'ok')
-                            error('WeightSensitivity:BaselineFailure', '%s', baselineStatus{ai});
-                        end
-                        timer = tic;
-                        [~,det] = cm.evaluatePath(baselinePaths{ai}, tStart, hasPayload);
-                        evaluationTimeS(row) = toc(timer);
-                        planningTimeS(row) = baselinePlanningTime(ai);
-                        pathReusedAcrossWeights(row) = true;
-                    end
-
-                    J(row) = localField(det, 'J_final', NaN);
-                    energyWh(row) = localField(det, 'E_total', NaN);
-                    flightTimeS(row) = localField(det, 'T_total', NaN);
-                    climbCost(row) = localField(det, 'C_climb', NaN);
-                    dynamicRisk(row) = localField(det, 'R_dynamic', NaN);
-                    penaltyTotal(row) = localField(det, 'penalty_total', NaN);
-                    feasible(row) = logical(localField(det, 'feasible', false));
-                    runStatus{row} = 'ok';
-                catch ME
-                    feasible(row) = false;
-                    runStatus{row} = ['failed: ', ME.identifier];
-                    warning('Config %d, environment %d, algorithm %s failed: %s', ...
-                        ci, ei, algNames{ai}, ME.message);
-                end
-            end
-        end
-
-        completedEnv(ei) = true;
-        checkpointEnvSeeds = envSeeds;
-        checkpointConfigTable = configTable;
-        checkpointSpacingM = canonicalSpacingM;
-        save(checkpointFile, 'checkpointEnvSeeds','checkpointConfigTable', ...
-            'checkpointSpacingM', ...
-            'configId','configName','variedComponent','multiplier', ...
-            'environmentId','environmentSeed','algorithmName','algorithmSeed', ...
-            'J','energyWh','flightTimeS','climbCost','dynamicRisk', ...
-            'penaltyTotal','feasible','planningTimeS','evaluationTimeS', ...
-            'pathReusedAcrossWeights','runStatus','completedEnv');
-        fprintf('Completed environment %d/%d. Checkpoint saved.\n', ei, nEnv);
+        completedEnv(ei)=true;
+        checkpointEnvSeeds=envSeeds; %#ok<NASGU>
+        checkpointConfigTable=configTable; %#ok<NASGU>
+        save(checkpointFile,'checkpointEnvSeeds','checkpointConfigTable', ...
+            'checkpointDesign','ConfigID','ConfigName','VariedComponent', ...
+            'Multiplier','EnvironmentID','EnvironmentSeed','AlgorithmSeed', ...
+            'J','Energy_Wh','FlightTime_s','ClimbCost','DynamicRisk', ...
+            'PenaltyTotal','Feasible','PlanningTime_s','EvaluationTime_s', ...
+            'RunStatus','completedEnv');
+        fprintf('Completed environment %d/%d. Checkpoint saved.\n',ei,nEnv);
     end
 
-    caseResults = table(configId,configName,variedComponent,multiplier, ...
-        environmentId,environmentSeed,algorithmName,algorithmSeed,J,energyWh, ...
-        flightTimeS,climbCost,dynamicRisk,penaltyTotal,feasible,planningTimeS, ...
-        evaluationTimeS,pathReusedAcrossWeights,runStatus, ...
-        'VariableNames', {'ConfigID','ConfigName','VariedComponent','Multiplier', ...
-        'EnvironmentID','EnvironmentSeed','Algorithm','AlgorithmSeed','J', ...
-        'Energy_Wh','FlightTime_s','ClimbCost','DynamicRisk','PenaltyTotal', ...
-        'Feasible','PlanningTime_s','EvaluationTime_s','PathReusedAcrossWeights', ...
-        'RunStatus'});
-    writetable(caseResults, fullfile(outputDir, 'weight_sensitivity_case_results.csv'));
+    caseResults=table(ConfigID,ConfigName,VariedComponent,Multiplier, ...
+        EnvironmentID,EnvironmentSeed,AlgorithmSeed,J,Energy_Wh,FlightTime_s, ...
+        ClimbCost,DynamicRisk,PenaltyTotal,Feasible,PlanningTime_s, ...
+        EvaluationTime_s,RunStatus);
+    summaryResults=localSummarize(caseResults,configTable,nEnv);
+    stabilityResults=localStability(summaryResults);
 
-    summaryResults = localSummarize(caseResults, configTable, algNames, nEnv);
-    writetable(summaryResults, fullfile(outputDir, 'weight_sensitivity_summary.csv'));
+    writetable(caseResults,fullfile(opts.OutputDir, ...
+        'ra_weight_sensitivity_case_results.csv'));
+    writetable(summaryResults,fullfile(opts.OutputDir, ...
+        'ra_weight_sensitivity_summary.csv'));
+    writetable(stabilityResults,fullfile(opts.OutputDir, ...
+        'ra_weight_sensitivity_stability.csv'));
 
-    [rankingResults, raBestCount] = localRankSettings(summaryResults, configTable);
-    writetable(rankingResults, fullfile(outputDir, 'weight_sensitivity_rank_stability.csv'));
-
-    baseRows = find(caseResults.ConfigID == 1 & strcmp(caseResults.Algorithm,'RA-ALA'));
-    expectedBaseJ = S.stat_J(1, baseStatIndex)';
-    actualBaseJ = caseResults.J(baseRows);
-    validRepro = isfinite(expectedBaseJ) & isfinite(actualBaseJ);
-    if any(validRepro)
-        maxBaseDifference = max(abs(expectedBaseJ(validRepro) - actualBaseJ(validRepro)));
+    baseRows=caseResults.ConfigID==1;
+    expectedBaseJ=S.stat_J(1,baseStatIndex)';
+    actualBaseJ=caseResults.J(baseRows);
+    valid=isfinite(expectedBaseJ) & isfinite(actualBaseJ);
+    if any(valid)
+        maxBaseDifference=max(abs(expectedBaseJ(valid)-actualBaseJ(valid)));
     else
-        maxBaseDifference = NaN;
+        maxBaseDifference=NaN;
     end
-    reproductionPassed = all(isnan(expectedBaseJ) == isnan(actualBaseJ)) && ...
-        (isnan(maxBaseDifference) || maxBaseDifference <= 1e-9);
+    reproductionPassed=all(valid) && maxBaseDifference<=1e-9;
     if ~reproductionPassed
-        warning('Baseline sensitivity runs did not exactly reproduce the selected Section 5.5 cases (max |dJ| = %.3g).', ...
+        warning('WeightSensitivity:BaseReproduction', ...
+            'Base configuration differs from the cohort (max |dJ| = %.3g).', ...
             maxBaseDifference);
     end
 
-    figureFilePng = fullfile(outputDir, 'fig_weight_sensitivity.png');
-
-    localPlotSensitivity(summaryResults, configTable, algNames, figureFilePng);
-
-    reportFile = fullfile(outputDir, 'weight_sensitivity_method_report.txt');
-    localWriteReport(reportFile, dataFile, configTable, nEnv, cfg, ...
-        reproductionPassed, maxBaseDifference, raBestCount, nConfig);
-
-    save(fullfile(outputDir, 'weight_sensitivity_results.mat'), ...
-        'caseResults','summaryResults','rankingResults','configTable', ...
-        'weightConfigs','envSeeds','raSeeds','cfg','reproductionPassed', ...
-        'maxBaseDifference','raBestCount');
-
-    if isfile(checkpointFile)
-        delete(checkpointFile);
+    if opts.MakeFigure
+        localPlotSensitivity(stabilityResults,fullfile(opts.OutputDir, ...
+            'fig_ra_weight_sensitivity.png'));
     end
+    localWriteReport(fullfile(opts.OutputDir, ...
+        'ra_weight_sensitivity_method_report.txt'),dataFile,sampling,nEnv, ...
+        nConfig,reproductionPassed,maxBaseDifference);
+    save(fullfile(opts.OutputDir,'ra_weight_sensitivity_results.mat'), ...
+        'caseResults','summaryResults','stabilityResults','configTable', ...
+        'weightConfigs','envSeeds','raSeeds','cfg','sampling','provenance', ...
+        'reproductionPassed','maxBaseDifference','checkpointDesign');
 
-    outputs = struct();
-    outputs.outputDir = outputDir;
-    outputs.caseResults = caseResults;
-    outputs.summaryResults = summaryResults;
-    outputs.rankingResults = rankingResults;
-    outputs.reproductionPassed = reproductionPassed;
-    outputs.maxBaseDifference = maxBaseDifference;
-    outputs.raBestCount = raBestCount;
-
-    fprintf('\nWeight sensitivity analysis completed.\n');
-    fprintf('Results: %s\n', outputDir);
-    fprintf('Section 5.5 reproduction check: %d (max |dJ| = %.3g).\n', ...
-        reproductionPassed, maxBaseDifference);
-    fprintf('RA-ALA feasibility-first best settings: %d/%d.\n', raBestCount, nConfig);
+    outputs=struct('outputDir',opts.OutputDir,'caseResults',caseResults, ...
+        'summaryResults',summaryResults,'stabilityResults',stabilityResults, ...
+        'reproductionPassed',reproductionPassed, ...
+        'maxBaseDifference',maxBaseDifference,'checkpointFile',checkpointFile);
+    fprintf('\nRA-ALA weight sensitivity complete: %s\n',opts.OutputDir);
 end
 
-function [configTable, configs] = localBuildWeightConfigs()
-    base = struct('w_energy',1.0,'w_time',0.5,'w_climb',2.0, ...
+function [configTable,configs]=localBuildWeightConfigs()
+    base=struct('w_energy',1.0,'w_time',0.5,'w_climb',2.0, ...
         'w_risk',10.0,'lambda_penalty',100.0);
-    configNames = {'Base','Energy 0.5x','Energy 1.5x','Time 0.5x','Time 1.5x', ...
+    names={'Base','Energy 0.5x','Energy 1.5x','Time 0.5x','Time 1.5x', ...
         'Climb 0.5x','Climb 1.5x','Risk 0.5x','Risk 1.5x', ...
         'Penalty 0.5x','Penalty 1.5x'};
-    components = {'None','Energy','Energy','Time','Time','Climb','Climb', ...
+    components={'None','Energy','Energy','Time','Time','Climb','Climb', ...
         'Risk','Risk','Penalty','Penalty'};
-    multipliers = [1,0.5,1.5,0.5,1.5,0.5,1.5,0.5,1.5,0.5,1.5]';
-    configs = repmat(base, numel(configNames), 1);
-    fieldNames = {'','w_energy','w_energy','w_time','w_time','w_climb', ...
+    multipliers=[1 0.5 1.5 0.5 1.5 0.5 1.5 0.5 1.5 0.5 1.5]';
+    fields={'','w_energy','w_energy','w_time','w_time','w_climb', ...
         'w_climb','w_risk','w_risk','lambda_penalty','lambda_penalty'};
-    for ci = 2:numel(configNames)
-        f = fieldNames{ci};
-        configs(ci).(f) = base.(f) * multipliers(ci);
+    configs=repmat(base,numel(names),1);
+    for i=2:numel(names)
+        configs(i).(fields{i})=base.(fields{i})*multipliers(i);
     end
-    configTable = table((1:numel(configNames))', configNames', components', ...
-        multipliers, [configs.w_energy]', [configs.w_time]', [configs.w_climb]', ...
-        [configs.w_risk]', [configs.lambda_penalty]', ...
-        'VariableNames', {'ConfigID','ConfigName','VariedComponent','Multiplier', ...
-        'w_energy','w_time','w_climb','w_risk','lambda_penalty'});
+    configTable=table((1:numel(names))',names',components',multipliers, ...
+        [configs.w_energy]',[configs.w_time]',[configs.w_climb]', ...
+        [configs.w_risk]',[configs.lambda_penalty]', ...
+        'VariableNames',{'ConfigID','ConfigName','VariedComponent', ...
+        'Multiplier','w_energy','w_time','w_climb','w_risk','lambda_penalty'});
 end
 
-function cm = localCreateCostModel(env, weights)
-    constructorWeights = struct('w_energy',weights.w_energy, ...
-        'w_time',weights.w_time,'w_climb',weights.w_climb, ...
-        'w_risk',weights.w_risk);
-    cm = UnifiedCostModel([], constructorWeights);
-    cm.lambda_penalty = weights.lambda_penalty;
-    cm.setEnvironment(env.windField, env.dynObstacles, env.heightMap);
+function cm=localCreateCostModel(env,w,spacing,minSamples)
+    constructorWeights=struct('w_energy',w.w_energy,'w_time',w.w_time, ...
+        'w_climb',w.w_climb,'w_risk',w.w_risk);
+    cm=UnifiedCostModel([],constructorWeights);
+    cm.lambda_penalty=w.lambda_penalty;
+    cm.setEnvironment(env.windField,env.dynObstacles,env.heightMap);
+    cm.setCollisionSampling(spacing,minSamples);
 end
 
-function value = localField(S, name, defaultValue)
-    if isstruct(S) && isfield(S, name) && ~isempty(S.(name))
-        value = S.(name);
-    else
-        value = defaultValue;
+function T=localSummarize(R,C,nEnv)
+    n=height(C);
+    SuccessfulPaths=zeros(n,1);
+    FeasibleCount=zeros(n,1);
+    FeasibilityPct=zeros(n,1);
+    MedianCompositeScore=nan(n,1);
+    MedianEnergyWh=nan(n,1);
+    MedianFlightTimeS=nan(n,1);
+    MedianDynamicRisk=nan(n,1);
+    MedianPenaltyAllValid=nan(n,1);
+    MedianPlanningTimeS=nan(n,1);
+    for ci=1:n
+        mask=R.ConfigID==ci;
+        valid=mask & strcmp(R.RunStatus,'ok') & isfinite(R.J);
+        feasibleValid=valid & R.Feasible;
+        SuccessfulPaths(ci)=sum(valid);
+        FeasibleCount(ci)=sum(feasibleValid);
+        FeasibilityPct(ci)=100*FeasibleCount(ci)/nEnv;
+        MedianCompositeScore(ci)=localMedian(R.J(feasibleValid));
+        MedianEnergyWh(ci)=localMedian(R.Energy_Wh(feasibleValid));
+        MedianFlightTimeS(ci)=localMedian(R.FlightTime_s(feasibleValid));
+        MedianDynamicRisk(ci)=localMedian(R.DynamicRisk(feasibleValid));
+        MedianPenaltyAllValid(ci)=localMedian(R.PenaltyTotal(valid));
+        MedianPlanningTimeS(ci)=localMedian(R.PlanningTime_s(valid));
     end
+    T=table(C.ConfigID,C.ConfigName,C.VariedComponent,C.Multiplier, ...
+        SuccessfulPaths,FeasibleCount,FeasibilityPct,MedianCompositeScore, ...
+        MedianEnergyWh,MedianFlightTimeS,MedianDynamicRisk, ...
+        MedianPenaltyAllValid,MedianPlanningTimeS, ...
+        'VariableNames',{'ConfigID','ConfigName','VariedComponent','Multiplier', ...
+        'SuccessfulPaths','FeasibleCount','FeasibilityPct', ...
+        'MedianCompositeScore','MedianEnergyWh','MedianFlightTimeS', ...
+        'MedianDynamicRisk','MedianPenaltyAllValid','MedianPlanningTimeS'});
 end
 
-function value = localNestedField(S, names, defaultValue)
-    value = defaultValue;
-    current = S;
-    for k = 1:numel(names)
-        if ~isstruct(current) || ~isfield(current, names{k})
-            return;
-        end
-        current = current.(names{k});
-    end
-    if ~isempty(current)
-        value = current;
-    end
+function T=localStability(S)
+    n=height(S);
+    DeltaFeasibilityPct=S.FeasibilityPct-S.FeasibilityPct(1);
+    EnergyRatioToBase=localRatios(S.MedianEnergyWh,S.MedianEnergyWh(1));
+    TimeRatioToBase=localRatios(S.MedianFlightTimeS,S.MedianFlightTimeS(1));
+    RiskRatioToBase=localRatios(S.MedianDynamicRisk,S.MedianDynamicRisk(1));
+    T=table(S.ConfigID,S.ConfigName,S.VariedComponent,S.Multiplier, ...
+        S.FeasibilityPct,DeltaFeasibilityPct,S.MedianEnergyWh, ...
+        EnergyRatioToBase,S.MedianFlightTimeS,TimeRatioToBase, ...
+        S.MedianDynamicRisk,RiskRatioToBase,S.MedianPenaltyAllValid, ...
+        'VariableNames',{'ConfigID','ConfigName','VariedComponent','Multiplier', ...
+        'FeasibilityPct','DeltaFeasibilityPct','MedianEnergyWh', ...
+        'EnergyRatioToBase','MedianFlightTimeS','TimeRatioToBase', ...
+        'MedianDynamicRisk','RiskRatioToBase','MedianPenaltyAllValid'});
 end
 
-function summary = localSummarize(results, configTable, algNames, nEnv)
-    nConfig = height(configTable);
-    nAlg = numel(algNames);
-    nRows = nConfig * nAlg;
-    ConfigID = zeros(nRows,1);
-    ConfigName = cell(nRows,1);
-    VariedComponent = cell(nRows,1);
-    Multiplier = nan(nRows,1);
-    Algorithm = cell(nRows,1);
-    SuccessfulPaths = zeros(nRows,1);
-    FeasibleCount = zeros(nRows,1);
-    FeasibilityPct = zeros(nRows,1);
-    MedianJ = nan(nRows,1);
-    Q1J = nan(nRows,1);
-    Q3J = nan(nRows,1);
-    MedianEnergyWh = nan(nRows,1);
-    MedianFlightTimeS = nan(nRows,1);
-    MedianDynamicRisk = nan(nRows,1);
-    MedianPenalty = nan(nRows,1);
-    MedianPlanningTimeS = nan(nRows,1);
-
-    row = 0;
-    for ci = 1:nConfig
-        for ai = 1:nAlg
-            row = row + 1;
-            mask = results.ConfigID == ci & strcmp(results.Algorithm, algNames{ai});
-            valid = mask & isfinite(results.J);
-            ConfigID(row) = ci;
-            ConfigName{row} = configTable.ConfigName{ci};
-            VariedComponent{row} = configTable.VariedComponent{ci};
-            Multiplier(row) = configTable.Multiplier(ci);
-            Algorithm{row} = algNames{ai};
-            SuccessfulPaths(row) = sum(valid);
-            FeasibleCount(row) = sum(results.Feasible(mask));
-            FeasibilityPct(row) = 100 * FeasibleCount(row) / nEnv;
-            MedianJ(row) = localMedian(results.J(valid));
-            Q1J(row) = localPercentile(results.J(valid), 25);
-            Q3J(row) = localPercentile(results.J(valid), 75);
-            MedianEnergyWh(row) = localMedian(results.Energy_Wh(valid));
-            MedianFlightTimeS(row) = localMedian(results.FlightTime_s(valid));
-            MedianDynamicRisk(row) = localMedian(results.DynamicRisk(valid));
-            MedianPenalty(row) = localMedian(results.PenaltyTotal(valid));
-            MedianPlanningTimeS(row) = localMedian(results.PlanningTime_s(valid));
-        end
-    end
-
-    summary = table(ConfigID,ConfigName,VariedComponent,Multiplier,Algorithm, ...
-        SuccessfulPaths,FeasibleCount,FeasibilityPct,MedianJ,Q1J,Q3J, ...
-        MedianEnergyWh,MedianFlightTimeS,MedianDynamicRisk,MedianPenalty, ...
-        MedianPlanningTimeS);
+function r=localRatios(x,base)
+    r=nan(size(x));
+    if isfinite(base) && abs(base)>eps, r=x/base; end
 end
 
-function [ranking, raBestCount] = localRankSettings(summary, configTable)
-    nConfig = height(configTable);
-    BestByMedianJ = cell(nConfig,1);
-    BestFeasibilityFirst = cell(nConfig,1);
-    RARankByMedianJ = nan(nConfig,1);
-    RABestFeasibilityFirst = false(nConfig,1);
-
-    for ci = 1:nConfig
-        rows = find(summary.ConfigID == ci);
-        medJ = summary.MedianJ(rows);
-        feas = summary.FeasibilityPct(rows);
-        medJForSort = medJ;
-        medJForSort(~isfinite(medJForSort)) = inf;
-        [~,orderJ] = sort(medJForSort, 'ascend');
-        BestByMedianJ{ci} = summary.Algorithm{rows(orderJ(1))};
-        raLocal = find(strcmp(summary.Algorithm(rows),'RA-ALA'),1);
-        RARankByMedianJ(ci) = find(orderJ == raLocal, 1);
-
-        bestFeas = max(feas);
-        candidates = find(feas == bestFeas);
-        [~,tieOrder] = sort(medJForSort(candidates), 'ascend');
-        winner = candidates(tieOrder(1));
-        BestFeasibilityFirst{ci} = summary.Algorithm{rows(winner)};
-        RABestFeasibilityFirst(ci) = strcmp(BestFeasibilityFirst{ci}, 'RA-ALA');
+function localPlotSensitivity(T,file)
+    fig=figure('Color','w','Units','centimeters','Position',[2 2 30 20], ...
+        'ToolBar','none','MenuBar','none');
+    tl=tiledlayout(fig,2,1,'TileSpacing','compact','Padding','compact');
+    x=1:height(T);
+    ax1=nexttile(tl);
+    bar(ax1,x,T.FeasibilityPct,0.7,'FaceColor',[0.75 0.18 0.18]);
+    ylim(ax1,[0 105]); ylabel(ax1,'Feasibility (%)');
+    title(ax1,'RA-ALA Feasibility across Weight Configurations');
+    grid(ax1,'on');
+    ax2=nexttile(tl); hold(ax2,'on');
+    plot(ax2,x,T.EnergyRatioToBase,'-o','LineWidth',1.6);
+    plot(ax2,x,T.TimeRatioToBase,'-s','LineWidth',1.6);
+    plot(ax2,x,T.RiskRatioToBase,'-^','LineWidth',1.6);
+    yline(ax2,1,'--k','Base');
+    ylabel(ax2,'Ratio to base configuration');
+    legend(ax2,{'Energy','Flight time','Dynamic risk'}, ...
+        'Location','best','Box','off');
+    grid(ax2,'on');
+    for ax=[ax1 ax2]
+        set(ax,'XTick',x,'XTickLabel',T.ConfigName, ...
+            'TickLabelInterpreter','none','FontName','Times New Roman', ...
+            'FontSize',11,'LineWidth',1,'TickDir','out');
+        xtickangle(ax,30);
     end
-
-    ranking = table(configTable.ConfigID,configTable.ConfigName, ...
-        BestByMedianJ,BestFeasibilityFirst,RARankByMedianJ,RABestFeasibilityFirst, ...
-        'VariableNames', {'ConfigID','ConfigName','BestByMedianJ', ...
-        'BestFeasibilityFirst','RA_RankByMedianJ','RA_BestFeasibilityFirst'});
-    raBestCount = sum(RABestFeasibilityFirst);
-end
-
-function localPlotSensitivity(summary, configTable, algNames, pngFile)
-    nConfig = height(configTable);
-    nAlg = numel(algNames);
-    medJ = nan(nConfig,nAlg);
-    feas = nan(nConfig,nAlg);
-    for ci = 1:nConfig
-        for ai = 1:nAlg
-            row = find(summary.ConfigID == ci & strcmp(summary.Algorithm,algNames{ai}),1);
-            medJ(ci,ai) = summary.MedianJ(row);
-            feas(ci,ai) = summary.FeasibilityPct(row);
-        end
-    end
-    relativeJ = medJ ./ medJ(:,1);
-    logRelativeJ = log10(max(relativeJ, eps));
-
-    fig = figure('Color','w','Units','centimeters','Position',[2 2 32 23]);
-    tiledlayout(fig,2,1,'TileSpacing','compact','Padding','compact');
-
-    ax1 = nexttile;
-    imagesc(ax1,logRelativeJ);
-    set(ax1,'XTick',1:nAlg,'XTickLabel',algNames,'YTick',1:nConfig, ...
-        'YTickLabel',configTable.ConfigName,'FontName','Times New Roman','FontSize',10);
-    title(ax1,'(a) Median composite cost relative to RA-ALA within each weight setting', ...
-        'FontWeight','bold');
-    cb1 = colorbar(ax1);
-    cb1.Label.String = 'log_{10}(median J / median J_{RA-ALA})';
-    for ci = 1:nConfig
-        for ai = 1:nAlg
-            text(ax1,ai,ci,sprintf('%.2fx',relativeJ(ci,ai)), ...
-                'HorizontalAlignment','center','FontSize',9,'FontWeight','bold', ...
-                'Color',localContrastColor(logRelativeJ(ci,ai),ax1.CLim));
-        end
-    end
-
-    ax2 = nexttile;
-    imagesc(ax2,feas,[0 100]);
-    set(ax2,'XTick',1:nAlg,'XTickLabel',algNames,'YTick',1:nConfig, ...
-        'YTickLabel',configTable.ConfigName,'FontName','Times New Roman','FontSize',10);
-    title(ax2,'(b) Feasibility rate across the same ten environments', ...
-        'FontWeight','bold');
-    cb2 = colorbar(ax2);
-    cb2.Label.String = 'Feasibility (%)';
-    for ci = 1:nConfig
-        for ai = 1:nAlg
-            text(ax2,ai,ci,sprintf('%.0f%%',feas(ci,ai)), ...
-                'HorizontalAlignment','center','FontSize',9,'FontWeight','bold', ...
-                'Color',localContrastColor(feas(ci,ai),[0 100]));
-        end
-    end
-
-    colormap(fig,parula(256));
-    exportPublicationFigure(fig,pngFile);
+    exportPublicationFigure(fig,file);
     close(fig);
 end
 
-function color = localContrastColor(value, limits)
-    midpoint = mean(limits);
-    if isfinite(value) && value < midpoint
-        color = [1 1 1];
+function localWriteReport(file,dataFile,sampling,nEnv,nConfig,repro,maxDiff)
+    fid=fopen(file,'w');
+    cleanup=onCleanup(@()fclose(fid)); %#ok<NASGU>
+    fprintf(fid,'RA-ALA-ONLY WEIGHT SENSITIVITY\n\n');
+    fprintf(fid,'Source cohort: %s\n',dataFile);
+    fprintf(fid,'Design: %d environments x %d one-at-a-time configurations.\n', ...
+        nEnv,nConfig);
+    fprintf(fid,'Planning/final spacing: %.3g/%.3g m.\n', ...
+        sampling.PlanningSpacingM,sampling.FinalSpacingM);
+    fprintf(fid,['Interpretation: within-method calibration under the prespecified ', ...
+        'RA-ALA budget; no cross-planner ranking is performed.\n']);
+    fprintf(fid,['Composite scores under different weight definitions are not ', ...
+        'treated as directly comparable outcomes.\n']);
+    fprintf(fid,['Physical metrics are summarized among feasible outputs; feasibility ', ...
+        'retains all attempted environments in its denominator.\n']);
+    fprintf(fid,'Base-cohort reproduction: %d; max |dJ| = %.6g.\n',repro,maxDiff);
+end
+
+function value=localField(S,name,defaultValue)
+    if isstruct(S) && isfield(S,name) && ~isempty(S.(name))
+        value=S.(name);
     else
-        color = [0 0 0];
+        value=defaultValue;
     end
 end
 
-function localWriteReport(reportFile, dataFile, configTable, nEnv, cfg, ...
-        reproductionPassed, maxBaseDifference, raBestCount, nConfig)
-    fid = fopen(reportFile,'w');
-    if fid < 0
-        warning('Could not write %s.', reportFile);
-        return;
-    end
-    cleaner = onCleanup(@() fclose(fid));
-    fprintf(fid,'COST-WEIGHT SENSITIVITY ANALYSIS\n');
-    fprintf(fid,'================================\n\n');
-    fprintf(fid,'Source cohort: %s\n', dataFile);
-    fprintf(fid,'Design: %d fixed High-complexity environments, one pre-specified seed per environment.\n', nEnv);
-    fprintf(fid,'Settings: baseline plus 0.5x and 1.5x one-at-a-time perturbations of each reported weight.\n');
-    fprintf(fid,'Base weights: w_energy=1, w_time=0.5, w_climb=2, w_risk=10, lambda_penalty=100.\n');
-    fprintf(fid,'RA-ALA budget: popSize=%d, maxIter=%d.\n', cfg.popSize, cfg.maxIter);
-    fprintf(fid,'The auxiliary search riskWeight remains fixed at %.6g; it is not treated as a reported J weight.\n\n', cfg.riskWeight);
-    fprintf(fid,'Implementation rule:\n');
-    fprintf(fid,'- RA-ALA and ST-EA* are re-optimized under every weight setting.\n');
-    fprintf(fid,'- Energy-A*, Informed-RRT*, and Greedy paths are generated once per environment and rescored,\n');
-    fprintf(fid,'  because their implemented path-generation objectives do not use the reported composite-cost weights.\n');
-    fprintf(fid,'- Raw J values are not compared across different settings because each setting defines a different objective.\n');
-    fprintf(fid,'  Interpretation uses within-setting algorithm ranks, feasibility, and physical outcome components.\n\n');
-    fprintf(fid,'Section 5.5 reproduction passed: %d\n', reproductionPassed);
-    fprintf(fid,'Maximum absolute baseline J difference: %.12g\n', maxBaseDifference);
-    fprintf(fid,'RA-ALA feasibility-first best settings: %d/%d\n\n', raBestCount, nConfig);
-    fprintf(fid,'This analysis assesses robustness to reasonable weight perturbations; it does not claim that the base weights are optimal.\n\n');
-    fprintf(fid,'Configuration table:\n');
-    for ci = 1:height(configTable)
-        fprintf(fid,'%2d %-14s  wE=%g wt=%g wc=%g wr=%g lambda=%g\n', ...
-            configTable.ConfigID(ci),configTable.ConfigName{ci}, ...
-            configTable.w_energy(ci),configTable.w_time(ci), ...
-            configTable.w_climb(ci),configTable.w_risk(ci), ...
-            configTable.lambda_penalty(ci));
-    end
+function value=localMedian(x)
+    x=x(isfinite(x));
+    if isempty(x), value=NaN; else, value=median(x); end
 end
 
-function value = localMedian(x)
-    x = x(isfinite(x));
-    if isempty(x)
-        value = NaN;
-    else
-        value = median(x);
-    end
-end
-
-function value = localPercentile(x, p)
-    x = sort(x(isfinite(x)));
-    n = numel(x);
-    if n == 0
-        value = NaN;
-        return;
-    end
-    if n == 1
-        value = x(1);
-        return;
-    end
-    position = 1 + (n-1) * p / 100;
-    lowerIndex = floor(position);
-    upperIndex = ceil(position);
-    fraction = position - lowerIndex;
-    value = x(lowerIndex) + fraction * (x(upperIndex) - x(lowerIndex));
+function id=localExceptionId(ME)
+    id=ME.identifier;
+    if isempty(id), id='unidentified_error'; end
 end

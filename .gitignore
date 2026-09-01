@@ -11,10 +11,14 @@ codegen/
 *.log
 *.diary
 *_checkpoint.mat
+*_checkpoint*.mat
 
 # Regenerated smoke-test and temporary outputs
 *_smoke/
 *_smoke_*/
+validation_round_*/
+figure7_8_*_output/
+planning_resolution_pilot_*/
 temp/
 tmp/
 
@@ -23,4 +27,3 @@ tmp/
 Thumbs.db
 .vscode/
 .idea/
-

@@ -4,16 +4,16 @@
 %%   for Time-Varying Urban Low-Altitude Environments)
 %% =========================================================================
 %%
-%%  【诊断版修改说明】
-%%    目标1: 每个算法的结果输出均包含完整代价分解
+%%  Output and evaluation conventions
+%%    1. 每个算法的结果输出均包含完整代价分解
 %%           (J, E, T, Risk, penalty_total, penalty_height,
 %%            penalty_static/dyn_collision, NFZ诊断等)
-%%    目标2: 所有算法 (RA-ALA / Energy-A* / RRT* / Greedy) 的最终 J
+%%    2. 所有算法 (RA-ALA / Energy-A* / RRT* / Greedy) 的最终 J
 %%           统一通过 costModel.evaluatePath(finalPath, t_start, true)
 %%           重新计算, 不使用搜索阶段内部适应度
-%%    目标3: RA-ALA 输出三阶段代价分解
+%%    3. RA-ALA 输出三阶段代价分解
 %%           (raw path → smooth path → final path, Repair 模块已移除)
-%%           以便定位 J 异常究竟发生在哪个阶段
+%%           用于区分搜索、平滑和最终选择阶段的结果
 %%
 %%  依赖: CityEnvironment.m, UnifiedCostModel.m, PathPlanners.m (同目录)
 %% =========================================================================
@@ -25,10 +25,19 @@
 % Create or redraw the original representative path-comparison archive:
 %   RA_ALA_RUN_MODE = 'path-comparison-only'; runMainExperiments
 %   RA_ALA_RUN_MODE = 'replot-path-comparison'; runMainExperiments
+% Validation-suite phase modes:
+%   RA_ALA_RUN_MODE = 'pre-cohort';  runMainExperiments
+%   RA_ALA_RUN_MODE = 'post-cohort'; runMainExperiments
 if ~exist('RA_ALA_RUN_MODE','var') || isempty(RA_ALA_RUN_MODE)
     RA_ALA_RUN_MODE = 'full';
 end
-clearvars -except RA_ALA_RUN_MODE; clc; close all;
+if ~exist('RA_ALA_DEFER_ANALYSES','var'), RA_ALA_DEFER_ANALYSES = false; end
+if ~exist('RA_ALA_EXTERNAL_COHORT_FILE','var'), RA_ALA_EXTERNAL_COHORT_FILE = ''; end
+clearvars -except RA_ALA_RUN_MODE RA_ALA_DEFER_ANALYSES RA_ALA_EXTERNAL_COHORT_FILE;
+if ~strcmpi(string(RA_ALA_RUN_MODE),'post-cohort')
+    clc;
+    close all;
+end
 warning off;
 
 %% ====================================================================
@@ -40,8 +49,8 @@ SHOW_CONV_CURVE  = true;   % 实时收敛曲线（figure窗口）
 SHOW_PATH_LIVE   = true;   % 迭代中实时路径预览（figure窗口）
 REFRESH_EVERY    = 5;      % 每隔多少次迭代刷新图形（太小会慢）
 PRINT_ITER_EVERY = 10;     % 每隔多少次迭代打印一行进度（0=不打印）
-RUN_WEIGHT_SENSITIVITY = true; % 审稿补充：第5.5节同队列代价权重敏感性实验
-RUN_SPATIAL_RESOLUTION_SENSITIVITY = false; % 设为 true 可在5.5后运行12/6/3/1.5 m分辨率实验
+RUN_WEIGHT_SENSITIVITY = ~RA_ALA_DEFER_ANALYSES;
+RUN_SPATIAL_RESOLUTION_SENSITIVITY = false; % true runs the separate fixed-path resolution audit
 
 fprintf('╔═══════════════════════════════════════════════════════════════╗\n');
 fprintf('║  面向时变城市低空环境的风险感知能耗优化 ALA 路径规划         ║\n');
@@ -95,6 +104,8 @@ ala_cfg.windLookahead = 3;
 
 PATH_COMPARISON_ONLY = strcmpi(string(RA_ALA_RUN_MODE),'path-comparison-only');
 DEPARTURE_TIME_ONLY = strcmpi(string(RA_ALA_RUN_MODE),'departure-time-only');
+PRE_COHORT_ONLY = strcmpi(string(RA_ALA_RUN_MODE),'pre-cohort');
+POST_COHORT_ONLY = strcmpi(string(RA_ALA_RUN_MODE),'post-cohort');
 if strcmpi(string(RA_ALA_RUN_MODE),'replot-departure-time')
     archiveFile=fullfile(fileparts(mfilename('fullpath')),'departure_time_case_data.mat');
     if ~isfile(archiveFile)
@@ -139,11 +150,19 @@ if strcmpi(string(RA_ALA_RUN_MODE),'replot-path-comparison')
         'path archive (environment seed %d). No planner was executed.\n'],archived.seed);
     return;
 end
-if ~PATH_COMPARISON_ONLY && ~DEPARTURE_TIME_ONLY && ~strcmpi(string(RA_ALA_RUN_MODE),'full')
+if ~PATH_COMPARISON_ONLY && ~DEPARTURE_TIME_ONLY && ...
+        ~PRE_COHORT_ONLY && ~POST_COHORT_ONLY && ...
+        ~strcmpi(string(RA_ALA_RUN_MODE),'full')
     error('RAALA:UnknownRunMode','Unknown RA_ALA_RUN_MODE: %s',string(RA_ALA_RUN_MODE));
 end
 
+if POST_COHORT_ONLY && isempty(RA_ALA_EXTERNAL_COHORT_FILE)
+    error('RAALA:MissingPostCohortInput', ...
+        'post-cohort mode requires RA_ALA_EXTERNAL_COHORT_FILE.');
+end
+
 %% ====================================================================
+if ~POST_COHORT_ONLY
 %%  实验1: 同一任务、不同出发时刻 → RA-ALA 路径差异
 %% ====================================================================
 
@@ -204,7 +223,7 @@ for d = 1:nDepart
     fprintf('    └──────────────────────────────────────────────────────────┘\n\n');
 end
 
-% 审稿补充：导出五个出发时刻的分阶段耗时、Top-K 候选数量、
+% Export five-case stage timing, Top-K candidate counts,
 % RescueA 冲突段/候选计数及运行平台信息。
 % 若正文定义了重规划周期，可将第4参数 NaN 改为该周期（秒）。
 exp1_latency_table = exportDepartureTimeLatency( ...
@@ -243,6 +262,7 @@ exp2_paths         = cell(nAlg, 1);
 exp2_costs         = zeros(nAlg, 1);
 exp2_details       = cell(nAlg, 1);
 exp2_stage_details = cell(nAlg, 1);
+exp2_wait_schedules = cell(nAlg,1);
 
 for a = 1:nAlg
     fprintf('  %-18s :\n', algNames{a});
@@ -260,15 +280,18 @@ for a = 1:nAlg
             [exp2_paths{a}, ~, ~] = planner.informedRRTStar(startPt, goalPt, 0, true, 2000);
 
         case 4  % ST-EA*: 时空状态与到达时刻递推
-            [exp2_paths{a}, ~, ~] = planner.timeExpandedEnergyAStar( ...
-                startPt, goalPt, 0, true, st_time_step, st_time_horizon);
+            [exp2_paths{a},~,stInfo] = planner.timeExpandedEnergyAStar( ...
+                startPt,goalPt,0,true,st_time_step,st_time_horizon);
+            if isfield(stInfo,'waitBeforeSegmentS')
+                exp2_wait_schedules{a}=stInfo.waitBeforeSegmentS;
+            end
 
         case 5  % Greedy: 只取路径
             [exp2_paths{a}, ~, ~] = planner.greedyPlanner(startPt, goalPt, 0, true);
     end
 
     % ★ 目标2: 统一评估口径 —— 所有算法均用同一个 evaluatePath
-    [exp2_costs(a), exp2_details{a}] = costModel.evaluatePath(exp2_paths{a}, 0, true);
+    [exp2_costs(a), exp2_details{a}] = costModel.evaluatePath(exp2_paths{a},0,true,exp2_wait_schedules{a});
 
     % ★ 目标1: 完整代价分解
     printCostDecomposition(exp2_details{a}, algNames{a});
@@ -354,6 +377,7 @@ exp3_costs   = zeros(nCity, nAlg);
 exp3_details = cell(nCity, nAlg);
 exp3_paths   = cell(nCity, nAlg);
 exp3_envs    = cell(nCity, 1);
+exp3_wait_schedules = cell(nCity,nAlg);
 
 for c = 1:nCity
     fprintf('  [%s]\n', cityLabels{c});
@@ -379,13 +403,16 @@ for c = 1:nCity
             case 3
                 [exp3_paths{c,a}, ~, ~] = pl_c.informedRRTStar(startPt, goalPt, 0, true, 2000);
             case 4
-                [exp3_paths{c,a}, ~, ~] = pl_c.timeExpandedEnergyAStar( ...
-                    startPt, goalPt, 0, true, st_time_step, st_time_horizon);
+                [exp3_paths{c,a},~,stInfo] = pl_c.timeExpandedEnergyAStar( ...
+                    startPt,goalPt,0,true,st_time_step,st_time_horizon);
+                if isfield(stInfo,'waitBeforeSegmentS')
+                    exp3_wait_schedules{c,a}=stInfo.waitBeforeSegmentS;
+                end
             case 5
                 [exp3_paths{c,a}, ~, ~] = pl_c.greedyPlanner(startPt, goalPt, 0, true);
         end
         % ★ 统一评估口径
-        [exp3_costs(c,a), exp3_details{c,a}] = cm_c.evaluatePath(exp3_paths{c,a}, 0, true);
+        [exp3_costs(c,a), exp3_details{c,a}] = cm_c.evaluatePath(exp3_paths{c,a},0,true,exp3_wait_schedules{c,a});
         det = exp3_details{c,a};
         fprintf('    %-16s J=%6.1f  E=%5.1f  T=%5.0f  R=%6.4f  Pen=%.4f\n', ...
             algNames{a}, exp3_costs(c,a), det.E_total, det.T_total, ...
@@ -435,7 +462,7 @@ fprintf('  fig3 (Path Quality Comparison) saved\n');
 %% ====================================================================
 
 fig4 = figure('Units','centimeters','Position',[0.5 0.5 32 18],'Color','w');
-metricTitles = {'Unified Cost J', 'Energy (Wh)', 'Flight Time (s)', 'Dynamic Risk'};
+metricTitles = {'Composite Score J', 'Energy (Wh)', 'Flight Time (s)', 'Dynamic Risk'};
 % 标记哪些子图需要对数 Y 轴（数据跨度大的）
 metricUseLog = [true, false, false, true];
 
@@ -600,6 +627,13 @@ for a = 1:nAlg
 end
 
 %% ====================================================================
+end % Pre-cohort experiments and Figures 1-6.
+
+if PRE_COHORT_ONLY
+    fprintf('\nPre-cohort stage completed; Figure 7-8 has not been started.\n');
+    return;
+end
+
 %%  图7: 多随机种子箱线图 (fig7)
 %%  图8: 环境级聚类感知配对统计图 (fig8)
 %%
@@ -618,6 +652,15 @@ fprintf('\n━━━ Generating Statistical Figures (fig7: Distributional Robust
 fprintf('  设计: 两因素分层采样 (N_ENV 个环境 × N_SEED 次ALA内部种子)\n');
 
 % ── 参数配置 ──
+if ~isempty(RA_ALA_EXTERNAL_COHORT_FILE)
+    if ~isfile(RA_ALA_EXTERNAL_COHORT_FILE)
+        error('MainExperiments:MissingExternalCohort', ...
+            'External Section 5.5 cohort not found: %s',RA_ALA_EXTERNAL_COHORT_FILE);
+    end
+    fprintf('\nReusing the authoritative Figure 7-8 cohort: %s\n', ...
+        RA_ALA_EXTERNAL_COHORT_FILE);
+    load(RA_ALA_EXTERNAL_COHORT_FILE);
+else
 N_ENV  = 10;  % 环境数量（升至10以提升 vs 强基线对比的统计功效）
 N_SEED = 3;   % 每个环境的 ALA 内部重复次数
 N_STAT = N_ENV * N_SEED;   % 总样本量 = 30
@@ -628,14 +671,29 @@ ala_cfg_stat.popSize         = 40;   % 主实验 30 → 统计轮次 40
 ala_cfg_stat.maxIter         = 80;   % 主实验 60 → 统计轮次 80
 ala_cfg_stat.rescue_max_ins  = 12;   % 主实验 6  → 统计轮次 12（增强救援）
 
-stat_J    = zeros(nAlg, N_STAT);
-stat_E    = zeros(nAlg, N_STAT);
-stat_P    = zeros(nAlg, N_STAT);
-stat_feasible = false(nAlg, N_STAT); % 严格标准：无任一硬约束违规
-stat_env  = zeros(1, N_STAT);   % 记录每次使用的环境 seed（用于论文方法说明）
-stat_ra_seed = zeros(1, N_STAT); % Exact RA-ALA run seeds reused by the ablation study
-stat_paths = cell(nAlg,N_STAT); % Save selected paths for fixed-path resolution auditing
-
+stat_J = nan(nAlg,N_STAT);       % Primary 0.75 m certification results
+stat_E = nan(nAlg,N_STAT);
+stat_P = nan(nAlg,N_STAT);
+stat_search_J = nan(nAlg,N_STAT); % Search-stage 0.75 m results
+stat_search_E = nan(nAlg,N_STAT);
+stat_search_P = nan(nAlg,N_STAT);
+stat_feasible = false(nAlg,N_STAT);
+stat_env = zeros(1,N_STAT);
+stat_ra_seed = zeros(1,N_STAT);  % Retained for paired RA-ALA ablations
+stat_algorithm_seed = nan(nAlg,N_STAT);
+stat_planner_success = false(nAlg,N_STAT);
+stat_reached_goal = false(nAlg,N_STAT);
+stat_failure_reason = repmat({''},nAlg,N_STAT);
+stat_paths = cell(nAlg,N_STAT);
+stat_wait_schedules = cell(nAlg,N_STAT);
+stat_search_evaluation_details = cell(nAlg,N_STAT);
+stat_final_evaluation_details = cell(nAlg,N_STAT);
+stat_is_unique_trial = false(nAlg,N_STAT);
+planning_collision_sample_spacing_m = 0.75;
+final_verification_spacing_m = 0.75;
+validation_source = validationProvenance();
+budget_interpretation = ['system-level comparison under the prespecified ', ...
+    'method-specific algorithm budgets'];
 env_seeds_used = [483, 638, 855, 948, 1041, 1103, 1227, 1475, 2312, 2560];
 if numel(env_seeds_used) ~= N_ENV
     error('The fixed Section 5.5 cohort must contain exactly %d environments.', N_ENV);
@@ -651,6 +709,10 @@ for env_count = 1:N_ENV
     env_c2.setTaskPoints(startPt, goalPt);
     cm_c2 = UnifiedCostModel();
     cm_c2.setEnvironment(env_c2.windField, env_c2.dynObstacles, env_c2.heightMap);
+    cm_c2.setCollisionSampling(planning_collision_sample_spacing_m,3);
+    cm_verify = UnifiedCostModel();
+    cm_verify.setEnvironment(env_c2.windField,env_c2.dynObstacles,env_c2.heightMap);
+    cm_verify.setCollisionSampling(final_verification_spacing_m,3);
     pl_c2 = PathPlanners(env_c2, cm_c2);
     pl_c2.setBudget(15, 5000, 2000);
     fprintf('  [环境 %d/%d] seed=%-5d\n', env_count, N_ENV, env_candidate);
@@ -662,39 +724,93 @@ for env_count = 1:N_ENV
         stat_ra_seed(col_idx) = alg_seed + 11; % a=1: actual RA-ALA rng seed
 
         for a = 1:nAlg
-            rng(alg_seed + a * 11);
+            isStochastic = a==1 || a==3;
+            if ~isStochastic && s>1
+                src=col_idx-(s-1);
+                stat_J(a,col_idx)=stat_J(a,src); stat_E(a,col_idx)=stat_E(a,src);
+                stat_P(a,col_idx)=stat_P(a,src); stat_feasible(a,col_idx)=stat_feasible(a,src);
+                stat_search_J(a,col_idx)=stat_search_J(a,src);
+                stat_search_E(a,col_idx)=stat_search_E(a,src);
+                stat_search_P(a,col_idx)=stat_search_P(a,src);
+                stat_planner_success(a,col_idx)=stat_planner_success(a,src);
+                stat_reached_goal(a,col_idx)=stat_reached_goal(a,src);
+                stat_failure_reason{a,col_idx}=stat_failure_reason{a,src};
+                stat_paths{a,col_idx}=stat_paths{a,src};
+                stat_wait_schedules{a,col_idx}=stat_wait_schedules{a,src};
+                stat_search_evaluation_details{a,col_idx}=stat_search_evaluation_details{a,src};
+                stat_final_evaluation_details{a,col_idx}=stat_final_evaluation_details{a,src};
+                continue;
+            end
+            stat_is_unique_trial(a,col_idx)=true;
+            actualSeed = alg_seed+a*11;
+            if a == 1 || a == 3
+                stat_algorithm_seed(a,col_idx)=actualSeed;
+            end
+            rng(actualSeed,'twister');
             try
+                waitSchedule=[]; plannerInfo=struct();
                 switch a
-                    case 1  % RA-ALA: 不同环境 + 不同内部种子
-                        [p_s,~,d_s] = runRA_ALA(pl_c2, cm_c2, env_c2, ...
-                            startPt, goalPt, 0, true, ala_cfg_stat);
-                    case 2  % Energy-A*: 确定性，同一环境内结果相同
-                        [p_s,~,~] = pl_c2.energyAStar(startPt, goalPt, 0, true);
-                        [~,d_s]   = cm_c2.evaluatePath(p_s, 0, true);
-                    case 3  % Informed-RRT*: 不同内部采样种子
-                        [p_s,~,~] = pl_c2.informedRRTStar(startPt, goalPt, 0, true, 1500);
-                        [~,d_s]   = cm_c2.evaluatePath(p_s, 0, true);
-                    case 4  % ST-EA*: 确定性时空图搜索
-                        [p_s,~,~] = pl_c2.timeExpandedEnergyAStar( ...
-                            startPt, goalPt, 0, true, st_time_step, st_time_horizon);
-                        [~,d_s]   = cm_c2.evaluatePath(p_s, 0, true);
-                    case 5  % Greedy: 确定性
-                        [p_s,~,~] = pl_c2.greedyPlanner(startPt, goalPt, 0, true);
-                        [~,d_s]   = cm_c2.evaluatePath(p_s, 0, true);
+                    case 1
+                        [p_s,~,d_search] = runRA_ALA(pl_c2,cm_c2,env_c2, ...
+                            startPt,goalPt,0,true,ala_cfg_stat);
+                        plannerInfo=struct('success',~isempty(p_s), ...
+                            'reachedGoal',~isempty(p_s),'stopReason','completed');
+                    case 2
+                        [p_s,~,plannerInfo]=pl_c2.energyAStar(startPt,goalPt,0,true);
+                    case 3
+                        [p_s,~,plannerInfo]=pl_c2.informedRRTStar( ...
+                            startPt,goalPt,0,true,1500);
+                    case 4
+                        [p_s,~,plannerInfo]=pl_c2.timeExpandedEnergyAStar( ...
+                            startPt,goalPt,0,true,st_time_step,st_time_horizon);
+                        if isfield(plannerInfo,'waitBeforeSegmentS')
+                            waitSchedule=plannerInfo.waitBeforeSegmentS;
+                        end
+                    case 5
+                        [p_s,~,plannerInfo]=pl_c2.greedyPlanner(startPt,goalPt,0,true);
                 end
-                stat_J(a,col_idx) = d_s.J_final;
-                stat_E(a,col_idx) = d_s.E_total;
-                stat_P(a,col_idx) = d_s.penalty_total;
-                stat_feasible(a,col_idx) = logical(d_s.feasible);
-                stat_paths{a,col_idx} = p_s;
-            catch
-                stat_J(a,col_idx) = NaN;
-                stat_E(a,col_idx) = NaN;
-                stat_P(a,col_idx) = NaN;
-                stat_feasible(a,col_idx) = false;
+                reached = isfield(plannerInfo,'reachedGoal') && ...
+                    logical(plannerInfo.reachedGoal) && ~isempty(p_s) && ...
+                    size(p_s,2)==3 && all(isfinite(p_s(:)));
+                stat_reached_goal(a,col_idx)=reached;
+                stat_planner_success(a,col_idx)=reached;
+                if ~reached
+                    if isfield(plannerInfo,'stopReason')
+                        stat_failure_reason{a,col_idx}=char(plannerInfo.stopReason);
+                    else
+                        stat_failure_reason{a,col_idx}='goal_not_reached';
+                    end
+                    continue;
+                end
+                if a ~= 1
+                    [~,d_search]=cm_c2.evaluatePath(p_s,0,true,waitSchedule);
+                end
+                % Verification reports the fixed output only: no selection/recovery feedback.
+                [~,d_verify]=cm_verify.evaluatePath(p_s,0,true,waitSchedule);
+                stat_search_evaluation_details{a,col_idx}=d_search;
+                stat_final_evaluation_details{a,col_idx}=d_verify;
+                stat_search_J(a,col_idx)=d_search.J_final;
+                stat_search_E(a,col_idx)=d_search.E_total;
+                stat_search_P(a,col_idx)=d_search.penalty_total;
+                stat_J(a,col_idx)=d_verify.J_final;
+                stat_E(a,col_idx)=d_verify.E_total;
+                stat_P(a,col_idx)=d_verify.penalty_total;
+                stat_feasible(a,col_idx)=logical(d_verify.feasible);
+                stat_paths{a,col_idx}=p_s;
+                stat_wait_schedules{a,col_idx}=waitSchedule;
+                if ~d_verify.numerically_valid
+                    stat_failure_reason{a,col_idx}=d_verify.evaluation_status;
+                    stat_J(a,col_idx)=NaN; stat_E(a,col_idx)=NaN; stat_P(a,col_idx)=NaN;
+                elseif d_verify.feasible
+                    stat_failure_reason{a,col_idx}='none';
+                else
+                    stat_failure_reason{a,col_idx}='execution_constraint_violation';
+                end
+            catch ME
+                stat_failure_reason{a,col_idx}=sprintf('%s: %s',ME.identifier,ME.message);
+                stat_feasible(a,col_idx)=false;
             end
         end
-
         % 进度条
         pct = col_idx/N_STAT; blen=20; filled=round(pct*blen);
         fprintf('\r  [%s%s] %2d/%d (env%d seed%d)', ...
@@ -719,24 +835,31 @@ algColors_stat = [0.75 0.13 0.13;   % RA-ALA  红
 %%  图7: 环境级箱线图
 %% ====================================================================
 plotDistributionalRobustness(stat_J,stat_E,stat_feasible,stat_env, ...
-    env_seeds_used,algNames,'fig7_distributional_robustness.png');
+    env_seeds_used,algNames,'fig7_distributional_robustness.png',stat_is_unique_trial);
 fprintf('  fig7 (all-path distributional robustness) saved\n');
 
 %% ====================================================================
 %%  图8在保存固定队列后由环境级聚类感知统计生成。
 %%  三个内部种子先在每个环境内聚合，独立推断单位为 10 个城市环境。
 % 保存第5.5节同队列数据，供消融、权重和分辨率实验严格复用。
-main_collision_sample_spacing_m = costModel.collision_sample_spacing;
-main_min_collision_samples = costModel.min_collision_samples;
+main_collision_sample_spacing_m = final_verification_spacing_m;
+main_min_collision_samples = cm_verify.min_collision_samples;
 save('main_experiment_cohort.mat', ...
-    'env_seeds_used','stat_env','stat_ra_seed','stat_J','stat_E','stat_P','stat_feasible','stat_paths', ...
-    'ala_cfg_stat','N_ENV','N_SEED','N_STAT', ...
+    'env_seeds_used','stat_env','stat_ra_seed','stat_algorithm_seed', ...
+    'stat_J','stat_E','stat_P','stat_feasible','stat_paths', ...
+    'stat_search_J','stat_search_E','stat_search_P', ...
+    'stat_search_evaluation_details','stat_final_evaluation_details', ...
+    'stat_planner_success','stat_reached_goal','stat_failure_reason', ...
+    'stat_wait_schedules','stat_is_unique_trial','ala_cfg_stat','N_ENV','N_SEED','N_STAT', ...
     'mapSize','gridStep','windLevel','riskLevel','startPt','goalPt', ...
     'algNames','st_time_step','st_time_horizon', ...
-    'main_collision_sample_spacing_m','main_min_collision_samples');
+    'planning_collision_sample_spacing_m','final_verification_spacing_m', ...
+    'main_collision_sample_spacing_m','main_min_collision_samples', ...
+    'budget_interpretation','validation_source');
 fprintf('  Main experiment cohort saved: main_experiment_cohort.mat\n');
 clusterStats = runClusterAwareStatistics('main_experiment_cohort.mat');
 plotClusterAwareStatistics(clusterStats, 'fig8_statistical_significance.png');
+end
 
 
 %% ====================================================================
@@ -745,7 +868,7 @@ plotClusterAwareStatistics(clusterStats, 'fig8_statistical_significance.png');
 %%  4 个有效变体：
 %%    A1 w/o Smooth        — 去掉平滑度导向项 δ_smooth
 %%    A2 w/o Headwind      — 去掉逆风前瞻导向项 G_headwind
-%%    A3 w/o Unified Eval  — 跳过 Top-K 统一重评估，直接输出 raw
+%%    A3 w/o Top-K Re-evaluation — 跳过 Top-K 统一重评估，直接输出 raw
 %%
 %%  设计: 严格复用多环境统计实验（Section 5.5）的配对样本
 %%    外层直接使用 env_seeds_used，不再为消融独立筛选环境
@@ -762,13 +885,14 @@ N_ABL     = N_STAT;  % 同一批 10 环境 × 3 种子 = 30 个配对案例
 fprintf('  设计: 严格复用 Section 5.5 (%d 环境 × %d 种子, N=%d)\n', ...
     N_ABL_ENV, N_ABL_REP, N_ABL);
 
-ablationNames = {'Full RA-ALA', 'w/o Smooth', ...
-                 'w/o Headwind Guidance', 'w/o Unified Eval'};
+ablationNames = {'Full RA-ALA', 'No smoothness guidance', ...
+                 'No headwind-exposure guidance', ...
+                 'No Top-K candidate re-evaluation and selection'};
 % 消融变体说明：
 %   Full RA-ALA       — 完整方法（基准）
 %   w/o Smooth        — 去掉 evaluateRAALASearchFitness 平滑度导向罚项
 %   w/o Headwind      — 将 windLookahead 设为 0，去掉逆风前瞻导向项
-%   w/o Unified Eval  — 去掉统一重评估，直接输出 evaluateRAALASearchFitness 内部适应度
+%   w/o Top-K Re-evaluation — 跳过候选重评估与选择，输出搜索所得 raw 路径
 %                       最优路径（raw），不经过 Top-K 比较 raw vs smooth。
 %                       证明"统一评估驱动"的实质贡献：
 %                       若内部适应度口径与报告口径不一致，搜索到的"最优路径"
@@ -806,6 +930,8 @@ abl_T   = zeros(nAbl, N_ABL);
 abl_R   = zeros(nAbl, N_ABL);
 abl_Pen = zeros(nAbl, N_ABL);
 abl_feasible = false(nAbl, N_ABL);
+abl_evaluation_details = cell(nAbl,N_ABL);
+abl_evaluation_status = repmat({'not_evaluated'},nAbl,N_ABL);
 
 % ── 正式运行 ──
 for aa = 1:nAbl
@@ -819,6 +945,10 @@ for aa = 1:nAbl
         env_run.setTaskPoints(startPt, goalPt);
         cm_run = UnifiedCostModel();
         cm_run.setEnvironment(env_run.windField, env_run.dynObstacles, env_run.heightMap);
+        cm_run.setCollisionSampling(planning_collision_sample_spacing_m,3);
+        cm_abl_verify=UnifiedCostModel();
+        cm_abl_verify.setEnvironment(env_run.windField,env_run.dynObstacles,env_run.heightMap);
+        cm_abl_verify.setCollisionSampling(final_verification_spacing_m,3);
         pl_run = PathPlanners(env_run, cm_run);
         pl_run.setBudget(15, 5000, 2000);
 
@@ -827,14 +957,21 @@ for aa = 1:nAbl
             % Match the Section 5.5 RA-ALA seed exactly; all variants share it.
             rng(abl_run_seeds(col));
             try
-                [~,~,det_abl] = runRA_ALA(pl_run, cm_run, env_run, ...
-                    startPt, goalPt, 0, true, cfgs_abl{aa});
+                [path_abl,~,~] = runRA_ALA(pl_run,cm_run,env_run, ...
+                    startPt,goalPt,0,true,cfgs_abl{aa});
+                [~,det_abl]=cm_abl_verify.evaluatePath(path_abl,0,true);
                 abl_J(aa,col)   = det_abl.J_final;
                 abl_E(aa,col)   = det_abl.E_total;
                 abl_T(aa,col)   = det_abl.T_total;
                 abl_R(aa,col)   = det_abl.R_dynamic;
                 abl_Pen(aa,col) = det_abl.penalty_total;
                 abl_feasible(aa,col) = logical(det_abl.feasible);
+                abl_evaluation_details{aa,col} = det_abl;
+                abl_evaluation_status{aa,col} = det_abl.evaluation_status;
+                if ~det_abl.numerically_valid
+                    abl_J(aa,col)=NaN; abl_E(aa,col)=NaN; abl_T(aa,col)=NaN;
+                    abl_R(aa,col)=NaN; abl_Pen(aa,col)=NaN;
+                end
             catch
                 abl_J(aa,col) = NaN; abl_E(aa,col) = NaN;
                 abl_T(aa,col) = NaN; abl_R(aa,col) = NaN; abl_Pen(aa,col) = NaN;
@@ -903,9 +1040,12 @@ plotAblationStudyFigure(abl_J, abl_E, abl_T, abl_R, abl_Pen, ...
 
 save('ablation_same_cohort_results.mat', ...
     'abl_J','abl_E','abl_T','abl_R','abl_Pen','abl_feasible','ablationNames', ...
+    'abl_evaluation_details','abl_evaluation_status', ...
     'abl_env_seeds','abl_run_seeds','cfg_abl_base', ...
     'stat_J','stat_E','stat_P','stat_feasible','stat_env','stat_ra_seed', ...
-    'N_ABL_ENV','N_ABL_REP','N_ABL');
+    'N_ABL_ENV','N_ABL_REP','N_ABL', ...
+    'planning_collision_sample_spacing_m','final_verification_spacing_m', ...
+    'main_min_collision_samples','validation_source');
 fprintf('  Ablation raw data saved: ablation_same_cohort_results.mat\n');
 fprintf('  fig9 (Ablation Study - Component Contribution) saved\n');
 
