@@ -12,7 +12,7 @@ nAlg = numel(S.algNames);
 nCase = numel(S.stat_env);
 metricNames = {'J','E','T','R'};
 J = nan(nAlg,nCase); E = J; T = J; R = J;
-Pheight = J; Pstatic = J; Pdyn = J; Pnfz = J; Pbatt = J; Pkin = J;
+Pheight = J; Pstatic = J; Pscene = J; Pnfz = J; Pbatt = J; Pkin = J;
 feasible = false(nAlg,nCase);
 evaluationStatus = repmat({'no_path'},nAlg,nCase);
 numericalFailure = false(nAlg,nCase);
@@ -45,9 +45,9 @@ for c = 1:nCase
         R(a,c)=d.R_dynamic; Pheight(a,c)=d.penalty_height;
         Pstatic(a,c)=d.penalty_static_collision;
         if isfield(d,'penalty_scene_entry')
-            Pdyn(a,c)=d.penalty_scene_entry;
+            Pscene(a,c)=d.penalty_scene_entry;
         else
-            Pdyn(a,c)=d.penalty_dynamic_collision;
+            Pscene(a,c)=d.penalty_dynamic_collision;
         end
         Pnfz(a,c)=d.penalty_nfz; Pbatt(a,c)=d.penalty_battery;
         Pkin(a,c)=d.penalty_kinematic;
@@ -55,20 +55,20 @@ for c = 1:nCase
     end
 end
 
-tol = 1e-12;
+% All strictly positive physical penalties count as violations.
 alg = string(S.algNames(:));
-height_n=sum((Pheight>tol)&validTrial,2); static_n=sum((Pstatic>tol)&validTrial,2);
-dynamic_n=sum((Pdyn>tol)&validTrial,2); nfz_n=sum((Pnfz>tol)&validTrial,2);
-battery_n=sum((Pbatt>tol)&validTrial,2); kinematic_n=sum((Pkin>tol)&validTrial,2);
+height_n=sum((Pheight>0)&validTrial,2); static_n=sum((Pstatic>0)&validTrial,2);
+scene_n=sum((Pscene>0)&validTrial,2); nfz_n=sum((Pnfz>0)&validTrial,2);
+battery_n=sum((Pbatt>0)&validTrial,2); kinematic_n=sum((Pkin>0)&validTrial,2);
 trial_n=sum(validTrial,2);
 any_n=sum((~feasible)&validTrial,2);
-multi_n=sum(((Pheight>tol)+(Pstatic>tol)+(Pdyn>tol)+(Pnfz>tol)+(Pbatt>tol)+(Pkin>tol)>1)&validTrial,2);
-counts = table(alg,trial_n,height_n,static_n,dynamic_n,nfz_n,battery_n,kinematic_n,multi_n,any_n, ...
+multi_n=sum(((Pheight>0)+(Pstatic>0)+(Pscene>0)+(Pnfz>0)+(Pbatt>0)+(Pkin>0)>1)&validTrial,2);
+counts = table(alg,trial_n,height_n,static_n,scene_n,nfz_n,battery_n,kinematic_n,multi_n,any_n, ...
     'VariableNames',{'Algorithm','N','Height','Static','SceneEntry','ActiveNFZ','Battery','Kinematic','Multiple','Any'});
 counts.NumericalFailure=sum(numericalFailure&validTrial,2);
 counts.NoPath=sum(strcmp(evaluationStatus,'no_path')&validTrial,2);
-counts.AnyPhysical=sum(((Pheight>tol)|(Pstatic>tol)|(Pdyn>tol)| ...
-    (Pnfz>tol)|(Pbatt>tol)|(Pkin>tol))&validTrial,2);
+counts.AnyPhysical=sum(((Pheight>0)|(Pstatic>0)|(Pscene>0)| ...
+    (Pnfz>0)|(Pbatt>0)|(Pkin>0))&validTrial,2);
 % Any retains its historical meaning: all unsuccessful trials, including failures.
 writetable(counts,fullfile(outDir,'hard_violation_counts.csv'));
 
@@ -110,21 +110,24 @@ for a=1:nAlg
     else
         algSeed=nan(nCase,1); if a==1, algSeed=S.stat_ra_seed(:); end
     end
-    reached=false(nCase,1); plannerSuccess=false(nCase,1);
+    reached=false(nCase,1); generationSuccess=false(nCase,1);
     failureReason=repmat({''},nCase,1);
     if isfield(S,'stat_reached_goal'), reached=S.stat_reached_goal(a,:)'; end
-    if isfield(S,'stat_planner_success'), plannerSuccess=S.stat_planner_success(a,:)'; end
+    if isfield(S,'stat_planner_success'), generationSuccess=S.stat_planner_success(a,:)'; end
     if isfield(S,'stat_failure_reason'), failureReason=S.stat_failure_reason(a,:)'; end
     part=table(repmat(alg(a),nCase,1),S.stat_env(:),algSeed, ...
-        validTrial(a,:)',reached,plannerSuccess,failureReason,J(a,:)',E(a,:)',T(a,:)',R(a,:)', ...
-        Pheight(a,:)',Pstatic(a,:)',Pdyn(a,:)',Pnfz(a,:)',Pbatt(a,:)',Pkin(a,:)',feasible(a,:)', ...
+        validTrial(a,:)',reached,generationSuccess,failureReason,J(a,:)',E(a,:)',T(a,:)',R(a,:)', ...
+        Pheight(a,:)',Pstatic(a,:)',Pscene(a,:)',Pnfz(a,:)',Pbatt(a,:)',Pkin(a,:)',feasible(a,:)', ...
         'VariableNames',{'Algorithm','EnvironmentSeed','AlgorithmSeed','UniqueTrial','ReachedGoal', ...
-        'PlannerSuccess','FailureReason','J','EnergyWh','TimeS','DynamicRisk', ...
+        'GenerationSuccess','FailureReason','J','EnergyWh','TimeS','DynamicRisk', ...
         'Pheight','Pstatic','PsceneEntry','PNFZ','Pbattery','Pkinematic','Feasible'});
     part.EvaluationStatus=evaluationStatus(a,:)';
     part.NumericalFailure=numericalFailure(a,:)';
     caseTable=[caseTable;part]; %#ok<AGROW>
 end
+% Human-readable output contains one row per unique planner trial. Repeated
+% deterministic plotting slots are represented in the archive mask but omitted.
+caseTable=caseTable(caseTable.UniqueTrial,:);
 writetable(caseTable,fullfile(outDir,'case_level_evaluator_outputs.csv'));
 pairing_rule = ['Descriptive jointly feasible RA-trial pairs; a deterministic baseline ', ...
     'is reused within its environment, not treated as a new independent observation.'];

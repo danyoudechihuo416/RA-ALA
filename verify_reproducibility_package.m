@@ -26,15 +26,78 @@ requiredFiles = {
     'main_experiment_cohort.mat'
     'ablation_same_cohort_results.mat'
     fullfile('experiment_outcome_summary','case_level_evaluator_outputs.csv')
+    fullfile('experiment_outcome_summary','hard_violation_counts.csv')
     fullfile('cluster_statistics_output','environment_level_summary.csv')
     fullfile('spatial_resolution_output','spatial_resolution_case_results.csv')
     fullfile('fixed_path_weight_sensitivity_results','fixed_path_weight_summary.csv')
-    fullfile('manuscript_completed_results','planner_runtime_summary.csv')};
+    fullfile('manuscript_completed_results','planner_runtime_summary.csv')
+    fullfile('manuscript_completed_results','planner_outcome_counts.csv')};
 
 missing = requiredFiles(~cellfun(@(f) isfile(fullfile(root,f)),requiredFiles));
 assert(isempty(missing),'Missing required package file(s): %s', ...
     strjoin(missing,', '));
 fprintf('Released source tree and readable result summaries: OK\n');
+
+caseFile = fullfile(root,'experiment_outcome_summary','case_level_evaluator_outputs.csv');
+caseT = readtable(caseFile,'TextType','string');
+caseVars = {'Algorithm','EnvironmentSeed','AlgorithmSeed','UniqueTrial', ...
+    'ReachedGoal','GenerationSuccess','FailureReason','J','EnergyWh','TimeS', ...
+    'DynamicRisk','Pheight','Pstatic','PsceneEntry','PNFZ','Pbattery', ...
+    'Pkinematic','Feasible','EvaluationStatus','NumericalFailure'};
+assert(all(ismember(caseVars,caseT.Properties.VariableNames)), ...
+    'Case-level CSV is missing required semantic fields.');
+assert(~ismember('PlannerSuccess',caseT.Properties.VariableNames) && ...
+       ~ismember('Pdynamic',caseT.Properties.VariableNames), ...
+    'Case-level CSV retains deprecated field names.');
+assert(all(logical(caseT.UniqueTrial)), ...
+    'Human-readable case output must omit non-unique deterministic copies.');
+generated = logical(caseT.GenerationSuccess);
+reached = logical(caseT.ReachedGoal);
+feasibleCsv = logical(caseT.Feasible);
+status = string(caseT.EvaluationStatus);
+assert(isequal(generated,reached), ...
+    'GenerationSuccess and ReachedGoal must agree for the released cohort.');
+assert(all(~feasibleCsv | (generated & status=="evaluated")), ...
+    'A feasible row must be a generated and numerically evaluated path.');
+noPath = ~generated;
+assert(all(status(noPath)=="no_path"), ...
+    'Generation failures must have EvaluationStatus=no_path.');
+assert(all(~isfinite(caseT.J(noPath)) & ~isfinite(caseT.EnergyWh(noPath))), ...
+    'No-path failures must not contain finite score or energy values.');
+
+hardFile = fullfile(root,'experiment_outcome_summary','hard_violation_counts.csv');
+hardT = readtable(hardFile,'TextType','string');
+hardVars = {'Algorithm','N','Height','Static','SceneEntry','ActiveNFZ', ...
+    'Battery','Kinematic','Multiple','Any','NumericalFailure','NoPath','AnyPhysical'};
+assert(all(ismember(hardVars,hardT.Properties.VariableNames)) && ...
+       ~ismember('Dynamic',hardT.Properties.VariableNames), ...
+    'Hard-violation CSV fields are not synchronized with manuscript terminology.');
+positiveComponents = (caseT.Pheight>0)+(caseT.Pstatic>0)+ ...
+    (caseT.PsceneEntry>0)+(caseT.PNFZ>0)+(caseT.Pbattery>0)+ ...
+    (caseT.Pkinematic>0);
+for a = 1:height(hardT)
+    use = caseT.Algorithm==hardT.Algorithm(a);
+    penaltyFields = {'Pheight','Pstatic','PsceneEntry','PNFZ','Pbattery','Pkinematic'};
+    countFields = {'Height','Static','SceneEntry','ActiveNFZ','Battery','Kinematic'};
+    for k = 1:numel(penaltyFields)
+        assert(sum(caseT.(penaltyFields{k})(use)>0)==hardT.(countFields{k})(a), ...
+            'Violation counts must include every strictly positive penalty.');
+    end
+    assert(sum(use)==hardT.N(a) && ...
+           sum(positiveComponents(use)>0)==hardT.AnyPhysical(a), ...
+        'Unique-trial and physical-violation totals disagree with case outputs.');
+    assert(sum(positiveComponents(use)>1)==hardT.Multiple(a), ...
+        'Multiple must count trials with more than one positive hard-penalty component.');
+end
+
+outcomeFile = fullfile(root,'manuscript_completed_results','planner_outcome_counts.csv');
+outcomeT = readtable(outcomeFile,'TextType','string');
+outcomeVars = {'scene_entry_violations','kinematic_violations', ...
+    'multiple_positive_hard_penalty_components'};
+assert(all(ismember(outcomeVars,outcomeT.Properties.VariableNames)) && ...
+       ~ismember('dynamic_violations',outcomeT.Properties.VariableNames), ...
+    'Planner-outcome CSV fields are not synchronized with manuscript terminology.');
+fprintf('Human-readable output semantics: OK\n');
 
 archive = 'main_experiment_cohort.mat';
 assert(isfile(archive), 'Missing released cohort archive: %s', archive);
@@ -68,7 +131,8 @@ assert(all(all(isnan(S.stat_algorithm_seed([2,4,5],:)))), ...
     'Deterministic planners must not be assigned artificial random seeds.');
 assert(contains(S.budget_interpretation,'method-specific'), ...
     'Budget interpretation must state the method-specific comparison scope.');
-testResults = runtests({'testTrackHoldingKinematics.m','testArrivalTimeSolver.m'});
+testResults = runtests({'testTrackHoldingKinematics.m','testArrivalTimeSolver.m', ...
+    'testValidationInterfaces.m'});
 assert(all([testResults.Passed]),'Wind/time/kinematics unit tests failed.');
 
 fprintf('Released archived cohort: OK\n');

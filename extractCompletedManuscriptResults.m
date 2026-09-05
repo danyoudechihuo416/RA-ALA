@@ -32,10 +32,11 @@ function outputs = extractCompletedManuscriptResults(cohortFile, outputDir)
     feasible_paths = zeros(nAlg,1);
     height_violations = zeros(nAlg,1);
     static_violations = zeros(nAlg,1);
-    dynamic_violations = zeros(nAlg,1);
+    scene_entry_violations = zeros(nAlg,1);
     nfz_violations = zeros(nAlg,1);
     battery_violations = zeros(nAlg,1);
-    multiple_violation_classes = zeros(nAlg,1);
+    kinematic_violations = zeros(nAlg,1);
+    multiple_positive_hard_penalty_components = zeros(nAlg,1);
 
     for a = 1:nAlg
         planner(a) = string(S.algNames{a});
@@ -50,23 +51,26 @@ function outputs = extractCompletedManuscriptResults(cohortFile, outputDir)
             if isempty(d), continue; end
             flags = [localPositive(d,'penalty_height'), ...
                 localPositive(d,'penalty_static_collision'), ...
-                localPositive(d,'penalty_dynamic_collision'), ...
+                localSceneEntryPositive(d), ...
                 localPositive(d,'penalty_nfz'), ...
-                localPositive(d,'penalty_battery')];
+                localPositive(d,'penalty_battery'), ...
+                localPositive(d,'penalty_kinematic')];
             height_violations(a) = height_violations(a) + flags(1);
             static_violations(a) = static_violations(a) + flags(2);
-            dynamic_violations(a) = dynamic_violations(a) + flags(3);
+            scene_entry_violations(a) = scene_entry_violations(a) + flags(3);
             nfz_violations(a) = nfz_violations(a) + flags(4);
             battery_violations(a) = battery_violations(a) + flags(5);
-            multiple_violation_classes(a) = ...
-                multiple_violation_classes(a) + (sum(flags) > 1);
+            kinematic_violations(a) = kinematic_violations(a) + flags(6);
+            multiple_positive_hard_penalty_components(a) = ...
+                multiple_positive_hard_penalty_components(a) + (sum(flags) > 1);
         end
     end
 
     outcomeTable = table(planner,environments,unique_runs,generated_paths, ...
         generation_failures,feasible_paths,height_violations, ...
-        static_violations,dynamic_violations,nfz_violations, ...
-        battery_violations,multiple_violation_classes);
+        static_violations,scene_entry_violations,nfz_violations, ...
+        battery_violations,kinematic_violations, ...
+        multiple_positive_hard_penalty_components);
     outcomeFile = fullfile(outputDir,'planner_outcome_counts.csv');
     writetable(outcomeTable,outcomeFile);
 
@@ -123,6 +127,15 @@ end
 function tf = localPositive(details, fieldName)
     tf = isfield(details,fieldName) && isfinite(details.(fieldName)) && ...
         details.(fieldName) > 0;
+end
+
+function tf = localSceneEntryPositive(details)
+    if isfield(details,'penalty_scene_entry')
+        tf = isfinite(details.penalty_scene_entry) && ...
+            details.penalty_scene_entry > 0;
+    else
+        tf = localPositive(details,'penalty_dynamic_collision');
+    end
 end
 
 function q = localQuantile(x,p)

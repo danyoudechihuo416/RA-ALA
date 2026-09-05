@@ -836,7 +836,7 @@ algColors_stat = [0.75 0.13 0.13;   % RA-ALA  红
 %% ====================================================================
 plotDistributionalRobustness(stat_J,stat_E,stat_feasible,stat_env, ...
     env_seeds_used,algNames,'fig7_distributional_robustness.png',stat_is_unique_trial);
-fprintf('  fig7 (all-path distributional robustness) saved\n');
+fprintf('  fig7 (finite evaluated-output distributions) saved\n');
 
 %% ====================================================================
 %%  图8在保存固定队列后由环境级聚类感知统计生成。

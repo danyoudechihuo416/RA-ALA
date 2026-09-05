@@ -98,6 +98,11 @@ function testSummaryIncludesWaitAndUniqueCounts(t)
     verifyEqual(t,st.EnergyWh,expected.E_total,'AbsTol',1e-9);
     verifyGreaterThan(t,st.EnergyWh,ra.EnergyWh(1));
     verifyTrue(t,ismember('Kinematic',R.counts.Properties.VariableNames));
+    verifyTrue(t,ismember('SceneEntry',R.counts.Properties.VariableNames));
+    verifyTrue(t,ismember('GenerationSuccess',R.caseTable.Properties.VariableNames));
+    verifyFalse(t,ismember('PlannerSuccess',R.caseTable.Properties.VariableNames));
+    verifyTrue(t,all(R.caseTable.UniqueTrial));
+    verifyEqual(t,height(R.caseTable),sum(R.counts.N));
 end
 
 function testValidationSuitePreservesExperimentOrder(t)

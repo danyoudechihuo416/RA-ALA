@@ -1,8 +1,9 @@
 function fig = plotDistributionalRobustness(stat_J, stat_E, stat_feasible, stat_env, env_seeds_used, algNames, outputFile, uniqueTrial)
-%PLOTDISTRIBUTIONALROBUSTNESS Plot all-path distributions by environment.
+%PLOTDISTRIBUTIONALROBUSTNESS Plot finite evaluated-output distributions.
 % Stochastic runs within each environment are reduced to a median; deterministic
 % planners contribute their single unique run rather than copied plotting slots.
-% Penalty-dominated values remain in the statistics but are marked off-scale.
+% No-path failures contribute no score or energy value. Penalty-dominated finite
+% values remain in the statistics but are marked off-scale.
 
 if nargin < 7 || isempty(outputFile)
     outputFile = 'fig7_distributional_robustness.png';
@@ -30,12 +31,12 @@ end
 
 fig = figure('Units','centimeters','Position',[2 2 36 21], ...
     'Color','w','ToolBar','none','MenuBar','none');
-sgtitle({sprintf('Environment-Level Outcome Distributions (%d Independent Environments)',nEnv), ...
-    'High complexity; t_0 = 0 s'}, ...
+sgtitle({'Evaluated-Output Distributions', ...
+    sprintf('High complexity; %d environments; t_0 = 0 s',nEnv)}, ...
     'FontName','Times New Roman','FontSize',22,'FontWeight','bold');
 metrics = {Jenv,Eenv};
 titles = {'Composite Score J_{final}','Energy E (Wh)'};
-positions = {[0.070 0.135 0.410 0.690],[0.565 0.135 0.410 0.690]};
+positions = {[0.070 0.195 0.410 0.630],[0.565 0.195 0.410 0.630]};
 
 for m = 1:2
     ax = axes(fig,'Position',positions{m}); hold(ax,'on');
@@ -65,7 +66,9 @@ for m = 1:2
     grid(ax,'on'); box(ax,'on'); ax.GridAlpha=0.22; ax.MinorGridAlpha=0.12; ax.YMinorGrid='on';
     nonGreedy = metrics{m}(1:nAlg-1,:);
     nonGreedy = nonGreedy(isfinite(nonGreedy) & nonGreedy > 0);
-    ylim(ax,[min(nonGreedy)*0.68 max(nonGreedy)*2.35]);
+    topPadding = 2.35;
+    if m == 1, topPadding = 4; end
+    ylim(ax,[min(nonGreedy)*0.68 max(nonGreedy)*topPadding]);
     yl=ylim(ax); logSpan=log(yl(2))-log(yl(1));
     yCount=exp(log(yl(1))+0.955*logSpan); yMean=exp(log(yl(1))+0.835*logSpan); yNone=exp(log(yl(1))+0.63*logSpan);
     for a = 1:nAlg
@@ -89,13 +92,25 @@ for m = 1:2
                 'EdgeColor',colors(a,:),'Margin',2,'Interpreter','none');
         end
         use = uniqueTrial(a,:);
-        text(ax,a,yCount,sprintf('feas. %d/%d',sum(stat_feasible(a,use)),sum(use)), ...
-            'HorizontalAlignment','center','FontName','Times New Roman','FontSize',13, ...
+        finiteEnvN = sum(isfinite(metrics{m}(a,:)) & metrics{m}(a,:) > 0);
+        text(ax,a,yCount,sprintf('N = %d\n%d/%d feas.', ...
+            finiteEnvN,sum(stat_feasible(a,use)),sum(use)), ...
+            'HorizontalAlignment','center','VerticalAlignment','top', ...
+            'FontName','Times New Roman','FontSize',15, ...
             'FontWeight','bold','Color',[0.76 0.08 0.08],'BackgroundColor','w', ...
             'EdgeColor',[0.86 0.25 0.25],'Margin',1);
     end
     title(ax,titles{m},'FontName','Times New Roman','FontSize',21,'FontWeight','bold');
     ylabel(ax,[titles{m},' (log scale)'],'FontName','Times New Roman','FontSize',20,'FontWeight','bold');
+    set(ax,'PositionConstraint','innerposition','Position',positions{m});
 end
-exportPublicationFigure(fig,outputFile);
+% Preserve the full canvas: tight export can clip rotated algorithm labels.
+[outDir,baseName,~] = fileparts(char(outputFile));
+if isempty(outDir), outDir = pwd; end
+if ~exist(outDir,'dir'), mkdir(outDir); end
+set(fig,'PaperUnits','centimeters','PaperSize',[36 21], ...
+    'PaperPosition',[0 0 36 21],'PaperPositionMode','manual');
+drawnow;
+print(fig,fullfile(outDir,[baseName,'.png']),'-dpng','-r600');
+print(fig,fullfile(outDir,[baseName,'.pdf']),'-dpdf','-painters');
 end

@@ -2,7 +2,7 @@
 
 Repository: <https://github.com/danyoudechihuo416/RA-ALA>
 
-Versioned release: <https://github.com/danyoudechihuo416/RA-ALA/tree/v1.1.0>
+Versioned release: <https://github.com/danyoudechihuo416/RA-ALA/tree/v1.1.1>
 
 This repository contains the MATLAB implementation and released analysis
 artifacts for the RA-ALA manuscript.
@@ -162,6 +162,34 @@ Primary cohort planning and final evaluation both use 0.75 m spacing. The
 The manuscript runtime table is extracted from the authoritative cohort.
 `computational_budget_output/` is a separate fresh-run audit.
 
+### Human-readable output semantics
+
+`experiment_outcome_summary/case_level_evaluator_outputs.csv` contains one row
+per unique planner trial; repeated deterministic plotting copies are omitted.
+Its status fields have the following meanings:
+
+- `UniqueTrial`: the row is an independent stochastic run or the single unique
+  deterministic run for that environment.
+- `ReachedGoal`: the planner returned a finite three-dimensional path ending at
+  the prescribed goal.
+- `GenerationSuccess`: the planner generated such a goal-reaching path. In the
+  released cohort this is equivalent to `ReachedGoal`; it is distinct from
+  evaluator feasibility.
+- `EvaluationStatus`: `evaluated` for a numerically evaluated path, `no_path`
+  when generation failed, or `time_solver_failure` when arrival-time propagation
+  did not produce a finite executable evaluation.
+- `Feasible`: the evaluated path has no positive physical hard-penalty component.
+  A generation or numerical failure is not feasible.
+
+`PsceneEntry` is the sampled scene-entry component returned by the common
+collision query and can be triggered by a moving obstacle or an active temporary
+NFZ. `PNFZ` separately measures active-NFZ penetration, so one NFZ event can make
+both components positive. `Multiple` counts trials with more than one positive
+component among `Pheight`, `Pstatic`, `PsceneEntry`, `PNFZ`, `Pbattery`, and
+`Pkinematic`; it does not imply independent physical hazards. No-path generation
+failures have no finite score or energy and are reported through status and
+failure counts rather than included in continuous-outcome distributions.
+
 `weight_sensitivity_results/` and `resolution_selection_output/` are retained
 as earlier auxiliary audits. Current manuscript-facing outputs use the
 `fixed_path_weight_sensitivity_results/` and `spatial_resolution_output/`
@@ -178,8 +206,9 @@ Arrival time is solved consistently for wind, energy, moving obstacles, and
 active NFZ checks. Unresolved equations are numerical failures, not finite
 executable routes.
 
-Strict feasibility requires zero physical hard-constraint violation; `1e-12`
-only recognizes floating-point zero. Source fingerprints include the arrival-
+Strict feasibility and all violation summaries use a strict component-wise
+zero test: any positive physical hard-penalty component counts as a violation.
+Source fingerprints include the arrival-
 time solver, and incompatible checkpoints are rejected. Restart MATLAB after
 changing class files before beginning a fresh experiment.
 
