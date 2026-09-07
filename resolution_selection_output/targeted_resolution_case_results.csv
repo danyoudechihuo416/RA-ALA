@@ -1,4 +1,4 @@
-case_id,environment_id,environment_seed,run_within_environment,algorithm_seed,spacing_m,J,energy_Wh,arrival_time_s,dynamic_risk,penalty_total,penalty_height,penalty_static,penalty_dynamic,penalty_nfz,feasible,static_violation,dynamic_violation,nfz_violation,total_subsamples,evaluation_time_s,status
+case_id,environment_id,environment_seed,run_within_environment,algorithm_seed,spacing_m,J,energy_Wh,arrival_time_s,dynamic_risk,penalty_total,penalty_height,penalty_static,penalty_scene_entry,penalty_nfz,feasible,static_violation,scene_entry_violation,nfz_violation,total_subsamples,evaluation_time_s,status
 1,1,204,1,268,3,7.11137145400713,6.094422486852,59.2957701594893,0,0,0,0,0,0,1,0,0,0,400,0.0836206,ok
 1,1,204,1,268,1.5,21.8853829414744,6.16941556025119,60.0253817033336,0,0.146929383178694,0.135435130305131,0.0114942528735632,0,0,0,1,0,0,794,0.0641852,ok
 1,1,204,1,268,0.75,21.9595130485047,6.16252787444793,59.9176202137412,0,0.147748541231162,0.136187847589543,0.0115606936416185,0,0,0,1,0,0,1583,0.1151683,ok

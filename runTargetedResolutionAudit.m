@@ -32,9 +32,9 @@ function results = runTargetedResolutionAudit(resultsFile,userOpts)
     J=nan(nRows,1); energy_Wh=nan(nRows,1); arrival_time_s=nan(nRows,1);
     dynamic_risk=nan(nRows,1); penalty_total=nan(nRows,1);
     penalty_height=nan(nRows,1); penalty_static=nan(nRows,1);
-    penalty_dynamic=nan(nRows,1); penalty_nfz=nan(nRows,1);
+    penalty_scene_entry=nan(nRows,1); penalty_nfz=nan(nRows,1);
     feasible=false(nRows,1); static_violation=false(nRows,1);
-    dynamic_violation=false(nRows,1); nfz_violation=false(nRows,1);
+    scene_entry_violation=false(nRows,1); nfz_violation=false(nRows,1);
     total_subsamples=nan(nRows,1); evaluation_time_s=nan(nRows,1);
     status=repmat({''},nRows,1); row=0;
 
@@ -65,10 +65,10 @@ function results = runTargetedResolutionAudit(resultsFile,userOpts)
                 dynamic_risk(row)=d.R_dynamic; penalty_total(row)=d.penalty_total;
                 penalty_height(row)=d.penalty_height;
                 penalty_static(row)=d.penalty_static_collision;
-                penalty_dynamic(row)=d.penalty_dynamic_collision;
+                penalty_scene_entry(row)=localSceneEntryPenalty(d);
                 penalty_nfz(row)=d.penalty_nfz; feasible(row)=logical(d.feasible);
                 static_violation(row)=d.penalty_static_collision>0;
-                dynamic_violation(row)=d.penalty_dynamic_collision>0;
+                scene_entry_violation(row)=penalty_scene_entry(row)>0;
                 nfz_violation(row)=d.penalty_nfz>0;
                 total_subsamples(row)=d.total_collision_subsamples;
                 status{row}='ok';
@@ -80,8 +80,8 @@ function results = runTargetedResolutionAudit(resultsFile,userOpts)
 
     audit=table(case_id,environment_id,environment_seed,run_within_environment, ...
         algorithm_seed,spacing_m,J,energy_Wh,arrival_time_s,dynamic_risk, ...
-        penalty_total,penalty_height,penalty_static,penalty_dynamic, ...
-        penalty_nfz,feasible,static_violation,dynamic_violation,nfz_violation, ...
+        penalty_total,penalty_height,penalty_static,penalty_scene_entry, ...
+        penalty_nfz,feasible,static_violation,scene_entry_violation,nfz_violation, ...
         total_subsamples,evaluation_time_s,status);
     decision=localDecision(audit,caseIds,opts);
     writetable(audit,fullfile(opts.OutputDir,'targeted_resolution_case_results.csv'));
@@ -109,7 +109,7 @@ end
 function D=localDecision(T,caseIds,opts)
     n=numel(caseIds); case_id=caseIds(:); agreement_1p5_vs_0p75=false(n,1);
     feasible_1p5=false(n,1); feasible_0p75=false(n,1);
-    same_static_status=false(n,1); same_dynamic_status=false(n,1);
+    same_static_status=false(n,1); same_scene_entry_status=false(n,1);
     same_height_status=false(n,1);
     same_nfz_status=false(n,1); relative_J_change=nan(n,1);
     recommendation=cell(n,1);
@@ -123,11 +123,11 @@ function D=localDecision(T,caseIds,opts)
         feasible_1p5(i)=a.feasible; feasible_0p75(i)=b.feasible;
         same_height_status(i)=(a.penalty_height>0)==(b.penalty_height>0);
         same_static_status(i)=a.static_violation==b.static_violation;
-        same_dynamic_status(i)=a.dynamic_violation==b.dynamic_violation;
+        same_scene_entry_status(i)=a.scene_entry_violation==b.scene_entry_violation;
         same_nfz_status(i)=a.nfz_violation==b.nfz_violation;
         agreement_1p5_vs_0p75(i)=feasible_1p5(i)==feasible_0p75(i) && ...
             same_height_status(i) && same_static_status(i) && ...
-            same_dynamic_status(i) && same_nfz_status(i);
+            same_scene_entry_status(i) && same_nfz_status(i);
         relative_J_change(i)=abs(a.J-b.J)/max(abs(b.J),eps);
         if agreement_1p5_vs_0p75(i)
             recommendation{i}='1.5 m classification confirmed by 0.75 m';
@@ -136,7 +136,7 @@ function D=localDecision(T,caseIds,opts)
         end
     end
     D=table(case_id,feasible_1p5,feasible_0p75,agreement_1p5_vs_0p75, ...
-        same_height_status,same_static_status,same_dynamic_status, ...
+        same_height_status,same_static_status,same_scene_entry_status, ...
         same_nfz_status,relative_J_change,recommendation);
     D.Properties.UserData=struct('all_confirmed',all(agreement_1p5_vs_0p75), ...
         'feasibility_threshold',opts.FeasibilityThreshold);
@@ -148,9 +148,9 @@ function localWriteReport(file,source,opts,T,D)
     fprintf(fid,'Fixed cases: %s\nSpacings: %s m\n\n', ...
         mat2str(opts.CaseIDs),mat2str(opts.SpacingsM));
     for i=1:height(T)
-        fprintf(fid,'case=%d spacing=%.3g m J=%.8g penalty=%.8g feasible=%d height/static/dynamic/NFZ=%d/%d/%d/%d subsamples=%g\n', ...
+        fprintf(fid,'case=%d spacing=%.3g m J=%.8g penalty=%.8g feasible=%d height/static/scene-entry/NFZ=%d/%d/%d/%d subsamples=%g\n', ...
             T.case_id(i),T.spacing_m(i),T.J(i),T.penalty_total(i),T.feasible(i), ...
-            T.penalty_height(i)>0,T.static_violation(i),T.dynamic_violation(i), ...
+            T.penalty_height(i)>0,T.static_violation(i),T.scene_entry_violation(i), ...
             T.nfz_violation(i),T.total_subsamples(i));
     end
     fprintf(fid,'\nDECISION\n');
@@ -168,4 +168,12 @@ end
 
 function id=localExceptionId(ME)
     id=ME.identifier; if isempty(id), id='unidentified_error'; end
+end
+
+function p=localSceneEntryPenalty(details)
+    if isfield(details,'penalty_scene_entry')
+        p=details.penalty_scene_entry;
+    else
+        p=details.penalty_dynamic_collision;
+    end
 end

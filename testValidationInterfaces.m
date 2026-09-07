@@ -108,7 +108,7 @@ end
 function testValidationSuitePreservesExperimentOrder(t)
     suite=fileread('runAllValidationExperiments.m');
     pre=strfind(suite,'Main pre-cohort stage:');
-    figure78=strfind(suite,'Running/resuming the authoritative 0.75 m Figure 7-8 cohort');
+    figure78=strfind(suite,'Running/resuming the authoritative 0.75 m primary cohort');
     post=strfind(suite,'Main post-cohort stage:');
     verifyNotEmpty(t,pre);
     verifyNotEmpty(t,figure78);

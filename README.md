@@ -2,7 +2,7 @@
 
 Repository: <https://github.com/danyoudechihuo416/RA-ALA>
 
-Versioned release: <https://github.com/danyoudechihuo416/RA-ALA/tree/v1.1.1>
+Versioned release: <https://github.com/danyoudechihuo416/RA-ALA/tree/v1.1.2>
 
 This repository contains the MATLAB implementation and released analysis
 artifacts for the RA-ALA manuscript.
@@ -40,12 +40,15 @@ verify_reproducibility_package;
 ```
 
 This checks the 0.75 m archive, runs targeted tests, refreshes statistics, and
-redraws Figures 7-9. It does not rerun the hours-long planners.
+redraws manuscript Figures 11-13 from archived results. It does not rerun the
+hours-long planners. The verification command may refresh tracked CSV and
+figure outputs in the working tree.
 
 ## Entry Points
 
 - `runAllValidationExperiments`: complete ordered suite; reruns planners.
 - `runFigure7And8Experiment`: authoritative 0.75 m cohort only; reruns planners.
+  The legacy function name produces the current manuscript Figures 11-12.
 - `runRemainingValidationExperiments`: post-cohort analyses; no planner rerun
   by default.
 - `runClusterAwareStatistics`: environment-level inference from the archive.
@@ -86,14 +89,16 @@ results = runRemainingValidationExperiments();
 Its budget stage is disabled by default because that stage calls planners.
 Use `struct('CheckOnly',true)` to validate inputs without writing outputs.
 
-## Primary Figure 7-8 Experiment
+## Primary Cohort (Manuscript Figures 11-12)
 
 ```matlab
 results = runFigure7And8Experiment();
 ```
 
 It checkpoints every unique planner run. On completion, the authoritative
-cohort and Figure 7-8 PNG/PDF files are synchronized to the repository root.
+cohort and manuscript Figure 11-12 PNG/PDF files are synchronized to the
+repository root. The files retain their legacy `fig7_*` and `fig8_*` stems
+for backward compatibility.
 
 ## Complete Suite
 
@@ -101,9 +106,10 @@ cohort and Figure 7-8 PNG/PDF files are synchronized to the repository root.
 results = runAllValidationExperiments();
 ```
 
-The order is Figures 1-6, the 0.75 m Figure 7-8 cohort, same-cohort ablation,
-clustered inference, fixed-path weights, fixed-path resolution, outcome
-summaries, and a fresh budget audit.
+The order is the preliminary illustrative figures, the 0.75 m primary cohort,
+same-cohort ablation, clustered inference, fixed-path weights, fixed-path
+resolution, outcome summaries, and a fresh budget audit. The archived
+statistical outputs correspond to manuscript Figures 11-13.
 
 The full default is expensive. To omit the duplicate fresh budget audit:
 
@@ -189,6 +195,11 @@ component among `Pheight`, `Pstatic`, `PsceneEntry`, `PNFZ`, `Pbattery`, and
 `Pkinematic`; it does not imply independent physical hazards. No-path generation
 failures have no finite score or energy and are reported through status and
 failure counts rather than included in continuous-outcome distributions.
+
+`computational_budget_output/planner_runtime_raw.csv` uses
+`generation_success` to mean that the planner generated a finite
+goal-reaching path. It is distinct from `final_feasible`, which is assigned
+only after execution-level evaluation.
 
 `weight_sensitivity_results/` and `resolution_selection_output/` are retained
 as earlier auxiliary audits. Current manuscript-facing outputs use the

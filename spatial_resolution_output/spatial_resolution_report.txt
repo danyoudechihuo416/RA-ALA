@@ -1,22 +1,22 @@
 SPATIAL COLLISION-SAMPLING RESOLUTION STUDY
 
-Cohort: main_experiment_cohort.mat
+Cohort: C:\Users\hyl\Documents\Codex\2026-06-26\qin\RA-ALA-final-publish\main_experiment_cohort.mat
 Cases planned once: 30
 Planning/evaluation baseline: 0.75 m
 Design: fixed selected paths re-evaluated at [6 3 1.5 0.75 0.375] m.
 N includes archived planning failures; evaluated_N counts successfully evaluated paths.
 
 SUMMARY
-6 m: N=30, median J=9.80056, median T=91.8309 s, feasible=86.7%, static/dynamic/NFZ=2/0/0
-3 m: N=30, median J=10.0326, median T=91.1554 s, feasible=80.0%, static/dynamic/NFZ=3/0/0
-1.5 m: N=30, median J=10.0299, median T=91.0652 s, feasible=80.0%, static/dynamic/NFZ=3/1/0
-0.75 m: N=30, median J=9.7969, median T=91.085 s, feasible=80.0%, static/dynamic/NFZ=3/0/0
-0.375 m: N=30, median J=9.79785, median T=91.0803 s, feasible=80.0%, static/dynamic/NFZ=3/0/0
+6 m: N=30, median J=9.80056, median T=91.8309 s, feasible=86.7%, static/scene-entry/NFZ=2/0/0
+3 m: N=30, median J=10.0326, median T=91.1554 s, feasible=80.0%, static/scene-entry/NFZ=3/0/0
+1.5 m: N=30, median J=10.0299, median T=91.0652 s, feasible=80.0%, static/scene-entry/NFZ=3/1/0
+0.75 m: N=30, median J=9.7969, median T=91.085 s, feasible=80.0%, static/scene-entry/NFZ=3/0/0
+0.375 m: N=30, median J=9.79785, median T=91.0803 s, feasible=80.0%, static/scene-entry/NFZ=3/0/0
 
 STABILITY RELATIVE TO THE FINEST RESOLUTION
-6 vs 0.375 m: N=30, median/max rel J=0.002204/0.08004, median/max rel T=0.001046/0.01698, feasibility agreement=93.3%, static/dynamic/NFZ agreement=96.7/100.0/100.0%
-3 vs 0.375 m: N=30, median/max rel J=0.0004245/0.05806, median/max rel T=0.0004268/0.003705, feasibility agreement=100.0%, static/dynamic/NFZ agreement=100.0/100.0/100.0%
-1.5 vs 0.375 m: N=30, median/max rel J=0.0003908/0.04895, median/max rel T=0.0002214/0.004857, feasibility agreement=100.0%, static/dynamic/NFZ agreement=100.0/96.7/100.0%
-0.75 vs 0.375 m: N=30, median/max rel J=4.31e-05/0.01565, median/max rel T=4.018e-05/0.0001107, feasibility agreement=100.0%, static/dynamic/NFZ agreement=100.0/100.0/100.0%
+6 vs 0.375 m: N=30, median/max rel J=0.002204/0.08004, median/max rel T=0.001046/0.01698, feasibility agreement=93.3%, static/scene-entry/NFZ agreement=96.7/100.0/100.0%
+3 vs 0.375 m: N=30, median/max rel J=0.0004245/0.05806, median/max rel T=0.0004268/0.003705, feasibility agreement=100.0%, static/scene-entry/NFZ agreement=100.0/100.0/100.0%
+1.5 vs 0.375 m: N=30, median/max rel J=0.0003908/0.04895, median/max rel T=0.0002214/0.004857, feasibility agreement=100.0%, static/scene-entry/NFZ agreement=100.0/96.7/100.0%
+0.75 vs 0.375 m: N=30, median/max rel J=4.31e-05/0.01565, median/max rel T=4.018e-05/0.0001107, feasibility agreement=100.0%, static/scene-entry/NFZ agreement=100.0/100.0/100.0%
 
 Interpretation boundary: this is a numerical-resolution study, not a claim of analytic continuous collision detection.

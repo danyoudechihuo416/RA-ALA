@@ -32,9 +32,9 @@ function results = runSpatialResolutionSensitivity(cohortFile,userOpts)
     algorithm_seed = nan(nRows,1); spacing_m = nan(nRows,1);
     J = nan(nRows,1); energy_Wh = nan(nRows,1); arrival_time_s = nan(nRows,1);
     dynamic_risk = nan(nRows,1); penalty_total = nan(nRows,1);
-    penalty_static = nan(nRows,1); penalty_dynamic = nan(nRows,1);
+    penalty_static = nan(nRows,1); penalty_scene_entry = nan(nRows,1);
     penalty_nfz = nan(nRows,1); feasible = false(nRows,1);
-    static_violation = false(nRows,1); dynamic_violation = false(nRows,1);
+    static_violation = false(nRows,1); scene_entry_violation = false(nRows,1);
     nfz_violation = false(nRows,1); evaluation_time_s = nan(nRows,1);
     total_collision_subsamples = nan(nRows,1);
     total_nfz_subsamples = nan(nRows,1);
@@ -124,11 +124,11 @@ function results = runSpatialResolutionSensitivity(cohortFile,userOpts)
                     dynamic_risk(row) = det.R_dynamic;
                     penalty_total(row) = det.penalty_total;
                     penalty_static(row) = det.penalty_static_collision;
-                    penalty_dynamic(row) = det.penalty_dynamic_collision;
+                    penalty_scene_entry(row) = localSceneEntryPenalty(det);
                     penalty_nfz(row) = det.penalty_nfz;
                     feasible(row) = logical(det.feasible);
                     static_violation(row) = det.penalty_static_collision>0;
-                    dynamic_violation(row) = det.penalty_dynamic_collision>0;
+                    scene_entry_violation(row) = penalty_scene_entry(row)>0;
                     nfz_violation(row) = det.penalty_nfz>0;
                     total_collision_subsamples(row) = det.total_collision_subsamples;
                     total_nfz_subsamples(row) = det.total_nfz_subsamples;
@@ -150,8 +150,8 @@ function results = runSpatialResolutionSensitivity(cohortFile,userOpts)
     raw = table(case_id,environment_id,environment_seed, ...
         run_within_environment,algorithm_seed,spacing_m,J,energy_Wh, ...
         arrival_time_s,dynamic_risk,penalty_total,penalty_static, ...
-        penalty_dynamic,penalty_nfz,feasible,static_violation, ...
-        dynamic_violation,nfz_violation,evaluation_time_s, ...
+        penalty_scene_entry,penalty_nfz,feasible,static_violation, ...
+        scene_entry_violation,nfz_violation,evaluation_time_s, ...
         total_collision_subsamples,total_nfz_subsamples,path_points,run_status);
     summary = localSummary(raw,spacings);
     stability = localStability(raw,spacings);
@@ -292,7 +292,7 @@ function S = localSummary(T,spacings)
     median_energy_Wh=nan(n,1); median_arrival_time_s=nan(n,1);
     median_dynamic_risk=nan(n,1); median_penalty=nan(n,1);
     feasible_rate=nan(n,1); static_violation_count=zeros(n,1);
-    dynamic_violation_count=zeros(n,1); nfz_violation_count=zeros(n,1);
+    scene_entry_violation_count=zeros(n,1); nfz_violation_count=zeros(n,1);
     median_evaluation_time_s=nan(n,1); median_subsamples=nan(n,1);
     for i=1:n
         m=T.spacing_m==spacings(i) & strcmp(T.run_status,'ok');
@@ -304,14 +304,14 @@ function S = localSummary(T,spacings)
         median_penalty(i)=localMedian(T.penalty_total(m));
         feasible_rate(i)=sum(T.feasible(m))/N(i);
         static_violation_count(i)=sum(T.static_violation(m));
-        dynamic_violation_count(i)=sum(T.dynamic_violation(m));
+        scene_entry_violation_count(i)=sum(T.scene_entry_violation(m));
         nfz_violation_count(i)=sum(T.nfz_violation(m));
         median_evaluation_time_s(i)=localMedian(T.evaluation_time_s(m));
         median_subsamples(i)=localMedian(T.total_collision_subsamples(m));
     end
     S=table(spacing_m,N,evaluated_N,median_J,median_energy_Wh,median_arrival_time_s, ...
         median_dynamic_risk,median_penalty,feasible_rate, ...
-        static_violation_count,dynamic_violation_count,nfz_violation_count, ...
+        static_violation_count,scene_entry_violation_count,nfz_violation_count, ...
         median_evaluation_time_s,median_subsamples);
 end
 
@@ -322,7 +322,7 @@ function S = localStability(T,spacings)
     max_relative_J_change=nan(n,1); median_relative_energy_change=nan(n,1);
     max_relative_energy_change=nan(n,1); median_relative_arrival_change=nan(n,1);
     max_relative_arrival_change=nan(n,1); feasibility_agreement=nan(n,1);
-    static_status_agreement=nan(n,1); dynamic_status_agreement=nan(n,1);
+    static_status_agreement=nan(n,1); scene_entry_status_agreement=nan(n,1);
     nfz_status_agreement=nan(n,1);
     for i=1:n
         A=T(T.spacing_m==compare(i),:); B=T(T.spacing_m==ref,:);
@@ -337,7 +337,7 @@ function S = localStability(T,spacings)
         median_relative_arrival_change(i)=localMedian(d); max_relative_arrival_change(i)=localMax(d);
         feasibility_agreement(i)=mean(A.feasible(ia)==B.feasible(ib));
         static_status_agreement(i)=mean(A.static_violation(ia)==B.static_violation(ib));
-        dynamic_status_agreement(i)=mean(A.dynamic_violation(ia)==B.dynamic_violation(ib));
+        scene_entry_status_agreement(i)=mean(A.scene_entry_violation(ia)==B.scene_entry_violation(ib));
         nfz_status_agreement(i)=mean(A.nfz_violation(ia)==B.nfz_violation(ib));
     end
     S=table(spacing_m,reference_spacing_m,paired_N, ...
@@ -345,7 +345,7 @@ function S = localStability(T,spacings)
         median_relative_energy_change,max_relative_energy_change, ...
         median_relative_arrival_change,max_relative_arrival_change, ...
         feasibility_agreement,static_status_agreement, ...
-        dynamic_status_agreement,nfz_status_agreement);
+        scene_entry_status_agreement,nfz_status_agreement);
 end
 
 function localWriteReport(file,source,opts,S,C,nCases)
@@ -357,19 +357,19 @@ function localWriteReport(file,source,opts,S,C,nCases)
     fprintf(fid,'N includes archived planning failures; evaluated_N counts successfully evaluated paths.\n\n');
     fprintf(fid,'SUMMARY\n');
     for i=1:height(S)
-        fprintf(fid,'%.3g m: N=%d, median J=%.6g, median T=%.6g s, feasible=%.1f%%, static/dynamic/NFZ=%d/%d/%d\n', ...
+        fprintf(fid,'%.3g m: N=%d, median J=%.6g, median T=%.6g s, feasible=%.1f%%, static/scene-entry/NFZ=%d/%d/%d\n', ...
             S.spacing_m(i),S.N(i),S.median_J(i),S.median_arrival_time_s(i), ...
             100*S.feasible_rate(i),S.static_violation_count(i), ...
-            S.dynamic_violation_count(i),S.nfz_violation_count(i));
+            S.scene_entry_violation_count(i),S.nfz_violation_count(i));
     end
     fprintf(fid,'\nSTABILITY RELATIVE TO THE FINEST RESOLUTION\n');
     for i=1:height(C)
-        fprintf(fid,'%.3g vs %.3g m: N=%d, median/max rel J=%.4g/%.4g, median/max rel T=%.4g/%.4g, feasibility agreement=%.1f%%, static/dynamic/NFZ agreement=%.1f/%.1f/%.1f%%\n', ...
+        fprintf(fid,'%.3g vs %.3g m: N=%d, median/max rel J=%.4g/%.4g, median/max rel T=%.4g/%.4g, feasibility agreement=%.1f%%, static/scene-entry/NFZ agreement=%.1f/%.1f/%.1f%%\n', ...
             C.spacing_m(i),C.reference_spacing_m(i),C.paired_N(i), ...
             C.median_relative_J_change(i),C.max_relative_J_change(i), ...
             C.median_relative_arrival_change(i),C.max_relative_arrival_change(i), ...
             100*C.feasibility_agreement(i),100*C.static_status_agreement(i), ...
-            100*C.dynamic_status_agreement(i),100*C.nfz_status_agreement(i));
+            100*C.scene_entry_status_agreement(i),100*C.nfz_status_agreement(i));
     end
     fprintf(fid,'\nInterpretation boundary: this is a numerical-resolution study, not a claim of analytic continuous collision detection.\n');
 end
@@ -380,4 +380,11 @@ function d=localRelative(a,b)
 end
 function v=localMedian(x), x=x(isfinite(x)); if isempty(x), v=NaN; else, v=median(x); end, end
 function v=localMax(x), x=x(isfinite(x)); if isempty(x), v=NaN; else, v=max(x); end, end
+function p=localSceneEntryPenalty(details)
+    if isfield(details,'penalty_scene_entry')
+        p=details.penalty_scene_entry;
+    else
+        p=details.penalty_dynamic_collision;
+    end
+end
 function id=localExceptionId(ME), id=ME.identifier; if isempty(id), id='unidentified_error'; end, end

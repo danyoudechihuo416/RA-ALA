@@ -17,4 +17,4 @@ abl_colors = [0.82 0.10 0.10;
               0.50 0.50 0.50];
 plotAblationStudyFigure(abl_J, abl_E, abl_T, abl_R, abl_Pen, ...
     ablationNames, N_ABL, 'fig9_ablation_study.png');
-fprintf('Figure 9 regenerated as fig9_ablation_study.png and vector PDF.\n');
+fprintf('Manuscript Figure 13 regenerated as legacy file fig9_ablation_study.png and vector PDF.\n');

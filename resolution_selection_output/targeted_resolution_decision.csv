@@ -1,4 +1,4 @@
-case_id,feasible_1p5,feasible_0p75,agreement_1p5_vs_0p75,same_height_status,same_static_status,same_dynamic_status,same_nfz_status,relative_J_change,recommendation
+case_id,feasible_1p5,feasible_0p75,agreement_1p5_vs_0p75,same_height_status,same_static_status,same_scene_entry_status,same_nfz_status,relative_J_change,recommendation
 1,0,0,1,1,1,1,1,0.00337576278975421,1.5 m classification confirmed by 0.75 m
 2,1,1,1,1,1,1,1,0.00613871862005645,1.5 m classification confirmed by 0.75 m
 3,1,1,1,1,1,1,1,0.00138078724298223,1.5 m classification confirmed by 0.75 m

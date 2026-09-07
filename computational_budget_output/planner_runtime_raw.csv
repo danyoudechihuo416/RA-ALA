@@ -1,4 +1,4 @@
-environment_id,env_seed,run_within_environment,algorithm_seed,algorithm,wall_clock_s,evaluatePath_calls,search_fitness_calls,rescueA_adopted,rescueB_adopted,search_time_s,topk_time_s,recovery_time_s,actual_iterations_or_nodes,planner_success,budget_reached,timed_out,exception,path_points,J,penalty_total,final_feasible,failure_reason
+environment_id,env_seed,run_within_environment,algorithm_seed,algorithm,wall_clock_s,evaluatePath_calls,search_fitness_calls,rescueA_adopted,rescueB_adopted,search_time_s,topk_time_s,recovery_time_s,actual_iterations_or_nodes,generation_success,budget_reached,timed_out,exception,path_points,J,penalty_total,final_feasible,failure_reason
 1,483,1,547,RA-ALA,280.8357913,4929,3240,0,0,275.1970124,1.2286181,0,80,1,1,0,0,10,17.3524910323008,0,1,none
 1,483,1,558,Energy-A*,1.8339438,1673,0,0,0,NaN,NaN,NaN,100,1,0,0,0,57,21.2527116435581,0,1,none
 1,483,1,569,Informed-RRT*,15.1152283,7249,0,0,0,NaN,NaN,NaN,995,1,1,1,0,37,298.003814920212,2.77121274604531,0,timeout_without_feasible_output

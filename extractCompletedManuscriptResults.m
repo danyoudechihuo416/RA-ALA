@@ -1,6 +1,7 @@
 function outputs = extractCompletedManuscriptResults(cohortFile, outputDir)
 %EXTRACTCOMPLETEDMANUSCRIPTRESULTS Export manuscript-ready summaries.
-%   This function only reads the completed Figure 7-8 cohort. It does not
+%   This function only reads the completed primary cohort (manuscript
+%   Figures 11-12; legacy source filenames fig7/fig8). It does not
 %   run planners, alter paths, or feed finer-resolution findings back into
 %   optimization.
 
@@ -139,10 +140,8 @@ function tf = localSceneEntryPositive(details)
 end
 
 function q = localQuantile(x,p)
-    x = sort(x(isfinite(x)));
+    x = x(isfinite(x));
     if isempty(x), q = NaN; return; end
     if numel(x)==1, q = x; return; end
-    idx = 1 + p*(numel(x)-1);
-    lo = floor(idx); hi = ceil(idx); f = idx-lo;
-    q = x(lo)*(1-f) + x(hi)*f;
+    q = prctile(x,100*p);
 end

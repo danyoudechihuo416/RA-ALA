@@ -28,7 +28,7 @@ function outputs = runWeightSensitivityAnalysis(dataFile,userOpts)
     end
     if ~isfile(dataFile)
         error('WeightSensitivity:MissingCohort', ...
-            'Authoritative Figure 7-8 cohort not found: %s',dataFile);
+            'Authoritative primary cohort not found: %s',dataFile);
     end
     S=load(dataFile);
     required={'env_seeds_used','stat_env','stat_ra_seed','stat_J', ...
@@ -44,7 +44,7 @@ function outputs = runWeightSensitivityAnalysis(dataFile,userOpts)
     if abs(sampling.PlanningSpacingM-0.75)>eps || ...
             abs(sampling.FinalSpacingM-0.75)>eps
         error('WeightSensitivity:WrongCohort', ...
-            'RA-ALA weight sensitivity requires the 0.75 m Figure 7-8 cohort.');
+            'RA-ALA weight sensitivity requires the 0.75 m primary cohort.');
     end
     provenance=validationProvenance(dataFile);
 

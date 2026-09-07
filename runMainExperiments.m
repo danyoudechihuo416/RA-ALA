@@ -630,12 +630,11 @@ end
 end % Pre-cohort experiments and Figures 1-6.
 
 if PRE_COHORT_ONLY
-    fprintf('\nPre-cohort stage completed; Figure 7-8 has not been started.\n');
+    fprintf('\nPre-cohort stage completed; the primary cohort (manuscript Figures 11-12) has not been started.\n');
     return;
 end
 
-%%  图7: 多随机种子箱线图 (fig7)
-%%  图8: 环境级聚类感知配对统计图 (fig8)
+%%  主要统计队列: 当前论文图11-12（保留旧文件名 fig7/fig8）
 %%
 %%  两因素分层采样设计:
 %%    外层 N_ENV 个不同城市环境 → 测试跨场景泛化性
@@ -644,11 +643,11 @@ end
 %%    提高容量: stat 轮次使用更大 popSize/maxIter
 %%    总运行次数 = N_ENV × N_SEED = N_STAT
 %%
-%%    fig7 — 箱线图：环境内三次运行中位数的跨环境分布
-%%    fig8 — 环境级精确符号秩检验、Holm 校正与配对秩二列效应量
+%%    论文图11（fig7 文件）— 环境内三次运行中位数的跨环境分布
+%%    论文图12（fig8 文件）— 环境级精确符号秩检验、Holm 校正与配对秩二列效应量
 %% ====================================================================
 
-fprintf('\n━━━ Generating Statistical Figures (fig7: Distributional Robustness / fig8: Statistical Significance) ━━━\n');
+fprintf('\n━━━ Generating Manuscript Figures 11-12 (legacy files fig7/fig8) ━━━\n');
 fprintf('  设计: 两因素分层采样 (N_ENV 个环境 × N_SEED 次ALA内部种子)\n');
 
 % ── 参数配置 ──
@@ -657,7 +656,7 @@ if ~isempty(RA_ALA_EXTERNAL_COHORT_FILE)
         error('MainExperiments:MissingExternalCohort', ...
             'External Section 5.5 cohort not found: %s',RA_ALA_EXTERNAL_COHORT_FILE);
     end
-    fprintf('\nReusing the authoritative Figure 7-8 cohort: %s\n', ...
+    fprintf('\nReusing the authoritative primary cohort for manuscript Figures 11-12: %s\n', ...
         RA_ALA_EXTERNAL_COHORT_FILE);
     load(RA_ALA_EXTERNAL_COHORT_FILE);
 else
@@ -836,7 +835,7 @@ algColors_stat = [0.75 0.13 0.13;   % RA-ALA  红
 %% ====================================================================
 plotDistributionalRobustness(stat_J,stat_E,stat_feasible,stat_env, ...
     env_seeds_used,algNames,'fig7_distributional_robustness.png',stat_is_unique_trial);
-fprintf('  fig7 (finite evaluated-output distributions) saved\n');
+fprintf('  Manuscript Figure 11 (legacy fig7 file) saved\n');
 
 %% ====================================================================
 %%  图8在保存固定队列后由环境级聚类感知统计生成。
@@ -863,7 +862,7 @@ end
 
 
 %% ====================================================================
-%%  消融实验 (fig9)
+%%  消融实验：当前论文图13（保留旧文件名 fig9）
 %%  设计：每次只关闭一个组件，与完整 RA-ALA 对比。
 %%  4 个有效变体：
 %%    A1 w/o Smooth        — 去掉平滑度导向项 δ_smooth
@@ -877,7 +876,7 @@ end
 %%    因此 Full RA-ALA 应逐案例复现 Section 5.5 的 RA-ALA 结果
 %% ====================================================================
 
-fprintf('\n━━━ Ablation Study (fig9): Component Contribution Analysis ━━━\n');
+fprintf('\n━━━ Ablation Study: Manuscript Figure 13 (legacy file fig9) ━━━\n');
 
 N_ABL_ENV = N_ENV;   % 与 Section 5.5 完全一致
 N_ABL_REP = N_SEED;  % 与 Section 5.5 完全一致
@@ -1034,7 +1033,7 @@ fprintf('  注: 不可行率按严格标准计算：任一硬约束违规或运�
 fprintf('  实验设计: 严格复用 Section 5.5 的环境、RA-ALA 种子与计算预算\n');
 fprintf('  ALA容量: popSize=%d, maxIter=%d\n', cfg_abl_base.popSize, cfg_abl_base.maxIter);
 
-%% ── 绘制 fig9 ──
+%% ── 绘制论文图13（fig9 文件） ──
 plotAblationStudyFigure(abl_J, abl_E, abl_T, abl_R, abl_Pen, ...
     ablationNames, N_ABL, 'fig9_ablation_study.png');
 
@@ -1047,7 +1046,7 @@ save('ablation_same_cohort_results.mat', ...
     'planning_collision_sample_spacing_m','final_verification_spacing_m', ...
     'main_min_collision_samples','validation_source');
 fprintf('  Ablation raw data saved: ablation_same_cohort_results.mat\n');
-fprintf('  fig9 (Ablation Study - Component Contribution) saved\n');
+fprintf('  Manuscript Figure 13 (legacy fig9 file) saved\n');
 
 %% ====================================================================
 %%  Cost-weight sensitivity analysis

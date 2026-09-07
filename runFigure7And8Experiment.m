@@ -1,5 +1,7 @@
 function results = runFigure7And8Experiment(userOpts)
-%RUNFIGURE7AND8EXPERIMENT Run only the Figure 7-8 statistical cohort.
+%RUNFIGURE7AND8EXPERIMENT Run the primary statistical cohort.
+%   The current manuscript presents these outputs as Figures 11-12. The
+%   function and output stems retain their legacy fig7/fig8 names.
 %   All planners use 0.75 m collision sampling during planning/search and
 %   final evaluation. The fixed 10-environment design and method-specific
 %   budgets match the statistical cohort in runMainExperiments.
@@ -52,13 +54,13 @@ function results = runFigure7And8Experiment(userOpts)
         saved = load(checkpointFile,'state','metadata');
         localValidateCheckpoint(saved.metadata,metadata);
         state = saved.state;
-        fprintf('Resuming Figure 7-8 cohort from: %s\n',checkpointFile);
+        fprintf('Resuming primary cohort (manuscript Figures 11-12) from: %s\n',checkpointFile);
     else
         state = localEmptyState(nAlg,N_STAT);
-        fprintf('Starting a new Figure 7-8 cohort.\n');
+        fprintf('Starting a new primary cohort (manuscript Figures 11-12).\n');
     end
 
-    fprintf('\nFigure 7-8 standalone statistical experiment\n');
+    fprintf('\nPrimary standalone statistical experiment (manuscript Figures 11-12)\n');
     fprintf('  Planning/search spacing: %.2f m\n', ...
         planning_collision_sample_spacing_m);
     fprintf('  Final evaluation spacing: %.2f m\n', ...
@@ -260,17 +262,17 @@ function results = runFigure7And8Experiment(userOpts)
                 copyfile(sourceFile,fullfile(projectDir,[stem extension{1}]),'f');
             end
         end
-        fprintf('  Release cohort and Figure 7-8 files synchronized to the project root.\n');
+        fprintf('  Release cohort and manuscript Figures 11-12 synchronized to the project root.\n');
     end
 
     results = struct('cohort_file',publishedCohort, ...
         'archive_cohort_file',cohortFile,'figure7',fig7File, ...
         'figure8',fig8File,'cluster_statistics',clusterStats, ...
         'output_dir',opts.OutputDir,'state',state);
-    fprintf('\nFigure 7-8 experiment complete.\n');
+    fprintf('\nPrimary cohort experiment complete.\n');
     fprintf('  Cohort: %s\n',cohortFile);
-    fprintf('  Figure 7: %s\n',fig7File);
-    fprintf('  Figure 8: %s\n',fig8File);
+    fprintf('  Manuscript Figure 11 (legacy fig7 file): %s\n',fig7File);
+    fprintf('  Manuscript Figure 12 (legacy fig8 file): %s\n',fig8File);
 end
 
 function opts = localDefaults(projectDir,u)

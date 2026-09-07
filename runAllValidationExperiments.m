@@ -4,7 +4,7 @@ function results = runAllValidationExperiments(userOpts)
 %
 %   Execution order:
 %     1. Original Experiments 1-3 and Figures 1-6.
-%     2. Authoritative Figure 7-8 cohort (planning and final evaluation at 0.75 m).
+%     2. Authoritative primary cohort (manuscript Figures 11-12; 0.75 m).
 %     3. Ablation study reusing that cohort.
 %     4. Environment-level inference on the authoritative cohort.
 %     5. Fixed-path post hoc weight sensitivity without re-optimization.
@@ -85,7 +85,7 @@ function results = runAllValidationExperiments(userOpts)
     localSaveProgress(projectDir,results,opts);
 
     if opts.RunFigure78
-        fprintf('\nRunning/resuming the authoritative 0.75 m Figure 7-8 cohort ...\n');
+        fprintf('\nRunning/resuming the authoritative 0.75 m primary cohort (manuscript Figures 11-12) ...\n');
         figureOpts = localSetDefault(opts.Figure78Options,'OutputDir', ...
             fullfile(projectDir,'validation_round_0p75m','figure7_8'));
         results.figure78 = runFigure7And8Experiment(figureOpts);
@@ -93,7 +93,7 @@ function results = runAllValidationExperiments(userOpts)
         cohortFile = results.figure78.cohort_file;
         results.cohort_file = cohortFile;
     else
-        fprintf('\nFigure 7-8 cohort generation skipped; using: %s\n',cohortFile);
+        fprintf('\nPrimary cohort generation skipped; using: %s\n',cohortFile);
     end
     resolveCohortEvaluationSettings(load(cohortFile));
     results.last_completed_stage = 'figure7_8_cohort';
@@ -187,12 +187,12 @@ function localPublishFigureArtifacts(projectDir,figureResults)
             sourceFile = fullfile(sourceDir,[stem extension{1}]);
             if ~isfile(sourceFile)
                 error('ValidationSuite:MissingFigureArtifact', ...
-                    'Expected Figure 7-8 artifact is missing: %s',sourceFile);
+                    'Expected primary-cohort figure artifact is missing: %s',sourceFile);
             end
             copyfile(sourceFile,fullfile(projectDir,[stem extension{1}]),'f');
         end
     end
-    fprintf('Figure 7-8 PNG/PDF files synchronized to the project root.\n');
+    fprintf('Manuscript Figure 11-12 PNG/PDF files synchronized to the project root.\n');
 end
 
 function localRunMain(projectDir,runMode,cohortFile)
